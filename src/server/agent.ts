@@ -5,8 +5,9 @@ import { submitJournalEntry } from "@/server/journal";
 
 /**
  * Normalized ingress for every future agent channel.
- * Web chat uses the server action directly today; Slack and Google Chat
- * adapters can call this function after authenticating their webhook event.
+ * Web chat uses the server action directly; external adapters call this
+ * function after authenticating their webhook event. The Telegram Route
+ * Handler is the first external adapter using this boundary.
  */
 export async function receiveAgentMessage(input: {
   userId: string;

@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Telegram milestone — First delivery adapter and focused navigation (2026-10-25T03:10:42+05:30)
+
+- Implemented:
+  - Removed Overview and Knowledge from the primary sidebar without deleting their routes.
+  - Added Telegram to the normalized conversation channels and implemented `/api/telegram/webhook` with secret-header verification, allowed-chat filtering, deterministic retry keys, shared agent ingress, and Bot API replies.
+  - Added environment placeholders and [Telegram setup instructions](DEMO.md#connect-telegram-for-the-demo). The first adapter maps one configured chat to one Jeera user for the demo.
+- Files and areas changed: `src/components/app-shell/nav-items.ts`, `src/db/schema.ts`, `drizzle/0006_misty_mandrill.sql`, `src/lib/agent/channels.ts`, `src/lib/agent/telegram.ts`, `src/app/api/telegram/webhook/route.ts`, `src/lib/env.ts`, `.env.example`, `tests/telegram.test.ts`, `README.md`, and `docs/DEMO.md`.
+- Checks run and results: `npm run db:generate`, `npm run db:migrate`, `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (47/47), and `git diff --check` pass.
+- Decisions affecting later phases: Telegram only translates transport events and formats responses; all task/dependency permissions and journal processing remain in the shared agent service. Telegram writes preserve review-before-apply, so the first bot response directs consequential changes to the web review surface.
+- Remaining limitations: Per-person Telegram identity linking, inline proposal review/apply controls, webhook deployment, and live Bot API verification require a real bot token and public HTTPS URL.
+- Next phase: Configure the demo bot, test task/status questions end to end, then add identity linking and Telegram review actions.
+
 ## Demo milestone — Seeded team-delivery story (2026-10-25T03:03:35+05:30)
 
 - Implemented:

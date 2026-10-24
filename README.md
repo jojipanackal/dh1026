@@ -103,7 +103,9 @@ workflow before adding external chat adapters.
   briefing per user/day when the web conversation opens, prompts the user to
   state the first commitment, and preserves completion details when work is
   closed. A repeatable fake team-delivery dataset is available through
-  `npm run db:seed:demo`.
+  `npm run db:seed:demo`. A Telegram webhook adapter is available at
+  `/api/telegram/webhook`; it currently supports one configured demo identity
+  and uses the same normalized agent ingress as the web conversation.
 - Known limitations: Team and Knowledge pages are honest placeholders —
   those features land in later phases (see
   [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
@@ -111,7 +113,9 @@ workflow before adding external chat adapters.
   channel boundary but external OAuth/webhook adapters are not connected yet.
   Automatic follow-up delivery is not enabled yet, and the morning briefing
   currently triggers on opening the web Agent thread rather than from a
-  scheduler or Slack/Google Chat. Manually blocked tasks
+  scheduler or Slack/Google Chat. Telegram is wired for a single configured
+  demo identity, but per-person Telegram account linking and Telegram review
+  buttons are not implemented yet. Manually blocked tasks
   have no reason field yet, so the overview can only show "no reason
   recorded" for them. Under Next.js
   cacheComponents, a not-found page rendered from request-time checks

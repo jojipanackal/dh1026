@@ -43,6 +43,13 @@
       "when": 1792877060551,
       "tag": "0005_purple_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792878005602,
+      "tag": "0006_misty_mandrill",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:10:42+05:30 — Add Telegram delivery adapter and simplify navigation
+
+- Changed: Removed Overview and Knowledge from the primary sidebar navigation while keeping their routes available. Added `telegram` as a conversation channel, a secured `/api/telegram/webhook` Route Handler, deterministic Telegram retry keys, Telegram reply formatting, Bot API `sendMessage` delivery, and optional token/secret/default-user/chat configuration in `.env.example`. Generated and applied migration `drizzle/0006_misty_mandrill.sql`.
+- Why: The Agent and Projects surfaces are the product's working center, and Telegram is the next practical place to capture questions and updates without duplicating agent/task logic.
+- Validation: `npm run db:generate`, `npm run db:migrate`, `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (47/47), and `git diff --check` passed. Telegram pure adapter tests cover message parsing, stable retry ids, and dependency/evidence reply formatting.
+- Limitations: The demo maps all allowed-chat messages to `TELEGRAM_DEFAULT_USER_ID`; per-person account linking, Telegram proposal review buttons, and production deployment are still unfinished.
+
 ## 2026-10-25T03:03:35+05:30 — Add the team-delivery demo dataset
 
 - Changed: Added `npm run db:seed:demo` and `docs/DEMO.md`. The idempotent demo seed creates the Kochi Metro App execution scenario with Joji, George, Vaishakh, and Jaice; six tasks across todo, in-progress, blocked, and done states; an explicit dependency waiting on George; staging/payment evidence; and completion details on the finished decision task. The runbook documents the demo conversation and the Telegram adapter direction.

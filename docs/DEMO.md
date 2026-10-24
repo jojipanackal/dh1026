@@ -77,24 +77,52 @@ handoff to the validation API.
 Review the proposal, select the task update, and apply it. The completion note
 appears on the task and in its history.
 
-## Telegram direction
+## Connect Telegram for the demo
 
-Telegram should be the next delivery channel, not a second task-management
-backend. The existing normalized ingress in `src/server/agent.ts` is the seam
-for a Telegram adapter:
+The first Telegram adapter is now implemented at
+`/api/telegram/webhook`. It uses the same normalized agent ingress as the web
+conversation. Task questions can be answered entirely in Telegram; write
+updates return a reviewable proposal and should be applied from the web Agent
+until Telegram review buttons are added.
 
-1. Receive a Telegram update through a webhook.
-2. Authenticate the webhook and map the Telegram chat/user to a Jeera user.
-3. Convert the message into `{ userId, body, submissionKey, channel,
-   conversationKey, externalMessageId }`.
-4. Call the shared agent ingress so interpretation, task permissions,
-   dependency handling, and review-before-apply remain unchanged.
-5. Send the agent response back to the same Telegram conversation.
+Create a bot with `@BotFather`, then set these local environment variables in
+`.env.local`:
 
-The bot token, webhook URL, Telegram identity mapping, and deployment target
-are not committed here. For the first demo, keep the web Agent as the
-canonical conversation and use Telegram only as an adapter once those values
-are configured.
+```dotenv
+TELEGRAM_BOT_TOKEN=the-token-from-botfather
+TELEGRAM_WEBHOOK_SECRET=a-long-random-secret
+TELEGRAM_DEFAULT_USER_ID=the-Joji-user-id
+TELEGRAM_ALLOWED_CHAT_ID=the-demo-chat-id
+```
+
+For the seeded demo, `TELEGRAM_DEFAULT_USER_ID` should be Joji's user id. This
+single-user mapping is intentional for the first demo; it means messages in
+the allowed chat are attributed to Joji. Per-person Telegram identity linking
+is the next production step.
+
+The webhook must be publicly reachable over HTTPS. After deploying the app,
+set it with Telegram's official Bot API:
+
+```bash
+curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
+  -d "url=https://YOUR_DOMAIN.example/api/telegram/webhook" \
+  -d "secret_token=$TELEGRAM_WEBHOOK_SECRET" \
+  -d 'allowed_updates=["message"]'
+```
+
+Check delivery with:
+
+```bash
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getWebhookInfo"
+```
+
+Then send the bot a message such as `What is blocked?`. Telegram sends the
+update to the Next.js Route Handler, Jeera records it as a Telegram journal
+entry, runs the normal task/status path, and replies with `sendMessage`.
+
+Telegram's Bot API requires HTTPS for webhook delivery and supports a
+`secret_token` header for authenticating webhook requests; see the [official
+Bot API webhook documentation](https://core.telegram.org/bots/api#setwebhook).
 
 ## Resetting the story
 

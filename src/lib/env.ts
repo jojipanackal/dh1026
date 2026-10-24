@@ -13,6 +13,13 @@ const serverEnvSchema = z.object({
     }, "DATABASE_URL must be a postgres:// or postgresql:// URL"),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().optional().default("gpt-4.1-mini"),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+  TELEGRAM_DEFAULT_USER_ID: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.uuid().optional(),
+  ),
+  TELEGRAM_ALLOWED_CHAT_ID: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

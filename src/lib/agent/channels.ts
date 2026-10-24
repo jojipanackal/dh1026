@@ -26,6 +26,12 @@ export const AGENT_CHANNELS: {
     description: "A future channel for teams already using Google Workspace.",
     available: false,
   },
+  {
+    id: "telegram",
+    label: "Telegram",
+    description: "A Telegram bot connected to the shared execution agent.",
+    available: true,
+  },
 ];
 
 export function channelLabel(channel: AgentChannel): string {

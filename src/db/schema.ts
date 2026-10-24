@@ -66,6 +66,7 @@ export const conversationChannel = pgEnum("conversation_channel", [
   "web",
   "slack",
   "google_chat",
+  "telegram",
 ]);
 export type ConversationChannel = (typeof conversationChannel.enumValues)[number];
 
