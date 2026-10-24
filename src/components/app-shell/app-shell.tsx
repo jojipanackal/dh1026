@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { SquareKanban } from "lucide-react";
@@ -70,9 +72,20 @@ function Shell({
           </SidebarContent>
 
           <SidebarFooter>
-            <div className="flex items-center gap-1 group-data-[collapsible=icon]:justify-center">
-              <UserSwitcher />
-              <ThemeToggle className="ml-auto shrink-0 group-data-[collapsible=icon]:hidden" />
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1 group-data-[collapsible=icon]:justify-center">
+                <UserSwitcher />
+              </div>
+              <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:hidden">
+                <Badge
+                  variant="outline"
+                  className="text-xs font-normal text-muted-foreground"
+                  title="Demo identity — no authentication"
+                >
+                  Demo identity · no auth
+                </Badge>
+                <ThemeToggle className="shrink-0" />
+              </div>
             </div>
           </SidebarFooter>
           <SidebarRail />

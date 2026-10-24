@@ -234,7 +234,7 @@ export function JournalChat({
     <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={areaRef}
-        className="mx-auto min-h-0 w-full max-w-[52rem] flex-1 overflow-y-auto px-4 py-6 [scrollbar-gutter:stable]"
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-6"
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (

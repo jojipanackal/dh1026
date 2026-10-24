@@ -4,7 +4,6 @@ import { CircleUserRound } from "lucide-react";
 import { useTransition } from "react";
 
 import { setDemoUser } from "@/app/actions";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -61,14 +60,6 @@ export function UserSwitcherClient({
           ))}
         </SelectContent>
       </Select>
-      <Badge
-        variant="outline"
-        className="shrink-0 text-xs font-normal text-muted-foreground group-data-[collapsible=icon]:hidden"
-        title="Demo identity — no authentication"
-      >
-        <span className="hidden sm:inline">Demo identity · no auth</span>
-        <span className="sm:hidden">Demo</span>
-      </Badge>
     </div>
   );
 }

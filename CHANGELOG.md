@@ -29,6 +29,13 @@ Add entries as you build, newest first:
 - Validation: lint, typecheck and 76/76 unit tests pass; dev server serves `<title>Jeera</title>` and the renamed sidebar brand.
 - Limitations: The local database and `.env.example` keep the `project_runner` name — renaming it would break the existing local setup. Historical CHANGELOG/PROGRESS entries are unchanged.
 
+## 2026-10-25T00:59:00+05:30 — Journal chat layout fixes
+
+- Changed: Sidebar footer restacked (user switcher on its own row; "Demo identity · no auth" badge beside the theme toggle below it). Thread scrollbar back at the right edge of the content area. Composer stays anchored at the bottom of the chat area; the page no longer scrolls.
+- Why: User feedback on the journal layout.
+- Validation: Measured in a browser at 1440x900 — document height equals the viewport (no page scroll), thread scrolls internally, scrollbar at the content edge, composer bottom ~64px above the viewport edge. Lint and typecheck pass.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T00:45:00+05:30 — Phase 4: project overview with progress and blockers
 
 - Changed: `/projects/[projectId]` opens on a new "Overview" view (first tab, now the default). `src/server/overview.ts` adds `getProjectOverview` (membership-checked): status counts and done %, currently blocked tasks with who marked them and the recorded reason (read from `activity_events`, including journal-applied `blockedReason`), overdue open tasks, upcoming priorities (high/urgent or due within 7 days), and blockers reported in journal entries that are still awaiting review. Rules live in `src/lib/overview.ts` (`latestBlockerInfo`, `dayDiff`, `isStalled`) and the UI in `overview-view.tsx`. In-progress tasks with no change for 4+ days appear under "Needs attention" explicitly badged "inferred — not reported", keeping reported blockers distinct from system guesses. `src/lib/dates.ts` gains `todayIst`, reused by `isOverdue`.
