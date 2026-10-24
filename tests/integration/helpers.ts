@@ -51,7 +51,7 @@ export function ensureTestDb() {
 export async function truncateAll() {
   const { db } = await import("@/db");
   await db.execute(sql`
-    truncate table activity_events, tasks, project_memberships, projects, users
+    truncate table activity_events, journal_entries, tasks, project_memberships, projects, users
     restart identity cascade
   `);
 }

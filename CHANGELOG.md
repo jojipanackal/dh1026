@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T00:30:54+05:30 — Phase 3: AI journal chat
+
+- Changed: `/journal` is now an AI chat. Entries are stored first; OpenAI (via the AI SDK) interprets them into a validated proposal, which deterministic checks verify against real records. The user ticks items to apply in a proposal card, and they are applied in one transaction with journal-sourced activity events. Also adds: migration `0002` (`journal_entries`, `activity_events.journal_entry_id`); `OPENAI_API_KEY` and `OPENAI_MODEL` env vars; an env parsing fix so optional variables are forwarded; "via journal" badges in activity.
+- Why: Phase 3 of `docs/PHASES.md`. The user chose OpenAI, review-before-apply, and a chat interface.
+- Validation: lint and typecheck pass; 67/67 unit and 27/27 integration tests pass (mocked model). A real `gpt-4.1-mini` smoke test through the chat UI matched real tasks and handled a follow-up reply. Screenshots reviewed.
+- Limitations: Interpretation runs inline (45 s timeout). Blockers and decisions have no tables yet (planned for Phases 4 and 7). The build was not re-run while the dev server was up.
+
 ## 2026-10-24T23:59:39+05:30 — ClickUp-style board view for projects
 
 - Changed: The project page has a views bar (Board, List, Activity, Members via `?view=`). The board has status columns with counts, quick-add "+" on To do, In progress and Blocked, and a collapsible Cancelled column. Drag-and-drop (`@dnd-kit/core` 6.3.1) updates the screen immediately and reverts if the server rejects the move; a toast (`sonner` 2.0.8) reports the result. Cards show priority, due date (red when overdue), estimate and assignee avatar. Assignee and priority filters (`?assignee=`, `?priority=`) are applied on the server. A "+ New task" dialog and a member avatar stack are in the header. New `moveTask` service shares one locked update path with `updateTask`. `createTaskInput` accepts a starting status (todo, in_progress or blocked). New helpers `isOverdue` and `parseTaskFilters`.

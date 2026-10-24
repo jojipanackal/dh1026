@@ -13,6 +13,52 @@ One entry per completed phase from [PHASES.md](PHASES.md), newest first. Report 
 - Next phase:
 ```
 
+## Phase 3 — Natural-Language Journal and AI Interpretation (2026-10-25T00:31+05:30)
+
+- Implemented:
+  - Journal as a chat interface at `/journal`. The left rail lists the user's projects, each a private thread of the user's own entries. Messages are sent from a composer; the AI replies in the thread.
+  - Entries are always stored first (`journal_entries`, migration `0002_next_betty_brant.sql`), with an idempotent `submission_key` per author so retries don't create duplicates. The original text stays visible in the thread in every state.
+  - AI interpretation via the Vercel AI SDK (`ai` 7.0.143, `@ai-sdk/openai` 4.0.96, default model `gpt-4.1-mini`, configurable with `OPENAI_MODEL`):
+    - structured output validated against a Zod schema (`src/lib/journal/interpretation-schema.ts`);
+    - prompt in `src/lib/journal/prompt.ts`, which treats journal text as untrusted data;
+    - up to 6 earlier, non-dismissed entries by the same author in the project are sent as context, so replies to the AI's questions resolve.
+  - Deterministic checks after the model replies (`src/lib/journal/resolve.ts`):
+    - unknown task ids are dropped;
+    - assignees who aren't project members are cleared;
+    - no-op changes are dropped;
+    - transitions the lifecycle doesn't allow are flagged and can't be selected;
+    - likely duplicate new tasks are flagged (normalised title equality or token Jaccard ≥ 0.6);
+    - every drop or correction is listed as an "issue" under the proposal.
+  - Review, then apply. A proposal card in the AI's message lists task updates as field diffs, new tasks and blockers, each with a checkbox and inline edits. Decisions and clarifying questions are shown without checkboxes.
+    - Low-confidence items, possible duplicates and invalid transitions start unchecked.
+    - Apply runs as one transaction: all or nothing, re-checked against the current database.
+    - The client sends only indexes into the stored proposal plus a few editable fields, so it cannot inject task ids.
+    - Applying twice returns a conflict.
+  - Changes from the journal are recorded in activity with `source = journal` and a link to the entry, shown as a "via journal" badge in project and task history.
+  - Failed interpretations (AI not configured, unreadable output, timeout, provider error) keep the entry, show a safe message, and offer Retry or Dismiss. They are logged server-side by error name and code only.
+- Files and areas changed: `src/db/schema.ts`, `drizzle/0002_*`, `src/lib/env.ts` (`OPENAI_API_KEY`, `OPENAI_MODEL`, `getAiConfig`), `src/lib/journal/**`, `src/server/ai/interpret.ts`, `src/server/journal.ts`, `src/server/tasks.ts` (shared transaction-aware create/update with source and journal id), `src/app/journal/**`, project and task pages (journal link, "via journal" badges), `src/components/ui/checkbox.tsx`, `.env.example`, tests.
+- Checks run and results:
+  - lint and typecheck pass. `npm test` 67/67 pass. `npm run test:integration` 27/27 pass, using a mocked model. Cases covered:
+    - ready path; invalid AI output leaves no changes; missing key gives the configuration message; same submission key gives one entry;
+    - apply records journal-sourced events; re-apply conflicts; a concurrent change to done rolls back the whole apply, including new tasks;
+    - non-member gets not-found; out-of-range index is rejected; blocker on an already-blocked task; dismiss.
+  - `db:migrate` applied `0002`.
+  - Real OpenAI smoke test (`gpt-4.1-mini`) through the chat UI in Playwright, as Asha on Kochi Metro App.
+    - First entry: matched the real tasks (Print badges → Done, blocker on Order lanyards waiting on Rahul). It recorded the QR-over-NFC decision with the stated rationale and dropped two no-op updates.
+    - Follow-up "Assign the registration desk setup to Priya please.": proposed a new task assigned to Priya, after prompt rule 14 was added. Before that rule it had mapped the request onto an unrelated existing task.
+    - Both entries were left unapplied. Screenshots reviewed at desktop and 390px; no console errors.
+- Decisions affecting later phases:
+  - Blockers are applied by moving the task to Blocked with `blockedReason` in the activity event. There is no separate `blockers` table yet; Phase 4 should introduce one if it needs blocker lifecycle.
+  - Decisions are stored only inside the entry's interpretation JSON. Phase 7 should turn them into searchable records, drawing on stored interpretations.
+  - The journal is private per author; project-wide visibility comes through the activity feed.
+  - AI output is never applied without a click. Any future auto-apply must reuse `applyJournalEntry`'s validation.
+- Remaining limitations:
+  - Interpretation runs inline in the request (45 s timeout), with no background queue.
+  - The first entry in the final smoke run did not propose the "registration desk" task, most likely because earlier test entries with the same text were in its context. Dismissed entries are now excluded from context, but this was not re-verified with a real call.
+  - The model can still make mistakes. The review step and the database checks are the safeguards.
+  - The production build was not re-run in this phase because the dev server was running.
+- Next phase: Phase 4 — Project Progress and Blockers.
+
 ## Phase 2 — Projects, Teams, and Tasks (2026-10-24T23:08+05:30)
 
 - Implemented:

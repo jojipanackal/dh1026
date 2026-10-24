@@ -165,6 +165,14 @@ export default async function TaskPage({
                     <li key={event.id}>
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="font-medium">{event.actorName}</span>
+                        {event.source === "journal" && event.journalEntryId ? (
+                          <Link
+                            href={`/journal/${event.journalEntryId}`}
+                            className="text-xs text-brand underline-offset-2 hover:underline"
+                          >
+                            via journal
+                          </Link>
+                        ) : null}
                         <span className="shrink-0 font-mono text-xs text-muted-foreground">
                           {formatDateTime(event.createdAt)}
                         </span>

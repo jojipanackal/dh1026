@@ -1,6 +1,7 @@
 import {
   date,
   index,
+  unique,
   integer,
   jsonb,
   pgEnum,
@@ -51,6 +52,14 @@ export const activitySource = pgEnum("activity_source", [
   "manual",
   "journal",
   "ai",
+]);
+
+export const journalStatus = pgEnum("journal_status", [
+  "pending",
+  "ready",
+  "failed",
+  "applied",
+  "dismissed",
 ]);
 
 export const projects = pgTable("projects", {
@@ -123,6 +132,40 @@ export type ActivityChanges = Record<
   { from: unknown; to: unknown }
 >;
 
+export const journalEntries = pgTable(
+  "journal_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id),
+    body: text("body").notNull(),
+    submissionKey: uuid("submission_key").notNull(),
+    status: journalStatus("status").notNull().default("pending"),
+    interpretation: jsonb("interpretation"),
+    interpretationError: text("interpretation_error"),
+    model: text("model"),
+    appliedChanges: jsonb("applied_changes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    interpretedAt: timestamp("interpreted_at", { withTimezone: true }),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("journal_project_created_idx").on(table.projectId, table.createdAt),
+    // Idempotent submission retries: same key from the same author maps to
+    // one entry.
+    unique("journal_author_submission_unique").on(
+      table.authorId,
+      table.submissionKey,
+    ),
+  ],
+);
+
 export const activityEvents = pgTable(
   "activity_events",
   {
@@ -133,6 +176,10 @@ export const activityEvents = pgTable(
     taskId: uuid("task_id").references(() => tasks.id, {
       onDelete: "set null",
     }),
+    journalEntryId: uuid("journal_entry_id").references(
+      () => journalEntries.id,
+      { onDelete: "set null" },
+    ),
     actorId: uuid("actor_id")
       .notNull()
       .references(() => users.id),

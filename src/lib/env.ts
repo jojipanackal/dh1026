@@ -11,6 +11,8 @@ const serverEnvSchema = z.object({
         return false;
       }
     }, "DATABASE_URL must be a postgres:// or postgresql:// URL"),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().optional().default("gpt-4.1-mini"),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -18,7 +20,7 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 export function parseServerEnv(
   source: Record<string, string | undefined>,
 ): ServerEnv {
-  const result = serverEnvSchema.safeParse({ DATABASE_URL: source.DATABASE_URL });
+  const result = serverEnvSchema.safeParse(source);
   if (!result.success) {
     const issue = result.error.issues[0];
     const name =
@@ -37,4 +39,19 @@ export function getServerEnv(): ServerEnv {
     cached = parseServerEnv(process.env);
   }
   return cached;
+}
+
+export type AiConfig =
+  | { ok: true; apiKey: string; model: string }
+  | { ok: false; error: string };
+
+export function getAiConfig(): AiConfig {
+  const env = getServerEnv();
+  if (!env.OPENAI_API_KEY) {
+    return {
+      ok: false,
+      error: "AI is not configured: set OPENAI_API_KEY in .env.local",
+    };
+  }
+  return { ok: true, apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL };
 }

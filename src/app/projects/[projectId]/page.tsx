@@ -13,6 +13,7 @@ import { FilterBar } from "@/app/projects/[projectId]/filter-bar";
 import { NewTaskDialog } from "@/app/projects/[projectId]/new-task-dialog";
 import { TaskBoard } from "@/app/projects/[projectId]/task-board";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -123,6 +124,9 @@ export default async function ProjectPage({
         actions={
           <>
             <MemberStack members={members} />
+            <Button variant="outline" asChild>
+              <Link href={`/journal?projectId=${projectId}`}>Journal</Link>
+            </Button>
             <NewTaskDialog projectId={projectId} members={members} />
           </>
         }

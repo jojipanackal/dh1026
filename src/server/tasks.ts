@@ -100,7 +100,7 @@ export async function getTaskForMember(taskId: string, userId: string) {
 }
 
 async function assertAssigneeIsMember(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Tx,
   projectId: string,
   assigneeId: string | null | undefined,
 ) {
@@ -123,15 +123,24 @@ async function assertAssigneeIsMember(
   }
 }
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+export type TaskWriteOptions = {
+  tx?: Tx;
+  source?: "manual" | "journal";
+  journalEntryId?: string;
+};
+
 export async function createTask(
   userId: string,
   projectId: string,
   input: Omit<CreateTaskInput, "status"> & { status?: CreateTaskInput["status"] },
+  options: TaskWriteOptions = {},
 ) {
   if (!isUuid(projectId)) {
     throw new AppError("NOT_FOUND", "Project not found");
   }
-  return db.transaction(async (tx) => {
+  const run = async (tx: Tx) => {
     const [membership] = await tx
       .select()
       .from(projectMemberships)
@@ -173,10 +182,12 @@ export async function createTask(
         dueDate: { from: null, to: task.dueDate },
         estimateHours: { from: null, to: task.estimateHours },
       },
-      source: "manual",
+      source: options.source ?? "manual",
+      journalEntryId: options.journalEntryId ?? null,
     });
     return task;
-  });
+  };
+  return options.tx ? run(options.tx) : db.transaction(run);
 }
 
 const EDITABLE_FIELDS = [
@@ -202,11 +213,12 @@ type EditableTaskFields = {
 // Shared core for updateTask/moveTask: lock the row, verify membership,
 // validate the transition, apply the diff and record one activity event.
 // Must be called inside db.transaction.
-async function applyTaskUpdate(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+export async function applyTaskUpdate(
+  tx: Tx,
   userId: string,
   taskId: string,
   buildAfter: (before: typeof tasks.$inferSelect) => EditableTaskFields,
+  options: { source?: "manual" | "journal"; journalEntryId?: string } = {},
 ) {
   const [before] = await tx
     .select()
@@ -261,7 +273,8 @@ async function applyTaskUpdate(
     actorId: userId,
     type: "task.updated",
     changes,
-    source: "manual",
+    source: options.source ?? "manual",
+    journalEntryId: options.journalEntryId ?? null,
   });
   return updated;
 }
@@ -324,6 +337,7 @@ export async function listActivity(
       changes: activityEvents.changes,
       source: activityEvents.source,
       taskId: activityEvents.taskId,
+      journalEntryId: activityEvents.journalEntryId,
       createdAt: activityEvents.createdAt,
       actorName: users.name,
     })

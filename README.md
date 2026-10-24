@@ -38,6 +38,9 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 3. Environment setup: copy `.env.example` to `.env.local` and set `DATABASE_URL`
    to a `postgresql://` connection string, e.g.
    `postgresql://YOUR_USER@localhost:5432/project_runner`.
+   For the AI journal, set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`,
+   default `gpt-4.1-mini`). Without a key the app still runs; journal entries
+   are saved and show "AI is not configured" with a Retry button.
 4. Create the database and apply migrations:
    - `createdb project_runner` (add `-h /tmp` if your server listens on the
      `/tmp` socket)
