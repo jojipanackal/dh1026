@@ -34,9 +34,10 @@ function Shell({
             <div className="flex items-center gap-2 px-1 group-data-[collapsible=icon]:hidden">
               <Link
                 href="/"
-                className="flex min-w-0 flex-1 items-center rounded-md px-1 py-1"
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1"
               >
-                <span className="truncate text-sm font-medium">Jeera</span>
+                <span aria-hidden="true" className="brand-mark" />
+                <span className="truncate text-sm font-semibold tracking-tight">Jeera</span>
               </Link>
               <SidebarTrigger />
             </div>
@@ -66,7 +67,8 @@ function Shell({
           {/* Mobile top bar: the sidebar is an off-canvas drawer below md. */}
           <div className="flex h-12 shrink-0 items-center gap-2.5 border-b px-3 md:hidden">
             <SidebarTrigger />
-            <span className="text-sm font-medium">Jeera</span>
+            <span aria-hidden="true" className="brand-mark size-5 rounded-md" />
+            <span className="text-sm font-semibold tracking-tight">Jeera</span>
           </div>
           <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">
             {children}
