@@ -234,7 +234,7 @@ export function JournalChat({
     <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={areaRef}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-6"
+        className="mx-auto min-h-0 w-full max-w-[52rem] flex-1 overflow-y-auto px-4 py-6 [scrollbar-gutter:stable]"
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (
@@ -288,7 +288,7 @@ export function JournalChat({
         </div>
       </div>
 
-      <div className="shrink-0 px-4 pb-5 pt-2">
+      <div className="shrink-0 px-4 pt-2">
         <div className="mx-auto max-w-3xl">
           <div
             className={cn(

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T00:53:27+05:30 — Journal chat scrollbar and composer position
+
+- Changed: In the journal thread, the scrollbar now sits right next to the message column (bounded scroll area `max-w-[52rem]` + `scrollbar-gutter: stable`) instead of at the page edge, and the composer sits at the bottom of the thread with less dead space below it.
+- Why: User feedback — the scrollbar looked like a misplaced page scrollbar and the composer appeared to float mid-page.
+- Validation: Measured in a browser (Playwright, 1440x900): the scrollbar gutter is 15px beside the message column, the composer is anchored near the viewport bottom, and the page does not scroll (document height = viewport). Lint and typecheck pass.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T00:45:00+05:30 — Phase 4: project overview with progress and blockers
 
 - Changed: `/projects/[projectId]` opens on a new "Overview" view (first tab, now the default). `src/server/overview.ts` adds `getProjectOverview` (membership-checked): status counts and done %, currently blocked tasks with who marked them and the recorded reason (read from `activity_events`, including journal-applied `blockedReason`), overdue open tasks, upcoming priorities (high/urgent or due within 7 days), and blockers reported in journal entries that are still awaiting review. Rules live in `src/lib/overview.ts` (`latestBlockerInfo`, `dayDiff`, `isStalled`) and the UI in `overview-view.tsx`. In-progress tasks with no change for 4+ days appear under "Needs attention" explicitly badged "inferred — not reported", keeping reported blockers distinct from system guesses. `src/lib/dates.ts` gains `todayIst`, reused by `isOverdue`.
