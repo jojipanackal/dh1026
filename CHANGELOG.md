@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:28:39+05:30 — Add installable PWA baseline
+
+- Changed: Added the Next.js web app manifest, Jeera icon, mobile viewport/theme metadata, Apple web-app metadata, service-worker registration, static asset caching, and an offline fallback page. The worker deliberately avoids caching dynamic task/API responses.
+- Why: Jeera is a daily, mobile-first Agent surface and should be installable like a lightweight work app without claiming that task mutations work offline.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), and HTTP checks for `/manifest.webmanifest` (200), `/sw.js` (200 with service-worker headers), and `/offline.html` (200) passed.
+- Limitations: Dynamic task data and writes still require a network connection; push notifications, background sync, and offline mutation queues are not implemented.
+
 ## 2026-10-25T03:25:38+05:30 — Add the Integrations page
 
 - Changed: Added an Integrations page to the primary navigation with connector cards for Telegram, GitHub, Slack, and Google Chat. Telegram reflects server-side configuration without exposing secrets and links to the webhook setup; planned connectors explain their future capabilities and shared-ingress model.

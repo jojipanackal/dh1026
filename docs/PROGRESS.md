@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## PWA milestone — Installable mobile Agent shell (2026-10-25T03:28:39+05:30)
+
+- Implemented:
+  - Added `/manifest.webmanifest` with standalone display, Jeera branding, theme colors, and install icon metadata.
+  - Added a client-side service-worker registration, static asset caching, no-cache service-worker headers, and an offline fallback page.
+  - Added mobile viewport and Apple web-app metadata.
+- Files and areas changed: `src/app/manifest.ts`, `src/app/layout.tsx`, `src/components/pwa-register.tsx`, `public/sw.js`, `public/icon.svg`, `public/offline.html`, `next.config.ts`, `README.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (95/95), and HTTP checks for the manifest, service worker, and offline fallback pass.
+- Decisions affecting later phases: The service worker caches static assets only; task/API responses remain network-backed so the app does not present stale execution state as current.
+- Remaining limitations: No push notifications, background sync, or offline mutation queue. PWA installability should be checked on the deployed HTTPS domain in each target browser.
+- Next phase: Add push notifications and durable follow-up delivery after the task-runner policy is stable.
+
 ## Integrations milestone — Connector control plane (2026-10-25T03:25:38+05:30)
 
 - Implemented:
