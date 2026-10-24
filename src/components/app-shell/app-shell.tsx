@@ -6,7 +6,6 @@ import { cookies } from "next/headers";
 import { SquareKanban } from "lucide-react";
 
 import { AppNav } from "@/components/app-shell/app-nav";
-import { CollapsedLogoButton } from "@/components/app-shell/collapsed-logo-button";
 import { Conversations } from "@/components/app-shell/conversations";
 import { ThemeToggle } from "@/components/app-shell/theme-toggle";
 import { UserSwitcher } from "@/components/app-shell/user-switcher";
@@ -55,7 +54,7 @@ function Shell({
               <SidebarTrigger />
             </div>
             <div className="hidden justify-center group-data-[collapsible=icon]:flex">
-              <CollapsedLogoButton />
+              <SidebarTrigger />
             </div>
           </SidebarHeader>
 

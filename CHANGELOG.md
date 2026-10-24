@@ -22,6 +22,13 @@ Add entries as you build, newest first:
 - Validation: Measured in a browser (Playwright, 1440x900): the scrollbar gutter is 15px beside the message column, the composer is anchored near the viewport bottom, and the page does not scroll (document height = viewport). Lint and typecheck pass.
 - Limitations: None identified in these checks.
 
+## 2026-10-25T01:01:00+05:30 — Collapsed sidebar shows expand icon
+
+- Changed: Collapsed (icon) sidebar header now renders `SidebarTrigger` (PanelLeft icon, expands on click) instead of the logo chip; `collapsed-logo-button.tsx` removed.
+- Why: User asked for the expand icon rather than the logo in the collapsed view.
+- Validation: lint and typecheck pass; dev server (with `sidebar_state=false`) renders the trigger in the collapsed header.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T00:55:00+05:30 — Rename product to Jeera
 
 - Changed: Product name "Project Runner" → "Jeera" in the page title, sidebar and mobile top bar, journal chat copy, the AI system prompt, overview description, `package.json`/`package-lock.json` name, `SUBMISSION.md`, `README.md`, `docs/PRD.md`, and `docs/PHASES.md`.
