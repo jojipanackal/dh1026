@@ -6,6 +6,7 @@ import { tasks } from "@/db/schema";
 import { addProjectMember, createProject } from "@/server/projects";
 import {
   listAgentMessages,
+  runGlobalFollowUpSweep,
   runTeamFollowUpSweep,
 } from "@/server/agent-messages";
 import { createTask } from "@/server/tasks";
@@ -45,5 +46,34 @@ describe("runTeamFollowUpSweep", () => {
     expect(messages[0].body).toContain("Build page");
     expect(messages[0].payload.kind).toBe("follow_up");
     expect(await runTeamFollowUpSweep(owner.id, now)).toEqual({ created: 0 });
+  });
+
+  it("global sweep checks projects without a browser user", async () => {
+    const owner = await insertUser("Owner", "owner@example.com");
+    const teammate = await insertUser("Teammate", "teammate@example.com");
+    const project = await createProject(owner.id, { name: "Launch" });
+    await addProjectMember(owner.id, project.id, {
+      userId: teammate.id,
+      role: "member",
+    });
+    const task = await createTask(owner.id, project.id, {
+      title: "Test staging",
+      description: null,
+      status: "blocked",
+      priority: "high",
+      assigneeId: teammate.id,
+      dueDate: null,
+      estimateHours: 2,
+    });
+    const now = new Date("2026-10-25T12:00:00.000Z");
+    await db
+      .update(tasks)
+      .set({ updatedAt: new Date("2026-10-25T11:45:00.000Z") })
+      .where(eq(tasks.id, task.id));
+
+    expect(await runGlobalFollowUpSweep(now)).toEqual({ created: 1 });
+    expect((await listAgentMessages(teammate.id))[0]?.body).toContain(
+      "Test staging",
+    );
   });
 });

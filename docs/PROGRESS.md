@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Background worker milestone — Server-side five-minute check-ins (2026-10-25T03:44:45+05:30)
+
+- Implemented:
+  - Added a standalone Node worker with continuous and one-shot modes: `npm run agent:worker` and `npm run agent:follow-ups`.
+  - Added a global sweep over all project memberships, PostgreSQL advisory locking, and graceful shutdown.
+  - Kept the web heartbeat as a local fallback and retained database deduplication.
+- Files and areas changed: `scripts/follow-up-worker.ts`, `package.json`, `src/db/index.ts`, `src/server/agent-messages.ts`, `tests/integration/agent-messages.test.ts`, `README.md`, `docs/DEMO.md`, and `docs/TECH.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (50/50), one-shot worker execution, continuous worker start/stop, and `git diff --check` pass.
+- Decisions affecting later phases: The worker is a separate process, not a second app or task database. Hosting must provide a process supervisor or scheduled-job trigger; Telegram delivery and quiet hours remain policy work.
+- Remaining limitations: No hosted worker deployment, restart supervisor, follow-up acknowledgement, or channel delivery yet.
+- Next phase: Validate the worker in one-shot mode against the demo database and connect delivery policy.
+
 ## Demo automation milestone — Five-minute team check-ins (2026-10-25T03:39:04+05:30)
 
 - Implemented:
@@ -30,9 +42,9 @@ movement, then stale-work follow-ups.
   - Added five-minute browser heartbeat, follow-up cards with task links, five-minute bucket deduplication, and integration coverage.
 - Files and areas changed: `scripts/seed-demo.ts`, `src/lib/agent/messages.ts`, `src/server/agent-messages.ts`, `src/app/api/agent/follow-ups/route.ts`, `src/app/journal/page.tsx`, `src/app/journal/journal-chat.tsx`, `tests/integration/agent-messages.test.ts`, `docs/DEMO.md`, and project records.
 - Checks run and results: Demo seed created 6 tasks and 3 dependencies; HTTP smoke check showed stale follow-ups. `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (49/49), and `git diff --check` pass.
-- Decisions affecting later phases: Follow-ups are based on explicit task evidence or task update time, assigned to the task owner, and deduplicated per five-minute bucket. The open browser is only a demo trigger; production delivery must move to durable scheduling with quiet hours and escalation rules.
-- Remaining limitations: No production scheduler, push/Telegram follow-up delivery, quiet hours, acknowledgement tracking, or maximum-nag policy yet.
-- Next phase: Connect durable follow-up scheduling and Telegram delivery after the demo policy is accepted.
+- Decisions affecting later phases: Follow-ups are based on explicit task evidence or task update time, assigned to the task owner, and deduplicated per five-minute bucket. The browser heartbeat is a local fallback; production delivery uses the standalone worker with quiet hours and escalation rules.
+- Remaining limitations: No hosted worker deployment, push/Telegram follow-up delivery, quiet hours, acknowledgement tracking, or maximum-nag policy yet.
+- Next phase: Validate the standalone worker and connect durable delivery policy.
 
 ## PWA milestone — Installable mobile Agent shell (2026-10-25T03:28:39+05:30)
 

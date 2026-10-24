@@ -76,20 +76,32 @@ appears on the task and in its history.
 
 ## Five-minute team check-ins
 
-When the Agent page opens, Jeera runs a team follow-up sweep immediately. While
-the page remains open, the browser triggers another sweep every five minutes.
-The sweep checks active work for every member of the selected user's projects.
-If the assigned person has no recent evidence, Jeera writes a deduplicated
-check-in to that person's Agent conversation:
+For a real demo, run this in a separate terminal alongside Next.js:
+
+```bash
+npm run agent:worker
+```
+
+The worker checks every project membership every five minutes, even when no
+browser is open. It uses a PostgreSQL advisory lock so two worker copies do
+not compete, and the database dedupe key makes retries safe. For cron or a
+platform scheduled job, use the one-shot command instead:
+
+```bash
+npm run agent:follow-ups
+```
+
+The Agent page still runs a sweep immediately on open and every five minutes
+as a local browser fallback. If an assigned person has no recent evidence,
+Jeera writes a deduplicated check-in to that person's Agent conversation:
 
 ```text
 Checking in, George: “Add the signup form” has had no update for about 40 minutes. It is still waiting on Joji. What changed, what is blocked, or is it ready to close?
 ```
 
 Switch the demo identity to George or Vaishakh to show their check-in in their
-own conversation. This is a demo heartbeat, not a production scheduler; a
-real deployment should run the same `runTeamFollowUpSweep` service from a
-durable cron/queue and add quiet hours before contacting people.
+own conversation. The worker currently records web Agent messages; Telegram
+delivery and quiet hours are separate follow-up policy work.
 
 ## Connect Telegram for the demo
 

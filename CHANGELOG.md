@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:44:45+05:30 — Move follow-ups into a server-side worker
+
+- Changed: Added `scripts/follow-up-worker.ts`, `npm run agent:worker`, and `npm run agent:follow-ups`. The continuous worker scans every project membership, uses a PostgreSQL advisory lock, and shares the existing evidence-based sweep and database deduplication. The browser heartbeat remains a local fallback.
+- Why: Follow-ups must happen when nobody has the Agent page open; a separate process is the simplest reliable deployment boundary without creating a second task system.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (50/50), `npm run agent:follow-ups` (one-shot completed with 0 duplicate messages), `npm run agent:worker` (started, ran one tick, and stopped cleanly on SIGINT), and `git diff --check` passed.
+- Limitations: The repository does not deploy or supervise the worker. Production still needs a process supervisor or hosted scheduled job, plus quiet hours, acknowledgement/escalation policy, and Telegram delivery.
+
 ## 2026-10-25T03:39:04+05:30 — Add five-minute demo follow-ups and simplify the demo story
 
 - Changed: Reset the dedicated demo project to a simple landing-page launch with six connected tasks and a three-step dependency chain. Added `runTeamFollowUpSweep`, a follow-up API route compatible with the project's Next.js cache-components mode, five-minute browser heartbeat, stale-evidence check-ins for every teammate in the selected user's projects, and follow-up message rendering in Agent conversations.

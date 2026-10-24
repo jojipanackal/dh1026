@@ -68,6 +68,8 @@ workflow before adding external chat adapters.
    - `npm run build` — production build (does not require a live database)
    - `npm run db:generate` — regenerate migrations after schema changes
    - `npm run db:migrate` / `npm run db:seed` / `npm run db:studio`
+   - `npm run agent:worker` — run the server-side five-minute follow-up worker
+   - `npm run agent:follow-ups` — run one follow-up sweep for cron or a platform scheduler
    - `curl http://localhost:3000/api/health` — returns JSON health status
      (200 when the database is reachable, 503 otherwise)
 
@@ -110,23 +112,23 @@ workflow before adding external chat adapters.
   Integrations page shows connector configuration and planned GitHub/Slack/
   Google Chat adapters. Jeera is installable as a PWA from a supporting
   browser's install control and includes a static-asset service worker plus an
-  offline fallback screen. The Agent also runs a five-minute demo follow-up
-  sweep over active work and writes deduplicated check-ins to each assignee's
-  conversation.
+  offline fallback screen. The Agent has a five-minute browser fallback, and
+  the standalone Node worker runs the same deduplicated sweep over all project
+  memberships and writes check-ins to each assignee's conversation.
 - Known limitations: Knowledge remains an honest placeholder — that feature
   lands in a later phase (see [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
   switcher only). Slack and Google Chat are represented by the normalized
   channel boundary but external OAuth/webhook adapters are not connected yet.
-  The five-minute follow-up sweep is demo-enabled while the web Agent page is
-  open; durable automatic delivery is not enabled yet, and the morning
+  The browser heartbeat is only a fallback; run `npm run agent:worker` as a
+  separate long-lived process or schedule `npm run agent:follow-ups` every five
+  minutes. The repository does not include a hosted worker deployment,
+  process supervisor, quiet hours, or channel delivery policy yet. The morning
   briefing currently triggers on opening the web Agent thread rather than from
   a scheduler or Slack/Google Chat. Telegram is wired for a single configured
   demo identity, but per-person Telegram account linking and Telegram review
   buttons are not implemented yet. The PWA does not support offline task
   reads/writes, push notifications, background sync, or offline mutation
-  queues yet. Follow-ups currently use the open Agent page as their heartbeat;
-  a production deployment needs durable scheduling, quiet hours, and delivery
-  policy. Manually blocked tasks
+  queues yet. Manually blocked tasks
   have no reason field yet, so the overview can only show "no reason
   recorded" for them. Under Next.js
   cacheComponents, a not-found page rendered from request-time checks

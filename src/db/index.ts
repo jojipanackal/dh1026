@@ -1,5 +1,3 @@
-import "server-only";
-
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
@@ -27,8 +25,9 @@ function getDb(): NodePgDatabase<typeof schema> {
   return globalForDb.db;
 }
 
-// Lazily forwards to the real client so importing this module does not
-// require DATABASE_URL (e.g. during `next build`).
+// Shared by the Next.js server and the standalone follow-up worker. Lazily
+// forwards to the real client so importing this module does not require
+// DATABASE_URL (e.g. during `next build`).
 export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
   get(_target, prop, receiver) {
     const value = Reflect.get(getDb(), prop, receiver);

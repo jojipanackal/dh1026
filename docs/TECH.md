@@ -178,14 +178,14 @@ Begin with simple rules that can be explained and tested. Add more sophisticated
 
 Follow-ups may require work to happen after the initial request.
 
-For the MVP:
-- Prefer the simplest reliable scheduling mechanism supported by the deployment environment.
-- Keep follow-up rules explicit and configurable where necessary.
-- Make repeated execution safe.
-- Record when a follow-up was generated, sent, answered, dismissed, or superseded.
-- Avoid sending duplicate or irrelevant reminders.
+For the MVP, background work runs in a separate Node process in this repository:
+- `npm run agent:worker` runs the five-minute sweep continuously.
+- `npm run agent:follow-ups` runs one sweep for cron, container, or platform schedulers.
+- The worker scans all project memberships, uses a PostgreSQL advisory lock to prevent concurrent copies, and relies on the unique `(user_id, dedupe_key)` constraint for retry-safe message creation.
+- The web heartbeat remains a fallback for local demos, not the production scheduler.
+- Follow-up rules stay explicit and evidence-based; channel delivery, quiet hours, acknowledgement, dismissal, and escalation are separate policy work.
 
-Do not introduce a queue, separate worker service, or workflow platform unless the chosen deployment genuinely needs it. If background scheduling cannot be performed reliably in the initial hosting environment, document the limitation and choose a suitable alternative.
+The worker is intentionally not a second application or task system. It imports the same service layer and writes to the same PostgreSQL source of truth. A deployment still needs a process supervisor or hosted scheduled job to restart/run it reliably.
 
 ## 9. Search and Project Knowledge
 

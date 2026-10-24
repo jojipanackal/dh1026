@@ -1,5 +1,3 @@
-import "server-only";
-
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -189,7 +187,7 @@ export async function ensureMorningBriefing(userId: string, now = new Date()) {
   return existing ? toAgentMessage(existing) : null;
 }
 
-const FOLLOW_UP_INTERVAL_MINUTES = 5;
+export const FOLLOW_UP_INTERVAL_MINUTES = 5;
 
 type FollowUpTask = {
   id: string;
@@ -212,17 +210,11 @@ function ageLabel(minutes: number) {
 }
 
 /**
- * Demo-friendly follow-up sweep. It scans active work for every member of the
- * selected user's projects, but writes messages only to the assigned person.
- * A five-minute bucket makes repeated browser/cron triggers idempotent.
+ * Follow-up sweep for active work. It scans projects visible to the selected
+ * user, but writes messages only to the assigned person. A five-minute bucket
+ * makes repeated browser/worker/cron triggers idempotent.
  */
-export async function runTeamFollowUpSweep(userId: string, now = new Date()) {
-  const projectRows = await db
-    .select({ id: projects.id })
-    .from(projectMemberships)
-    .innerJoin(projects, eq(projects.id, projectMemberships.projectId))
-    .where(eq(projectMemberships.userId, userId));
-  const projectIds = projectRows.map((project) => project.id);
+async function runFollowUpSweepForProjects(projectIds: string[], now: Date) {
   if (projectIds.length === 0) return { created: 0 };
 
   const memberRows = await db
@@ -232,6 +224,7 @@ export async function runTeamFollowUpSweep(userId: string, now = new Date()) {
     .where(inArray(projectMemberships.projectId, projectIds));
   const memberNames = new Map(memberRows.map((member) => [member.userId, member.name]));
   const memberIds = [...memberNames.keys()];
+  if (memberIds.length === 0) return { created: 0 };
 
   const tasksForFollowUp: FollowUpTask[] = await db
     .select({
@@ -353,6 +346,24 @@ export async function runTeamFollowUpSweep(userId: string, now = new Date()) {
     if (result.length > 0) created++;
   }
   return { created };
+}
+
+export async function runTeamFollowUpSweep(userId: string, now = new Date()) {
+  const projectRows = await db
+    .select({ id: projects.id })
+    .from(projectMemberships)
+    .innerJoin(projects, eq(projects.id, projectMemberships.projectId))
+    .where(eq(projectMemberships.userId, userId));
+  const projectIds = projectRows.map((project) => project.id);
+  return runFollowUpSweepForProjects(projectIds, now);
+}
+
+export async function runGlobalFollowUpSweep(now = new Date()) {
+  const rows = await db
+    .select({ projectId: projectMemberships.projectId })
+    .from(projectMemberships);
+  const projectIds = [...new Set(rows.map((row) => row.projectId))];
+  return runFollowUpSweepForProjects(projectIds, now);
 }
 
 export async function listAgentMessages(userId: string) {
