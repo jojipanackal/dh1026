@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Team milestone — Membership-scoped team directory (2026-10-25T03:19:17+05:30)
+
+- Implemented:
+  - Replaced the Team placeholder with a directory of people from the selected user's projects.
+  - Each member card shows name, email, project roles, project links, open workload, and total task count.
+  - Added membership-scoped aggregation so users from unrelated projects are not exposed.
+- Files and areas changed: `src/server/team.ts`, `src/app/team/page.tsx`, `tests/integration/team.test.ts`, `README.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (48/48), and `git diff --check` pass.
+- Decisions affecting later phases: Team visibility follows the existing project-membership boundary; this page does not become a global user directory.
+- Remaining limitations: The directory is read-only and does not yet show availability, skills, or Telegram account links.
+- Next phase: Use this team surface as the identity-linking target for Telegram users.
+
 ## Telegram milestone — First delivery adapter and focused navigation (2026-10-25T03:10:42+05:30)
 
 - Implemented:

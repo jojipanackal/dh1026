@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:19:17+05:30 — Show the team directory
+
+- Changed: Replaced the Team placeholder with a membership-scoped directory showing each teammate's name, email, projects, role, open workload, and total assigned task count. Added a database-backed team query and integration coverage for project visibility and workload counts.
+- Why: The execution agent needs a visible people surface so the team behind status, dependencies, and assignments is discoverable.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (48/48), and `git diff --check` passed.
+- Limitations: The directory is read-only; profile editing, availability, and per-person Telegram identity linking remain future work.
+
 ## 2026-10-25T03:10:42+05:30 — Add Telegram delivery adapter and simplify navigation
 
 - Changed: Removed Overview and Knowledge from the primary sidebar navigation while keeping their routes available. Added `telegram` as a conversation channel, a secured `/api/telegram/webhook` Route Handler, deterministic Telegram retry keys, Telegram reply formatting, Bot API `sendMessage` delivery, and optional token/secret/default-user/chat configuration in `.env.example`. Generated and applied migration `drizzle/0006_misty_mandrill.sql`.
