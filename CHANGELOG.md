@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:03:35+05:30 — Add the team-delivery demo dataset
+
+- Changed: Added `npm run db:seed:demo` and `docs/DEMO.md`. The idempotent demo seed creates the Kochi Metro App execution scenario with Joji, George, Vaishakh, and Jaice; six tasks across todo, in-progress, blocked, and done states; an explicit dependency waiting on George; staging/payment evidence; and completion details on the finished decision task. The runbook documents the demo conversation and the Telegram adapter direction.
+- Why: The execution agent needs a believable end-to-end story for the demo: a lead can ask what a teammate is doing, see who is waiting on whom, and close work with verifiable handoff details.
+- Validation: `npm run db:seed:demo` ran twice with the same project id; a read-only count verified 4 members, 6 tasks, 1 open dependency, and 3 seeded evidence entries. `npm run typecheck`, `npm run lint`, `npm test` (92/92), `npm run test:integration` (47/47), and an HTTP smoke check of the seeded project page (200) passed.
+- Limitations: Telegram is documented at the normalized ingress boundary but no bot token, identity mapping, webhook, or deployment has been configured.
+
 ## 2026-10-25T02:56:50+05:30 — Add the morning task-runner loop
 
 - Changed: Added idempotent daily morning briefings to the Agent conversation, showing assigned open work, blocked/in-progress/due counts, dependency context, and a prompt to declare the first commitment of the day. Added completion details to task creation, edits, journal proposals, task history, and the done-task flow. Added migration `drizzle/0005_purple_moira_mactaggert.sql` and integration coverage for both behaviors.

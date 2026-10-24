@@ -22,6 +22,17 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Demo milestone — Seeded team-delivery story (2026-10-25T03:03:35+05:30)
+
+- Implemented:
+  - Added an idempotent `npm run db:seed:demo` script for the dedicated Kochi Metro App execution demo.
+  - Seeded four project members, six tasks across todo/in-progress/blocked/done, an open dependency waiting on George, three teammate evidence entries, and completion details on the finished decision task.
+  - Added [docs/DEMO.md](DEMO.md) with the demo sequence, expected Agent questions, dependency-resolution step, completion flow, and the future Telegram adapter boundary.
+- Checks run and results: The seed ran twice with a stable project id; a read-only query verified 4 members, 6 tasks, 1 open dependency, and 3 evidence entries. Typecheck, lint, 92 unit tests, 47 integration tests, `git diff --check`, and an HTTP 200 smoke check of the seeded project page passed.
+- Decisions affecting later phases: Telegram remains a delivery adapter over the normalized agent ingress; it does not get separate task or dependency logic. No token, webhook, or identity mapping is stored in the repository.
+- Remaining limitations: Telegram is not connected yet, and the demo seed is additive rather than a destructive database reset.
+- Next phase: Implement and test the Telegram webhook/identity adapter when a bot token and deployment target are available.
+
 ## Phase 10 milestone — Morning task runner and completion records (2026-10-25T02:56:50+05:30)
 
 - Implemented:

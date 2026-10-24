@@ -51,7 +51,9 @@ workflow before adding external chat adapters.
      `/tmp` socket)
    - `createdb project_runner_test` (only needed for `npm run test:integration`)
    - `npm run db:migrate`
-5. Seed demo users: `npm run db:seed` (idempotent, 4 users only)
+5. Seed demo users: `npm run db:seed` (idempotent, 4 users only). For the
+   realistic task-runner story, run `npm run db:seed:demo` too; see
+   [docs/DEMO.md](docs/DEMO.md).
 6. Start the project: `npm run dev`, then open http://localhost:3000
 7. Click the demo user name at the bottom of the sidebar to open the user
    popup, then pick a user (the choice is stored in an httpOnly cookie — demo
@@ -100,7 +102,8 @@ workflow before adding external chat adapters.
   against a separate test database. The Agent creates one persisted morning
   briefing per user/day when the web conversation opens, prompts the user to
   state the first commitment, and preserves completion details when work is
-  closed.
+  closed. A repeatable fake team-delivery dataset is available through
+  `npm run db:seed:demo`.
 - Known limitations: Team and Knowledge pages are honest placeholders —
   those features land in later phases (see
   [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
