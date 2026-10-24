@@ -29,6 +29,13 @@ Add entries as you build, newest first:
 - Validation: Measured in a browser (Playwright, 1440x900): the scrollbar gutter is 15px beside the message column, the composer is anchored near the viewport bottom, and the page does not scroll (document height = viewport). Lint and typecheck pass.
 - Limitations: None identified in these checks.
 
+## 2026-10-25T01:15:00+05:30 — User switcher as an account-style menu
+
+- Changed: Sidebar footer user control restyled to the account-menu pattern — avatar + name on the left, `ChevronsUpDown` icon on the right; the select popup opens upward (`position="popper"`, `side="top"`) and each item shows the user's initial chip.
+- Why: User feedback — the switcher should read as a clickable account menu, not a form field.
+- Validation: lint and typecheck pass; rendered page shows the current user's name with the up/down icon.
+- Limitations: Popup positioning checked via markup only (Radix renders the list on open).
+
 ## 2026-10-25T01:10:00+05:30 — Simplify sidebar footer and rename demo users
 
 - Changed: Removed the "Conversations" rail from the sidebar (`conversations.tsx`, `conversations-nav.tsx` deleted); the journal page now shows its project picker on all breakpoints instead of relying on the rail (`MobileProjectSelect` → `ProjectSelect`). Removed the "Demo identity · no auth" badge from the footer; the user switcher trigger is now full-width so clicking the name opens the user menu. Demo users renamed to Joji, George, Vaishakh, Jaice in `scripts/seed.ts` and in the dev database (the unused fifth seeded user was deleted; it had no references). `excerpt` helper removed from `lib/format.ts` (only the rail used it).

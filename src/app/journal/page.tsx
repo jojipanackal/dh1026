@@ -69,8 +69,6 @@ export default async function JournalPage({
     listJournalThread(user.id, selected),
     getProjectForMember(selected, user.id),
   ]);
-  const projectName = projectList.find((p) => p.id === selected)?.name ?? "";
-
   const entries: ThreadEntry[] = thread.map((e) => ({
     id: e.id,
     body: e.body,
