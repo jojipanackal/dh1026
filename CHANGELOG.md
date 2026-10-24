@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-24T23:08:00+05:30 — Phase 2: projects, teams, and tasks
+
+- Changed: New tables `projects`, `project_memberships`, `tasks`, `activity_events` (migration `0001`); task lifecycle, validation, and diff rules (`src/lib/tasks/`); membership-checked services (`src/server/`); demo user switcher; `/projects`, project detail, and task detail pages with forms and activity history; `npm run db:seed`; unit and integration tests; nav Tasks → Projects.
+- Why: Phase 2 of `docs/PHASES.md`. Projects, membership, and the task workflow must exist before the journal and AI phases can create or update tasks.
+- Validation: lint and typecheck pass; 45/45 unit and 11/11 integration tests pass; build passes; migrate and seed are idempotent. Service-level end-to-end flow and HTTP page checks per user role. Fixed and re-verified a crash on non-UUID cookies and route params.
+- Limitations: Demo identity only, no real auth; dynamic not-found pages return HTTP 200; server actions not yet browser-tested; no delete or archive.
+
 ## 2026-10-24T22:42:00+05:30 — Phase 1: foundation and application shell
 
 - Changed: Scaffolded Next.js 16.4.2 + TypeScript + Tailwind v4 + shadcn/ui at the repo root; app shell and navigation (`src/app/**`, `src/components/**`); Zod env validation (`src/lib/env.ts`); Drizzle ORM + node-postgres connection, `users` schema, and initial migration (`src/db/**`, `drizzle.config.ts`, `drizzle/`); `GET /api/health`; loading/empty/error/not-found/global-error states; Vitest tests (`tests/env.test.ts`); `.env.example`; README setup and commands; `docs/PROGRESS.md` Phase 1 report.

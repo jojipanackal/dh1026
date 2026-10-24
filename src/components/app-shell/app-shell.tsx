@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+
 import { AppNav } from "@/components/app-shell/app-nav";
+import { UserSwitcher } from "@/components/app-shell/user-switcher";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +10,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <span className="px-3 text-base font-semibold tracking-tight">
           Project Runner
         </span>
-        <AppNav />
+        <Suspense>
+          <AppNav />
+        </Suspense>
+        <div className="md:mt-auto">
+          <UserSwitcher />
+        </div>
       </header>
       <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
     </div>

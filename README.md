@@ -41,28 +41,47 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 4. Create the database and apply migrations:
    - `createdb project_runner` (add `-h /tmp` if your server listens on the
      `/tmp` socket)
+   - `createdb project_runner_test` (only needed for `npm run test:integration`)
    - `npm run db:migrate`
-5. Start the project: `npm run dev`, then open http://localhost:3000
-6. Run checks or tests:
+5. Seed demo users: `npm run db:seed` (idempotent, 5 users only)
+6. Start the project: `npm run dev`, then open http://localhost:3000
+7. Pick a demo user in the sidebar ("Demo identity — no authentication";
+   the choice is stored in an httpOnly cookie, not a login).
+8. Run checks or tests:
    - `npm run lint` — ESLint
    - `npm run typecheck` — `tsc --noEmit`
    - `npm test` — Vitest unit tests
+   - `npm run test:integration` — service-level tests against a dedicated
+     test database; requires `TEST_DATABASE_URL` in `.env.local`
+     (see `.env.example`), which must differ from `DATABASE_URL`
    - `npm run build` — production build (does not require a live database)
    - `npm run db:generate` — regenerate migrations after schema changes
+   - `npm run db:migrate` / `npm run db:seed` / `npm run db:studio`
    - `curl http://localhost:3000/api/health` — returns JSON health status
      (200 when the database is reachable, 503 otherwise)
 
 ### Current status
 
 - Working features: application shell with responsive navigation (Overview,
-  Journal, Tasks, Team, Knowledge); Overview page with a live database health
-  card; `GET /api/health` endpoint; PostgreSQL connection via Drizzle ORM with
-  a `users` table migration; shared loading/empty/error state components;
-  custom 404 and error pages; environment validation (`parseServerEnv`) with
-  unit tests.
-- Known limitations: Journal, Tasks, Team, and Knowledge pages are honest
+  Journal, Projects, Team, Knowledge); demo user switcher (httpOnly cookie,
+  no authentication); project creation and listing with per-status task
+  counts; project detail page with tasks table, status filter, members
+  panel, owner-only "add member" form, and recent activity feed; task
+  create/edit forms with lifecycle validation (todo, in_progress, blocked,
+  done, cancelled) and per-field change history; `completed_at` set on done
+  and cleared on reopen; activity events recorded for project/member/task
+  changes; Overview page with a live database health card;
+  `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
+  (`users`, `projects`, `project_memberships`, `tasks`, `activity_events`);
+  shared loading/empty/error state components; custom 404 and error pages;
+  environment validation (`parseServerEnv`) with unit tests; service-level
+  integration tests against a separate test database.
+- Known limitations: Journal, Team, and Knowledge pages are honest
   placeholders — those features land in later phases (see
-  [docs/PHASES.md](docs/PHASES.md)). No authentication yet.
+  [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
+  switcher only). Under Next.js cacheComponents, a not-found page rendered
+  from request-time checks (e.g. a non-member opening a project URL)
+  streams with a 200 status — a platform limitation, not a data leak.
 - Libraries, APIs, and public datasets used:
   - Next.js, React, Tailwind CSS — https://nextjs.org, https://tailwindcss.com
   - shadcn/ui components — https://ui.shadcn.com
