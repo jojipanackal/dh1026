@@ -17,6 +17,12 @@
 - Validate inputs, handle errors explicitly, and show useful failure messages. Do not hide failures behind fabricated success or demo data.
 - Keep changes focused. Explain the reason for non-obvious decisions in short comments or project documentation.
 
+## Use Context7 for library documentation
+
+- Always use the Context7 MCP server, without being asked, for library or API documentation, code generation that uses a library, and setup or configuration steps.
+- Look up the library first, then fetch the docs for the version this project uses. Prefer Context7 over memory or web search for library behavior.
+- If Context7 has no docs for a library or is unavailable, say so, then use the official documentation.
+
 ## Document every meaningful change
 
 - Update [CHANGELOG.md](CHANGELOG.md) in the same commit as each meaningful change. Record the date and time with timezone, what changed, why, the affected files or feature, validation performed, and known limitations.

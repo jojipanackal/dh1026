@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-24T22:24:23+05:30 — Add Context7 documentation rule
+
+- Changed: `AGENTS.md`.
+- Why: Agents should fetch current library docs through Context7 by default instead of relying on memory.
+- Validation: Reviewed the new section for consistency with the rest of `AGENTS.md`.
+- Limitations: None identified in these checks.
+
 ## 2026-10-24T22:16:09+05:30 — De-duplicate Project Runner planning docs
 
 - Changed: `docs/TECH.md`, `docs/PHASES.md`, `docs/PROGRESS.md`.
