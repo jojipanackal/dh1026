@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:25:00+05:30 — Fix legacy journal rendering
+
+- Changed: Made the context-memory UI backward-compatible with journal interpretations created before `contextNotes` existed.
+- Why: Existing conversation history must remain readable after adding new agent memory fields.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (97/97), authenticated `/journal` HTTP smoke check (200), and `git diff --check` passed.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T05:07:29+05:30 — Remember coordination context and respect pauses
 
 - Changed: Added structured task-linked context notes for progress, pauses, resumptions, handoffs, next steps, and explicit check-in intervals. Teammate status answers now use the latest context evidence, context-only updates can be saved without changing task status, and the follow-up worker defers timed pauses. The demo includes a seeded interruption and a guided prompt.

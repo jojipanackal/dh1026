@@ -112,6 +112,8 @@ export function ProposalCard({
   const [blockers, setBlockers] = useState(() =>
     resolved.blockers.map((b) => ({ checked: b.taskId !== null })),
   );
+  // Older journal entries were stored before contextNotes existed.
+  const contextNotes = resolved.contextNotes ?? [];
 
   const count =
     updates.filter((u) => u.checked).length +
@@ -122,7 +124,7 @@ export function ProposalCard({
     resolved.taskUpdates.length > 0 ||
     resolved.newTasks.length > 0 ||
     resolved.blockers.length > 0 ||
-    resolved.contextNotes.length > 0;
+    contextNotes.length > 0;
 
   function apply() {
     startTransition(async () => {
@@ -205,7 +207,7 @@ export function ProposalCard({
   return (
     <div className="mt-2 rounded-xl border bg-card">
       <div className="flex flex-col divide-y text-sm">
-        {resolved.contextNotes.map((note, i) => (
+        {contextNotes.map((note, i) => (
           <div key={`c${i}`} className="bg-brand/5 px-3 py-2.5">
             <div className="flex items-start gap-2.5">
               <span className="mt-0.5 rounded-full border border-brand/30 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand">
@@ -713,7 +715,7 @@ export function ProposalCard({
         <Button
           size="sm"
           onClick={apply}
-          disabled={pending || (count === 0 && resolved.contextNotes.length === 0)}
+          disabled={pending || (count === 0 && contextNotes.length === 0)}
         >
           {pending
             ? "Saving…"
@@ -725,7 +727,7 @@ export function ProposalCard({
           Dismiss
         </Button>
         <span className="text-xs text-muted-foreground max-sm:basis-full">
-          {resolved.contextNotes.length > 0
+          {contextNotes.length > 0
             ? "Context is kept with the journal and shared in task answers."
             : "Proposed by AI. Nothing changes until you apply."}
         </span>
