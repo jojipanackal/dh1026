@@ -8,6 +8,7 @@ const FIELD_LABELS: Record<string, string> = {
   assigneeId: "Assignee",
   dueDate: "Due date",
   estimateHours: "Estimate",
+  completionDetails: "Completion details",
   member: "Member",
   role: "Role",
   name: "Name",

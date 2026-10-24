@@ -74,6 +74,7 @@ export async function createTaskAction(
       assigneeId: text(formData, "assigneeId"),
       dueDate: text(formData, "dueDate"),
       estimateHours: text(formData, "estimateHours"),
+      completionDetails: text(formData, "completionDetails"),
     });
     await createTask(user.id, projectId, input);
     revalidatePath(`/projects/${projectId}`);
@@ -99,6 +100,7 @@ export async function updateTaskAction(
       assigneeId: text(formData, "assigneeId"),
       dueDate: text(formData, "dueDate"),
       estimateHours: text(formData, "estimateHours"),
+      completionDetails: text(formData, "completionDetails"),
     });
     await updateTask(user.id, input);
     revalidatePath(`/projects/${projectId}`);

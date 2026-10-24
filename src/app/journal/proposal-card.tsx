@@ -88,6 +88,7 @@ export function ProposalCard({
       priority: (u.priority ?? "medium") as TaskPriority,
       assigneeId: u.assigneeId,
       description: u.description ?? u.fromDescription,
+      completionDetails: u.completionDetails ?? u.fromCompletionDetails,
       dueDate: u.dueDate ?? u.fromDueDate,
       estimateHours: u.estimateHours ?? u.fromEstimateHours,
     })),
@@ -134,6 +135,7 @@ export function ProposalCard({
             priority,
             assigneeId,
             description,
+            completionDetails: updates[index].completionDetails,
             dueDate,
             estimateHours,
           })),
@@ -261,6 +263,12 @@ export function ProposalCard({
                       Scope: {u.fromDescription ?? "—"} → {updates[i].description ?? "—"}
                     </p>
                   ) : null}
+                  {updates[i].status === "done" &&
+                  (u.completionDetails !== null || updates[i].completionDetails) ? (
+                    <p className="line-clamp-2">
+                      Completion: {updates[i].completionDetails ?? "—"}
+                    </p>
+                  ) : null}
                   {u.dueDate !== null || updates[i].dueDate !== u.fromDueDate ? (
                     <p>
                       Target: {u.fromDueDate ?? "—"} → {updates[i].dueDate ?? "—"}
@@ -350,6 +358,28 @@ export function ProposalCard({
                       className="min-h-14 w-full resize-y rounded-md border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
                       aria-label="Scope or description"
                     />
+                    {updates[i].status === "done" ? (
+                      <textarea
+                        value={updates[i].completionDetails ?? ""}
+                        maxLength={5000}
+                        rows={2}
+                        onChange={(e) =>
+                          setUpdates((s) =>
+                            s.map((x, j) =>
+                              j === i
+                                ? {
+                                    ...x,
+                                    completionDetails: e.target.value || null,
+                                  }
+                                : x,
+                            ),
+                          )
+                        }
+                        placeholder="What was completed, verified, or handed off?"
+                        className="min-h-14 w-full resize-y rounded-md border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+                        aria-label="Completion details"
+                      />
+                    ) : null}
                     <Input
                       type="date"
                       value={updates[i].dueDate ?? ""}

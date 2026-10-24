@@ -24,6 +24,7 @@ import { AppliedCard, ProposalCard } from "@/app/journal/proposal-card";
 import { Button } from "@/components/ui/button";
 import { dayKeyIst, formatDateTime, formatRelativeDay } from "@/lib/format";
 import { channelLabel } from "@/lib/agent/channels";
+import type { AgentMessage as ServerAgentMessage } from "@/server/agent-messages";
 import type { Resolved } from "@/lib/journal/resolve";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,10 @@ export type ThreadEntry = {
   interpretationError: string | null;
   model: string | null;
   appliedChanges: { updatedTaskIds?: string[]; createdTaskIds?: string[] } | null;
+  createdAt: string;
+};
+
+type AgentMessage = Omit<ServerAgentMessage, "createdAt"> & {
   createdAt: string;
 };
 
@@ -128,6 +133,70 @@ function TaskAnswerCard({ answer }: { answer: NonNullable<Resolved["answer"]> })
           Nothing needs attention right now.
         </p>
       )}
+    </div>
+  );
+}
+
+function AgentBriefingCard({ message }: { message: AgentMessage }) {
+  if (message.payload.kind !== "morning_briefing") return null;
+  const briefing = message.payload;
+  return (
+    <div className="flex gap-3">
+      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
+        <Sparkles className="size-3.5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Jeera</span>
+          <span>·</span>
+          <span>Daily briefing</span>
+          <span>·</span>
+          <span>{channelLabel(message.channel)}</span>
+        </div>
+        <div className="overflow-hidden rounded-2xl rounded-tl-md border bg-card shadow-sm">
+          <p className="px-4 pt-3 text-sm">{message.body}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 px-4 py-2 text-xs text-muted-foreground">
+            <span>{briefing.openCount} open</span>
+            <span>{briefing.inProgressCount} in progress</span>
+            <span>{briefing.blockedCount} blocked</span>
+            <span>{briefing.dueCount} due today or overdue</span>
+          </div>
+          {briefing.tasks.length > 0 ? (
+            <div className="divide-y border-t">
+              {briefing.tasks.map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/projects/${task.projectId}/tasks/${task.id}`}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/40"
+                >
+                  <span
+                    className={cn(
+                      "size-2 shrink-0 rounded-full",
+                      task.status === "blocked"
+                        ? "bg-amber-500"
+                        : task.status === "in_progress"
+                          ? "bg-brand"
+                          : "bg-muted-foreground/50",
+                    )}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{task.title}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {task.dueDate ?? priorityLabel(task.priority)}
+                  </span>
+                  {task.dependency ? (
+                    <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">
+                      waiting
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+          <p className="border-t px-4 py-2.5 text-xs text-muted-foreground">
+            Tell Jeera what you will work on first, or say what changed.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -264,10 +333,12 @@ function AssistantMessage({
 
 export function JournalChat({
   entries,
+  agentMessages,
   membersByProject,
   taskProjects,
 }: {
   entries: ThreadEntry[];
+  agentMessages: AgentMessage[];
   membersByProject: Record<string, { id: string; name: string }[]>;
   taskProjects: Record<string, string>;
 }) {
@@ -278,6 +349,20 @@ export function JournalChat({
     { key: string; body: string }[]
   >([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const timeline = [
+    ...agentMessages.map((message) => ({
+      kind: "agent" as const,
+      id: message.id,
+      createdAt: message.createdAt,
+      message,
+    })),
+    ...entries.map((entry) => ({
+      kind: "entry" as const,
+      id: entry.id,
+      createdAt: entry.createdAt,
+      entry,
+    })),
+  ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   // Auto-scroll: to the anchored entry if present, else to the bottom.
   useEffect(() => {
@@ -352,7 +437,7 @@ export function JournalChat({
         </div>
 
         <div className="flex flex-col gap-6">
-          {entries.length === 0 && optimistic.length === 0 ? (
+          {timeline.length === 0 && optimistic.length === 0 ? (
             <div className="rounded-2xl border border-dashed bg-card/50 px-6 py-10 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand/12 text-brand">
                 <Bot className="size-6" />
@@ -375,40 +460,42 @@ export function JournalChat({
               </div>
             </div>
           ) : null}
-          {entries.map((entry, i) => (
-            <div key={entry.id} className="contents">
+          {timeline.map((item, i) => (
+            <div key={item.id} className="contents">
               {(i === 0 ||
-                dayKeyIst(entry.createdAt) !==
-                  dayKeyIst(entries[i - 1].createdAt)) && (
+                dayKeyIst(item.createdAt) !==
+                  dayKeyIst(timeline[i - 1].createdAt)) && (
                 <div className="flex items-center gap-3 py-2">
                   <div className="h-px flex-1 bg-border" />
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {formatRelativeDay(entry.createdAt)}
-                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">{formatRelativeDay(item.createdAt)}</span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
               )}
-              <div
-                id={`entry-${entry.id}`}
-                className="flex flex-col gap-3 scroll-mt-4"
-              >
-              <div className="self-end">
-                <div className="max-w-[min(38rem,85vw)] rounded-2xl rounded-br-md border bg-muted/70 px-4 py-3 text-sm whitespace-pre-wrap shadow-sm">
-                  {entry.body}
+              {item.kind === "agent" ? (
+                <AgentBriefingCard message={item.message} />
+              ) : (
+                <div
+                  id={`entry-${item.entry.id}`}
+                  className="flex flex-col gap-3 scroll-mt-4"
+                >
+                  <div className="self-end">
+                    <div className="max-w-[min(38rem,85vw)] rounded-2xl rounded-br-md border bg-muted/70 px-4 py-3 text-sm whitespace-pre-wrap shadow-sm">
+                      {item.entry.body}
+                    </div>
+                    <p className="mt-1 text-right font-mono text-xs text-muted-foreground">
+                      {formatDateTime(new Date(item.entry.createdAt))}
+                    </p>
+                  </div>
+                  <AssistantMessage
+                    entry={item.entry}
+                    membersByProject={membersByProject}
+                    taskProjects={taskProjects}
+                    pending={pending}
+                    onRetry={() => retry(item.entry.id)}
+                    onDismiss={() => dismiss(item.entry.id)}
+                  />
                 </div>
-                <p className="mt-1 text-right font-mono text-xs text-muted-foreground">
-                  {formatDateTime(new Date(entry.createdAt))}
-                </p>
-              </div>
-              <AssistantMessage
-                entry={entry}
-                membersByProject={membersByProject}
-                taskProjects={taskProjects}
-                pending={pending}
-                onRetry={() => retry(entry.id)}
-                onDismiss={() => dismiss(entry.id)}
-              />
-              </div>
+              )}
             </div>
           ))}
           {optimistic.map((m) => (

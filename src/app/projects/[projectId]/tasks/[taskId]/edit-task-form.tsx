@@ -30,6 +30,7 @@ export type EditableTask = {
   assigneeId: string | null;
   dueDate: string | null;
   estimateHours: number | null;
+  completionDetails: string | null;
 };
 
 export function EditTaskForm({
@@ -69,6 +70,17 @@ export function EditTaskForm({
           defaultValue={task.description ?? ""}
         />
         <FieldError message={state.fieldErrors?.description} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="completionDetails">Completion details</Label>
+        <Textarea
+          id="completionDetails"
+          name="completionDetails"
+          rows={3}
+          placeholder="What was completed, verified, or handed off?"
+          defaultValue={task.completionDetails ?? ""}
+        />
+        <FieldError message={state.fieldErrors?.completionDetails} />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">

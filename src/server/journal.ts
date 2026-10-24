@@ -193,6 +193,7 @@ export async function interpretEntry(
             id: tasks.id,
             title: tasks.title,
             description: tasks.description,
+            completionDetails: tasks.completionDetails,
             status: tasks.status,
             priority: tasks.priority,
             assigneeName: users.name,
@@ -376,6 +377,7 @@ export async function interpretEntry(
               id: task.id,
               title: task.title,
               description: task.description,
+              completionDetails: task.completionDetails,
               status: task.status as TaskStatus,
               priority: task.priority,
               assigneeId: task.assigneeId,
@@ -421,6 +423,7 @@ export async function interpretEntry(
         id: t.id,
         title: t.title,
         description: t.description,
+        completionDetails: t.completionDetails,
         status: t.status,
         priority: t.priority,
         assigneeId: t.assigneeId,
@@ -481,6 +484,7 @@ const selectionSchema = z.object({
       priority: z.enum(TASK_PRIORITIES).nullable(),
       assigneeId: z.uuid().nullable(),
       description: z.string().trim().max(5000).nullable().default(null),
+      completionDetails: z.string().trim().max(5000).nullable().default(null),
       dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
       estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
@@ -493,6 +497,7 @@ const selectionSchema = z.object({
       priority: z.enum(TASK_PRIORITIES),
       assigneeId: z.uuid().nullable(),
       description: z.string().trim().max(5000).nullable().default(null),
+      completionDetails: z.string().trim().max(5000).nullable().default(null),
       dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
       estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
@@ -596,6 +601,7 @@ export async function applyJournalEntry(
         priority: TaskPriority | null;
         assigneeId: string | null;
         description: string | null;
+        completionDetails: string | null;
         dueDate: string | null;
         estimateHours: number | null;
         blockerDescription: string | null;
@@ -610,6 +616,7 @@ export async function applyJournalEntry(
         priority: sel.priority,
         assigneeId: sel.assigneeId,
         description: sel.description,
+        completionDetails: sel.completionDetails,
         dueDate: sel.dueDate,
         estimateHours: sel.estimateHours,
         blockerDescription: null,
@@ -631,6 +638,7 @@ export async function applyJournalEntry(
           priority: null,
           assigneeId: null,
           description: null,
+          completionDetails: null,
           dueDate: null,
           estimateHours: null,
           blockerDescription: base.description,
@@ -666,6 +674,7 @@ export async function applyJournalEntry(
             priority: update.priority ?? b.priority,
             assigneeId: update.assigneeId ?? b.assigneeId,
             description: update.description ?? b.description,
+            completionDetails: update.completionDetails ?? b.completionDetails,
             dueDate: update.dueDate ?? b.dueDate,
             estimateHours: update.estimateHours ?? b.estimateHours,
           }),
@@ -743,6 +752,7 @@ export async function applyJournalEntry(
           {
             title: sel.title,
             description: sel.description ?? base.description,
+            completionDetails: null,
             status: sel.status,
             priority: sel.priority,
             assigneeId: sel.assigneeId,

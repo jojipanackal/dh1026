@@ -13,6 +13,7 @@ import {
   listMemberProjects,
   listTaskProjectMap,
 } from "@/server/journal";
+import { ensureMorningBriefing, listAgentMessages } from "@/server/agent-messages";
 
 export const instant = false;
 
@@ -44,7 +45,11 @@ export default async function JournalPage() {
     );
   }
 
-  const thread = await listJournalThread(user.id);
+  await ensureMorningBriefing(user.id);
+  const [thread, agentMessages] = await Promise.all([
+    listJournalThread(user.id),
+    listAgentMessages(user.id),
+  ]);
   const entries: ThreadEntry[] = thread.map((e) => ({
     id: e.id,
     body: e.body,
@@ -55,6 +60,10 @@ export default async function JournalPage() {
     model: e.model,
     appliedChanges: e.appliedChanges as ThreadEntry["appliedChanges"],
     createdAt: e.createdAt.toISOString(),
+  }));
+  const serializedAgentMessages = agentMessages.map((message) => ({
+    ...message,
+    createdAt: message.createdAt.toISOString(),
   }));
 
   // Applied entries link to their tasks; one entry can touch tasks in
@@ -74,6 +83,7 @@ export default async function JournalPage() {
     <div>
       <JournalChat
         entries={entries}
+        agentMessages={serializedAgentMessages}
         membersByProject={membersByProject}
         taskProjects={taskProjects}
       />

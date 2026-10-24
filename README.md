@@ -94,16 +94,21 @@ workflow before adding external chat adapters.
   page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
   (`users`, `projects`, `project_memberships`, `tasks`,
-  `journal_entries`, `activity_events`); shared loading/empty/error state
+  `journal_entries`, `agent_messages`, `activity_events`); shared loading/empty/error state
   components; custom 404 and error pages; environment validation
   (`parseServerEnv`) with unit tests; service-level integration tests
-  against a separate test database.
+  against a separate test database. The Agent creates one persisted morning
+  briefing per user/day when the web conversation opens, prompts the user to
+  state the first commitment, and preserves completion details when work is
+  closed.
 - Known limitations: Team and Knowledge pages are honest placeholders —
   those features land in later phases (see
   [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
   switcher only). Slack and Google Chat are represented by the normalized
   channel boundary but external OAuth/webhook adapters are not connected yet.
-  Automatic follow-up delivery is not enabled yet. Manually blocked tasks
+  Automatic follow-up delivery is not enabled yet, and the morning briefing
+  currently triggers on opening the web Agent thread rather than from a
+  scheduler or Slack/Google Chat. Manually blocked tasks
   have no reason field yet, so the overview can only show "no reason
   recorded" for them. Under Next.js
   cacheComponents, a not-found page rendered from request-time checks

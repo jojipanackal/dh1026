@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:56:50+05:30 — Add the morning task-runner loop
+
+- Changed: Added idempotent daily morning briefings to the Agent conversation, showing assigned open work, blocked/in-progress/due counts, dependency context, and a prompt to declare the first commitment of the day. Added completion details to task creation, edits, journal proposals, task history, and the done-task flow. Added migration `drizzle/0005_purple_moira_mactaggert.sql` and integration coverage for both behaviors.
+- Why: Jeera needs to behave like a task runner: start the day with accountable work, let a person state what they will do, and preserve what was actually completed or handed off when work closes.
+- Validation: `npm run db:migrate`, `npm run typecheck`, `npm run lint`, `npm test` (92/92), `npm run test:integration` (47/47), and `git diff --check` passed.
+- Limitations: The morning message is currently created when the web Agent thread is opened and is deduplicated per user/day. Scheduler delivery and Slack/Google Chat adapters are still future work; automatic follow-ups for stale work are not enabled.
+
 ## 2026-10-25T02:49:13+05:30 — Resolve dependencies and resume blocked work
 
 - Changed: Added a membership-checked “Resolve & resume” action to project overview blocked-work items. It closes the open dependency, resumes a blocked task to In progress, and records both changes transactionally in task activity history.

@@ -62,6 +62,7 @@ export async function resolveTaskDependency(
         assigneeId: before.assigneeId,
         dueDate: before.dueDate,
         estimateHours: before.estimateHours,
+        completionDetails: before.completionDetails,
       }),
     );
     await tx.insert(activityEvents).values({

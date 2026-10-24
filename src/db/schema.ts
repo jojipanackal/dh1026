@@ -122,6 +122,7 @@ export const tasks = pgTable(
     }),
     dueDate: date("due_date", { mode: "string" }),
     estimateHours: integer("estimate_hours"),
+    completionDetails: text("completion_details"),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id),
@@ -183,6 +184,41 @@ export const journalEntries = pgTable(
     index("journal_channel_external_idx").on(
       table.channel,
       table.externalMessageId,
+    ),
+  ],
+);
+
+export const agentMessageType = pgEnum("agent_message_type", [
+  "morning_briefing",
+  "follow_up",
+]);
+
+export const agentMessages = pgTable(
+  "agent_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    channel: conversationChannel("channel").notNull().default("web"),
+    conversationKey: text("conversation_key").notNull().default("web"),
+    type: agentMessageType("type").notNull(),
+    dedupeKey: text("dedupe_key").notNull(),
+    body: text("body").notNull(),
+    payload: jsonb("payload").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (table) => [
+    unique("agent_messages_user_dedupe_unique").on(
+      table.userId,
+      table.dedupeKey,
+    ),
+    index("agent_messages_user_created_idx").on(
+      table.userId,
+      table.createdAt,
     ),
   ],
 );

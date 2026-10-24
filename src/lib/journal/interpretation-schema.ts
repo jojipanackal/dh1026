@@ -24,6 +24,10 @@ export const aiTaskUpdate = z.object({
     .string()
     .nullable()
     .describe("New task scope or description, or null if unchanged"),
+  completionDetails: z
+    .string()
+    .nullable()
+    .describe("What was completed or verified, or null if not closing the task"),
   dueDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

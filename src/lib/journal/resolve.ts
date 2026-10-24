@@ -19,8 +19,16 @@ type AiBlocker = z.infer<typeof aiBlocker>;
 type AiDecision = z.infer<typeof aiDecision>;
 type AiNewTask = z.infer<typeof aiNewTask>;
 type AiTaskUpdate = z.infer<typeof aiTaskUpdate>;
-type CompatibleTaskUpdate = Omit<AiTaskUpdate, "description" | "dueDate" | "estimateHours"> &
-  Partial<Pick<AiTaskUpdate, "description" | "dueDate" | "estimateHours">>;
+type CompatibleTaskUpdate = Omit<
+  AiTaskUpdate,
+  "description" | "completionDetails" | "dueDate" | "estimateHours"
+> &
+  Partial<
+    Pick<
+      AiTaskUpdate,
+      "description" | "completionDetails" | "dueDate" | "estimateHours"
+    >
+  >;
 type CompatibleNewTask = Omit<AiNewTask, "dueDate" | "estimateHours"> &
   Partial<Pick<AiNewTask, "dueDate" | "estimateHours">>;
 type CompatibleInterpretation = Omit<AiInterpretation, "taskUpdates" | "newTasks"> & {
@@ -37,6 +45,7 @@ export type ResolvedTaskUpdate = AiTaskUpdate & {
   fromPriority: string | null;
   fromAssigneeId: string | null;
   fromDescription: string | null;
+  fromCompletionDetails: string | null;
   fromDueDate: string | null;
   fromEstimateHours: number | null;
   transitionError: string | null;
@@ -79,6 +88,7 @@ type Ctx = {
     priority?: string;
     assigneeId?: string | null;
     description?: string | null;
+    completionDetails?: string | null;
     projectId: string;
     dueDate?: string | null;
     estimateHours?: number | null;
@@ -137,6 +147,11 @@ export function resolveInterpretation(
     const descriptionValue = u.description ?? null;
     const description =
       descriptionValue === (task.description ?? null) ? null : descriptionValue;
+    const completionDetailsValue = u.completionDetails ?? null;
+    const completionDetails =
+      completionDetailsValue === (task.completionDetails ?? null)
+        ? null
+        : completionDetailsValue;
     const dueDateValue = u.dueDate ?? null;
     const dueDate = dueDateValue === (task.dueDate ?? null) ? null : dueDateValue;
     const estimateHoursValue = u.estimateHours ?? null;
@@ -149,6 +164,7 @@ export function resolveInterpretation(
       priority === null &&
       assigneeId === null &&
       description === null &&
+      completionDetails === null &&
       dueDate === null &&
       estimateHours === null
     ) {
@@ -165,6 +181,7 @@ export function resolveInterpretation(
       priority,
       assigneeId,
       description,
+      completionDetails,
       dueDate,
       estimateHours,
       taskTitle: task.title,
@@ -173,6 +190,7 @@ export function resolveInterpretation(
       fromPriority: task.priority ?? null,
       fromAssigneeId: task.assigneeId ?? null,
       fromDescription: task.description ?? null,
+      fromCompletionDetails: task.completionDetails ?? null,
       fromDueDate: task.dueDate ?? null,
       fromEstimateHours: task.estimateHours ?? null,
       transitionError,

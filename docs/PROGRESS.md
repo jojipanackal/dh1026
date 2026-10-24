@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Phase 10 milestone — Morning task runner and completion records (2026-10-25T02:56:50+05:30)
+
+- Implemented:
+  - Added a persisted, idempotent morning briefing per user and IST day. It summarizes assigned open work, counts blocked/in-progress/due work, includes the newest explicit dependency for each listed task, and asks the person to state what they will work on first.
+  - Interleaved the briefing into the single web Agent conversation as an assistant message with links to the relevant tasks. The current trigger is opening the Agent thread; the message model is ready for future scheduler and channel delivery.
+  - Added completion details to tasks and to journal task-update proposals. Closing work can preserve what was completed, verified, or handed off, with the value visible in task details and activity changes.
+- Files and areas changed: `src/db/schema.ts`, `drizzle/0005_purple_moira_mactaggert.sql`, `src/lib/agent/messages.ts`, `src/server/agent-messages.ts`, `src/app/journal/page.tsx`, `src/app/journal/journal-chat.tsx`, task services/forms, journal schema/resolution/apply path, and `tests/integration/journal.test.ts`.
+- Checks run and results: `npm run db:migrate`, `npm run typecheck`, `npm run lint`, `npm test` (92/92), `npm run test:integration` (47/47), and `git diff --check` pass.
+- Decisions affecting later phases: The daily message is a durable record with a `(user, day)` dedupe key, not a transient render-only banner. The agent summarizes explicit task/dependency records and does not infer that a task is finished from silence. Next.js server data is serialized before crossing into the interactive chat component.
+- Remaining limitations: No scheduler, quiet hours, Slack/Google Chat delivery, or automatic stale-work follow-up is connected yet. New work still requires explicit owner, estimate, and target date before apply.
+- Next phase: Continue Phase 10 with multi-turn commitment capture, then connect the Phase 13 follow-up policy to durable agent messages.
+
 ## Phase 10 milestone — Accountable task capture and scope changes (2026-10-25T02:45:34+05:30)
 
 - Implemented:

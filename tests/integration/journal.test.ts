@@ -27,6 +27,7 @@ import {
 } from "@/server/journal";
 import { createTask, moveTask } from "@/server/tasks";
 import { resolveTaskDependency } from "@/server/dependencies";
+import { ensureMorningBriefing, listAgentMessages } from "@/server/agent-messages";
 import { AppError } from "@/server/errors";
 
 const CONFIG = { ok: true as const, apiKey: "test", model: "mock-model" };
@@ -67,7 +68,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, completionDetails: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(
@@ -174,6 +175,7 @@ describe("journal", () => {
             priority: null,
             assigneeId: null,
             description: null,
+            completionDetails: null,
             dueDate: null,
             estimateHours: null,
             reason: "testing on staging",
@@ -313,7 +315,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, description: "Expanded scope", dueDate: "2026-10-30", estimateHours: 6, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, description: "Expanded scope", completionDetails: null, dueDate: "2026-10-30", estimateHours: 6, reason: "r", confidence: "high" },
       ],
       newTasks: [
         { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: owner.id, dueDate: "2026-10-31", estimateHours: 12, reason: "r", confidence: "high" },
@@ -363,6 +365,88 @@ describe("journal", () => {
     expect(resolvedDependency.status).toBe("resolved");
   });
 
+  it("apply: captures completion details when a task is closed", async () => {
+    const { owner, project } = await fixture();
+    const task = await createTask(owner.id, project.id, {
+      title: "Verify release notes",
+      description: null,
+      priority: "medium",
+      assigneeId: owner.id,
+      dueDate: null,
+      estimateHours: 2,
+    });
+    const raw: AiInterpretation = {
+      ...empty,
+      taskUpdates: [
+        {
+          taskId: task.id,
+          status: "done",
+          priority: null,
+          assigneeId: null,
+          description: null,
+          completionDetails: "Checked the final build and shared the release notes.",
+          dueDate: null,
+          estimateHours: null,
+          reason: "finished and verified",
+          confidence: "high",
+        },
+      ],
+    };
+    const entry = await submitJournalEntry(owner.id, { body: "done", submissionKey: key() }, interp(raw));
+    await applyJournalEntry(owner.id, entry.id, {
+      taskUpdates: [
+        {
+          index: 0,
+          status: "done",
+          priority: null,
+          assigneeId: null,
+          description: null,
+          completionDetails: "Checked the final build and shared the release notes.",
+        },
+      ],
+      newTasks: [],
+      blockers: [],
+    });
+    const [closed] = await db.select().from(tasks).where(eq(tasks.id, task.id));
+    expect(closed.status).toBe("done");
+    expect(closed.completionDetails).toBe(
+      "Checked the final build and shared the release notes.",
+    );
+  });
+
+  it("creates one daily briefing and includes assigned work", async () => {
+    const { owner, project } = await fixture();
+    await createTask(owner.id, project.id, {
+      title: "Prepare demo",
+      description: null,
+      priority: "high",
+      assigneeId: owner.id,
+      dueDate: "2026-10-25",
+      estimateHours: 3,
+    });
+    await createTask(owner.id, project.id, {
+      title: "Investigate blocker",
+      description: null,
+      status: "blocked",
+      priority: "urgent",
+      assigneeId: owner.id,
+      dueDate: null,
+      estimateHours: 2,
+    });
+
+    const first = await ensureMorningBriefing(owner.id, new Date("2026-10-25T04:00:00.000Z"));
+    const second = await ensureMorningBriefing(owner.id, new Date("2026-10-25T10:00:00.000Z"));
+    expect(first?.id).toBe(second?.id);
+    expect(first?.payload.kind).toBe("morning_briefing");
+    if (first?.payload.kind === "morning_briefing") {
+      expect(first.payload.openCount).toBe(2);
+      expect(first.payload.blockedCount).toBe(1);
+      expect(first.payload.dueCount).toBe(1);
+      expect(first.payload.tasks.map((task) => task.title)).toContain("Prepare demo");
+    }
+    expect(await listAgentMessages(owner.id)).toHaveLength(1);
+  });
+
   it("apply spans projects: new task in A, task update in B", async () => {
     const { owner, project: projectA } = await fixture();
     const projectB = await createProject(owner.id, { name: "P2" });
@@ -373,7 +457,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, description: null, completionDetails: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
       newTasks: [
         { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: owner.id, dueDate: "2026-11-01", estimateHours: 4, reason: "r", confidence: "high" },
@@ -501,7 +585,7 @@ describe("journal", () => {
     });
     const raw: AiInterpretation = {
       ...empty,
-      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
+      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, completionDetails: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
       newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, dueDate: "2026-11-04", estimateHours: 5, reason: "r", confidence: "high" }],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));

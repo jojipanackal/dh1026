@@ -166,6 +166,7 @@ export async function createTask(
         assigneeId: input.assigneeId ?? null,
         dueDate: input.dueDate ?? null,
         estimateHours: input.estimateHours ?? null,
+        completionDetails: input.completionDetails ?? null,
         createdBy: userId,
       })
       .returning();
@@ -181,6 +182,7 @@ export async function createTask(
         assigneeId: { from: null, to: task.assigneeId },
         dueDate: { from: null, to: task.dueDate },
         estimateHours: { from: null, to: task.estimateHours },
+        completionDetails: { from: null, to: task.completionDetails },
       },
       source: options.source ?? "manual",
       journalEntryId: options.journalEntryId ?? null,
@@ -198,6 +200,7 @@ const EDITABLE_FIELDS = [
   "assigneeId",
   "dueDate",
   "estimateHours",
+  "completionDetails",
 ] as const;
 
 type EditableTaskFields = {
@@ -208,6 +211,7 @@ type EditableTaskFields = {
   assigneeId: string | null;
   dueDate: string | null;
   estimateHours: number | null;
+  completionDetails: string | null;
 };
 
 // Shared core for updateTask/moveTask: lock the row, verify membership,
@@ -281,7 +285,7 @@ export async function applyTaskUpdate(
 
 export async function updateTask(userId: string, input: UpdateTaskInput) {
   return db.transaction((tx) =>
-    applyTaskUpdate(tx, userId, input.taskId, () => ({
+    applyTaskUpdate(tx, userId, input.taskId, (before) => ({
       title: input.title,
       description: input.description ?? null,
       status: input.status,
@@ -289,6 +293,10 @@ export async function updateTask(userId: string, input: UpdateTaskInput) {
       assigneeId: input.assigneeId ?? null,
       dueDate: input.dueDate ?? null,
       estimateHours: input.estimateHours ?? null,
+      completionDetails:
+        input.completionDetails === undefined
+          ? before.completionDetails
+          : input.completionDetails ?? null,
     })),
   );
 }
@@ -310,6 +318,7 @@ export async function moveTask(
       assigneeId: before.assigneeId,
       dueDate: before.dueDate,
       estimateHours: before.estimateHours,
+      completionDetails: before.completionDetails,
     })),
   );
 }

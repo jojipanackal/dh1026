@@ -101,6 +101,7 @@ export default async function TaskPage({
                   assigneeId: task.assigneeId,
                   dueDate: task.dueDate,
                   estimateHours: task.estimateHours,
+                  completionDetails: task.completionDetails,
                 }}
                 members={members}
               />
@@ -137,6 +138,10 @@ export default async function TaskPage({
                   value: task.completedAt
                     ? formatDateTime(task.completedAt)
                     : "—",
+                },
+                {
+                  label: "Completion details",
+                  value: task.completionDetails ?? "—",
                 },
                 {
                   label: "Created",

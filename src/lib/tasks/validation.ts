@@ -64,6 +64,7 @@ export const createTaskInput = z.object({
   assigneeId: optionalUuid,
   dueDate: optionalDate,
   estimateHours: optionalEstimate,
+  completionDetails: optionalText(5000),
 });
 export type CreateTaskInput = z.infer<typeof createTaskInput>;
 
