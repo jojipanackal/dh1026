@@ -231,11 +231,6 @@ export function JournalChat({
     <div className="flex flex-col">
       <div className="px-4 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
-          {entries.length === 0 && optimistic.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              No entries yet. Tell Jeera what you worked on below.
-            </p>
-          ) : null}
           {entries.map((entry, i) => (
             <div key={entry.id} className="contents">
               {(i === 0 ||
@@ -332,9 +327,7 @@ export function JournalChat({
               </Button>
             </div>
           </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Enter to send · Shift+Enter for a new line
-          </p>
+
         </div>
       </div>
     </div>

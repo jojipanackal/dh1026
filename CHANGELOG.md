@@ -22,6 +22,13 @@ Add entries as you build, newest first:
 - Validation: typecheck, lint, 85/85 unit and 40/40 integration tests pass; real OpenAI smoke entry resolved "Still blocked on lanyards" to the right project automatically. Screenshots reviewed.
 - Limitations: A new task with an unclear project stays unselectable until clarified in a reply.
 
+## 2026-10-25T01:29:00+05:30 — Move theme switch beside user menu
+
+- Changed: Placed the theme toggle on the right side of the sidebar footer's user-switcher row in `src/components/app-shell/app-shell.tsx`.
+- Why: User feedback — the theme switch should not occupy a separate bottom row.
+- Validation: `npm run lint`, `npm run typecheck`, and `npm test` pass.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T01:23:57+05:30 — Make the sidebar user popup visible
 
 - Changed: Replaced the sidebar footer's Radix Select trigger with an explicit account-style popup in `src/components/app-shell/user-switcher-client.tsx`; clicking the name now opens the user list above the control, with outside-click and Escape dismissal and a checkmark for the active user.

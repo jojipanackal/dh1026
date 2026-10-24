@@ -71,13 +71,6 @@ export default async function JournalPage() {
 
   return (
     <div>
-      <div className="mx-auto w-full max-w-3xl pb-4">
-        <p className="text-xs text-muted-foreground">
-          Your private journal — AI proposes changes; nothing applies until
-          you say so.
-        </p>
-      </div>
-
       <JournalChat
         entries={entries}
         membersByProject={membersByProject}

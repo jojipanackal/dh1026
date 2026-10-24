@@ -64,13 +64,9 @@ function Shell({
           </SidebarContent>
 
           <SidebarFooter>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1 group-data-[collapsible=icon]:justify-center">
-                <UserSwitcher />
-              </div>
-              <div className="flex items-center justify-end gap-2 group-data-[collapsible=icon]:hidden">
-                <ThemeToggle className="shrink-0" />
-              </div>
+            <div className="flex items-center gap-1 group-data-[collapsible=icon]:justify-center">
+              <UserSwitcher />
+              <ThemeToggle className="shrink-0 group-data-[collapsible=icon]:hidden" />
             </div>
           </SidebarFooter>
           <SidebarRail />
