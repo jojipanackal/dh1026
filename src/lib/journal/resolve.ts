@@ -19,6 +19,14 @@ type AiBlocker = z.infer<typeof aiBlocker>;
 type AiDecision = z.infer<typeof aiDecision>;
 type AiNewTask = z.infer<typeof aiNewTask>;
 type AiTaskUpdate = z.infer<typeof aiTaskUpdate>;
+type CompatibleTaskUpdate = Omit<AiTaskUpdate, "dueDate" | "estimateHours"> &
+  Partial<Pick<AiTaskUpdate, "dueDate" | "estimateHours">>;
+type CompatibleNewTask = Omit<AiNewTask, "dueDate" | "estimateHours"> &
+  Partial<Pick<AiNewTask, "dueDate" | "estimateHours">>;
+type CompatibleInterpretation = Omit<AiInterpretation, "taskUpdates" | "newTasks"> & {
+  taskUpdates: CompatibleTaskUpdate[];
+  newTasks: CompatibleNewTask[];
+};
 
 export type ResolvedTaskUpdate = AiTaskUpdate & {
   taskTitle: string;
@@ -28,6 +36,8 @@ export type ResolvedTaskUpdate = AiTaskUpdate & {
   fromStatus: TaskStatus;
   fromPriority: string | null;
   fromAssigneeId: string | null;
+  fromDueDate: string | null;
+  fromEstimateHours: number | null;
   transitionError: string | null;
 };
 
@@ -67,6 +77,8 @@ type Ctx = {
     priority?: string;
     assigneeId?: string | null;
     projectId: string;
+    dueDate?: string | null;
+    estimateHours?: number | null;
   }[];
   // Member user ids, keyed by project id.
   membersByProject: Record<string, string[]>;
@@ -91,7 +103,7 @@ function jaccard(a: string, b: string): number {
 }
 
 export function resolveInterpretation(
-  raw: AiInterpretation,
+  raw: CompatibleInterpretation,
   ctx: Ctx,
   answer: TaskAnswer | null = null,
 ): Resolved {
@@ -119,7 +131,20 @@ export function resolveInterpretation(
     const priority = u.priority === task.priority ? null : u.priority;
     let assigneeId = cleanAssignee(u.assigneeId, task.projectId);
     if (assigneeId === task.assigneeId) assigneeId = null;
-    if (status === null && priority === null && assigneeId === null) {
+    const dueDateValue = u.dueDate ?? null;
+    const dueDate = dueDateValue === (task.dueDate ?? null) ? null : dueDateValue;
+    const estimateHoursValue = u.estimateHours ?? null;
+    const estimateHours =
+      estimateHoursValue === (task.estimateHours ?? null)
+        ? null
+        : estimateHoursValue;
+    if (
+      status === null &&
+      priority === null &&
+      assigneeId === null &&
+      dueDate === null &&
+      estimateHours === null
+    ) {
       issues.push(`Dropped a no-op update for "${task.title}"`);
       continue;
     }
@@ -132,11 +157,15 @@ export function resolveInterpretation(
       status,
       priority,
       assigneeId,
+      dueDate,
+      estimateHours,
       taskTitle: task.title,
       projectId: task.projectId,
       fromStatus: task.status,
       fromPriority: task.priority ?? null,
       fromAssigneeId: task.assigneeId ?? null,
+      fromDueDate: task.dueDate ?? null,
+      fromEstimateHours: task.estimateHours ?? null,
       transitionError,
     });
   }
@@ -186,6 +215,8 @@ export function resolveInterpretation(
     newTasks.push({
       ...n,
       title,
+      dueDate: n.dueDate ?? null,
+      estimateHours: n.estimateHours ?? null,
       projectId,
       projectName: projectId ? (projectById.get(projectId)?.name ?? null) : null,
       assigneeId,

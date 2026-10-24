@@ -87,6 +87,8 @@ export function ProposalCard({
       status: (u.status ?? u.fromStatus) as TaskStatus,
       priority: (u.priority ?? "medium") as TaskPriority,
       assigneeId: u.assigneeId,
+      dueDate: u.dueDate ?? u.fromDueDate,
+      estimateHours: u.estimateHours ?? u.fromEstimateHours,
     })),
   );
   const [news, setNews] = useState(() =>
@@ -100,6 +102,8 @@ export function ProposalCard({
       status: n.status as "todo" | "in_progress" | "blocked",
       priority: n.priority,
       assigneeId: n.assigneeId,
+      dueDate: n.dueDate,
+      estimateHours: n.estimateHours,
     })),
   );
   const [blockers, setBlockers] = useState(() =>
@@ -122,21 +126,25 @@ export function ProposalCard({
         taskUpdates: resolved.taskUpdates
           .map((_, index) => ({ index, ...updates[index] }))
           .filter((s) => s.checked)
-          .map(({ index, status, priority, assigneeId }) => ({
+          .map(({ index, status, priority, assigneeId, dueDate, estimateHours }) => ({
             index,
             status,
             priority,
             assigneeId,
+            dueDate,
+            estimateHours,
           })),
         newTasks: resolved.newTasks
           .map((_, index) => ({ index, ...news[index] }))
           .filter((s) => s.checked)
-          .map(({ index, title, status, priority, assigneeId }) => ({
+          .map(({ index, title, status, priority, assigneeId, dueDate, estimateHours }) => ({
             index,
             title: title.trim() || resolved.newTasks[index].title,
             status,
             priority,
             assigneeId,
+            dueDate,
+            estimateHours,
           })),
         blockers: resolved.blockers
           .map((_, index) => ({ index, checked: blockers[index].checked }))
@@ -244,6 +252,16 @@ export function ProposalCard({
                       {memberName(updates[i].assigneeId)}
                     </p>
                   ) : null}
+                  {u.dueDate !== null || updates[i].dueDate !== u.fromDueDate ? (
+                    <p>
+                      Target: {u.fromDueDate ?? "—"} → {updates[i].dueDate ?? "—"}
+                    </p>
+                  ) : null}
+                  {u.estimateHours !== null || updates[i].estimateHours !== u.fromEstimateHours ? (
+                    <p>
+                      Estimate: {u.fromEstimateHours ?? "—"}h → {updates[i].estimateHours ?? "—"}h
+                    </p>
+                  ) : null}
                 </div>
                 {u.transitionError ? (
                   <p className="mt-0.5 text-xs text-red-500 dark:text-red-400">
@@ -306,6 +324,44 @@ export function ProposalCard({
                       }
                       members={membersByProject[u.projectId] ?? []}
                     />
+                    <Input
+                      type="date"
+                      value={updates[i].dueDate ?? ""}
+                      onChange={(e) =>
+                        setUpdates((s) =>
+                          s.map((x, j) =>
+                            j === i ? { ...x, dueDate: e.target.value || null } : x,
+                          ),
+                        )
+                      }
+                      className="h-7 w-36 text-xs"
+                      aria-label="Target date"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={1000}
+                      step={1}
+                      placeholder="hours"
+                      value={updates[i].estimateHours ?? ""}
+                      onChange={(e) =>
+                        setUpdates((s) =>
+                          s.map((x, j) =>
+                            j === i
+                              ? {
+                                  ...x,
+                                  estimateHours:
+                                    e.target.value === ""
+                                      ? null
+                                      : Number(e.target.value),
+                                }
+                              : x,
+                          ),
+                        )
+                      }
+                      className="h-7 w-24 text-xs"
+                      aria-label="Estimate in hours"
+                    />
                   </div>
                 ) : null}
               </div>
@@ -350,6 +406,12 @@ export function ProposalCard({
                     {n.projectName}
                   </p>
                 ) : null}
+                <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
+                  {news[i].dueDate ? <span>Target: {news[i].dueDate}</span> : null}
+                  {news[i].estimateHours !== null ? (
+                    <span>Estimate: {news[i].estimateHours ?? "—"}h</span>
+                  ) : null}
+                </div>
                 {n.possibleDuplicateOf ? (
                   <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
                     Possible duplicate of{" "}
@@ -440,6 +502,44 @@ export function ProposalCard({
                           ? (membersByProject[n.projectId] ?? [])
                           : []
                       }
+                    />
+                    <Input
+                      type="date"
+                      value={news[i].dueDate ?? ""}
+                      onChange={(e) =>
+                        setNews((s) =>
+                          s.map((x, j) =>
+                            j === i ? { ...x, dueDate: e.target.value || null } : x,
+                          ),
+                        )
+                      }
+                      className="h-7 w-36 text-xs"
+                      aria-label="Target date"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={1000}
+                      step={1}
+                      placeholder="hours"
+                      value={news[i].estimateHours ?? ""}
+                      onChange={(e) =>
+                        setNews((s) =>
+                          s.map((x, j) =>
+                            j === i
+                              ? {
+                                  ...x,
+                                  estimateHours:
+                                    e.target.value === ""
+                                      ? null
+                                      : Number(e.target.value),
+                                }
+                              : x,
+                          ),
+                        )
+                      }
+                      className="h-7 w-24 text-xs"
+                      aria-label="Estimate in hours"
                     />
                   </div>
                 ) : null}

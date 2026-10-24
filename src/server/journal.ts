@@ -195,6 +195,7 @@ export async function interpretEntry(
             projectId: tasks.projectId,
             projectName: projects.name,
             dueDate: tasks.dueDate,
+            estimateHours: tasks.estimateHours,
             updatedAt: tasks.updatedAt,
           })
           .from(tasks)
@@ -336,6 +337,8 @@ export async function interpretEntry(
               priority: task.priority,
               assigneeId: task.assigneeId,
               projectId: task.projectId,
+              dueDate: task.dueDate,
+              estimateHours: task.estimateHours,
             })),
             membersByProject: Object.fromEntries(
               Object.entries(membersByProject).map(([projectId, members]) => [
@@ -378,6 +381,8 @@ export async function interpretEntry(
         priority: t.priority,
         assigneeId: t.assigneeId,
         projectId: t.projectId,
+        dueDate: t.dueDate,
+        estimateHours: t.estimateHours,
       })),
       membersByProject: Object.fromEntries(
         Object.entries(membersByProject).map(([projectId, members]) => [
@@ -431,6 +436,8 @@ const selectionSchema = z.object({
       status: z.enum(["todo", "in_progress", "blocked", "done", "cancelled"]).nullable(),
       priority: z.enum(TASK_PRIORITIES).nullable(),
       assigneeId: z.uuid().nullable(),
+      dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
+      estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
   ),
   newTasks: z.array(
@@ -440,11 +447,13 @@ const selectionSchema = z.object({
       status: z.enum(["todo", "in_progress", "blocked"]),
       priority: z.enum(TASK_PRIORITIES),
       assigneeId: z.uuid().nullable(),
+      dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
+      estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
   ),
   blockers: z.array(z.object({ index: z.number().int().nonnegative() })),
 });
-export type ApplySelection = z.infer<typeof selectionSchema>;
+export type ApplySelection = z.input<typeof selectionSchema>;
 
 export async function applyJournalEntry(
   userId: string,
@@ -540,6 +549,8 @@ export async function applyJournalEntry(
         status: TaskStatus | null;
         priority: TaskPriority | null;
         assigneeId: string | null;
+        dueDate: string | null;
+        estimateHours: number | null;
         blockerDescription: string | null;
         waitingOn: string | null;
         blockingUserId: string | null;
@@ -551,6 +562,8 @@ export async function applyJournalEntry(
         status: sel.status,
         priority: sel.priority,
         assigneeId: sel.assigneeId,
+        dueDate: sel.dueDate,
+        estimateHours: sel.estimateHours,
         blockerDescription: null,
         waitingOn: null,
         blockingUserId: null,
@@ -569,6 +582,8 @@ export async function applyJournalEntry(
           status: "blocked",
           priority: null,
           assigneeId: null,
+          dueDate: null,
+          estimateHours: null,
           blockerDescription: base.description,
           waitingOn: base.waitingOn,
           blockingUserId: base.waitingOnUserId,
@@ -602,8 +617,8 @@ export async function applyJournalEntry(
             status: update.status ?? b.status,
             priority: update.priority ?? b.priority,
             assigneeId: update.assigneeId ?? b.assigneeId,
-            dueDate: b.dueDate,
-            estimateHours: b.estimateHours,
+            dueDate: update.dueDate ?? b.dueDate,
+            estimateHours: update.estimateHours ?? b.estimateHours,
           }),
           { source: "journal", journalEntryId: entry.id },
         );
@@ -682,8 +697,8 @@ export async function applyJournalEntry(
             status: sel.status,
             priority: sel.priority,
             assigneeId: sel.assigneeId,
-            dueDate: null,
-            estimateHours: null,
+            dueDate: sel.dueDate,
+            estimateHours: sel.estimateHours,
           },
           { tx, source: "journal", journalEntryId: entry.id },
         );

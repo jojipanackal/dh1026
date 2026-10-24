@@ -20,6 +20,18 @@ export const aiTaskUpdate = z.object({
     .string()
     .nullable()
     .describe("Member id to assign, or null if the assignee is unchanged"),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .describe("Target date in YYYY-MM-DD, or null if unchanged"),
+  estimateHours: z
+    .number()
+    .int()
+    .min(0)
+    .max(1000)
+    .nullable()
+    .describe("Estimated effort in hours, or null if unchanged"),
   reason: z.string().describe("Short quote or paraphrase from the entry that justifies this update"),
   confidence,
 });
@@ -34,6 +46,18 @@ export const aiNewTask = z.object({
   status: z.enum(NEW_TASK_STATUSES),
   priority: z.enum(TASK_PRIORITIES),
   assigneeId: z.string().nullable().describe("Member id, or null if nobody was named"),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .describe("Target date in YYYY-MM-DD, or null when not stated"),
+  estimateHours: z
+    .number()
+    .int()
+    .min(0)
+    .max(1000)
+    .nullable()
+    .describe("Estimated effort in hours, or null when not stated"),
   reason: z.string().describe("Short quote or paraphrase from the entry that justifies this task"),
   confidence,
 });

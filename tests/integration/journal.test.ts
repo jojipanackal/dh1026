@@ -66,7 +66,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(
@@ -172,6 +172,8 @@ describe("journal", () => {
             status: "in_progress",
             priority: null,
             assigneeId: null,
+            dueDate: null,
+            estimateHours: null,
             reason: "testing on staging",
             confidence: "high",
           },
@@ -262,23 +264,28 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, dueDate: "2026-10-30", estimateHours: 6, reason: "r", confidence: "high" },
       ],
       newTasks: [
-        { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: null, reason: "r", confidence: "high" },
+        { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: null, dueDate: "2026-10-31", estimateHours: 12, reason: "r", confidence: "high" },
       ],
       blockers: [{ taskId: t.id, description: "waiting on vendor", waitingOn: "vendor" }],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     // blocker forces status blocked; keep the update selection too (merged)
     await applyJournalEntry(owner.id, entry.id, {
-      taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: member.id }],
-      newTasks: [{ index: 0, title: "New thing", status: "todo", priority: "high", assigneeId: null }],
+      taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: member.id, dueDate: "2026-10-30", estimateHours: 6 }],
+      newTasks: [{ index: 0, title: "New thing", status: "todo", priority: "high", assigneeId: null, dueDate: "2026-10-31", estimateHours: 12 }],
       blockers: [{ index: 0 }],
     });
     const [row] = await db.select().from(tasks).where(eq(tasks.id, t.id));
     expect(row.status).toBe("blocked"); // blocker wins the merge
     expect(row.assigneeId).toBe(member.id);
+    expect(row.dueDate).toBe("2026-10-30");
+    expect(row.estimateHours).toBe(6);
+    const [createdTask] = await db.select().from(tasks).where(eq(tasks.title, "New thing"));
+    expect(createdTask.dueDate).toBe("2026-10-31");
+    expect(createdTask.estimateHours).toBe(12);
     const events = await db.select().from(activityEvents).where(eq(activityEvents.projectId, project.id));
     const journalEvents = events.filter((e) => e.source === "journal");
     expect(journalEvents.length).toBeGreaterThanOrEqual(2);
@@ -303,10 +310,10 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, reason: "r", confidence: "high" },
+        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
       newTasks: [
-        { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: null, reason: "r", confidence: "high" },
+        { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
@@ -339,7 +346,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       newTasks: [
-        { projectId: null, title: "Implicit", description: null, status: "todo", priority: "low", assigneeId: null, reason: "r", confidence: "high" },
+        { projectId: null, title: "Implicit", description: null, status: "todo", priority: "low", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
@@ -358,7 +365,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       newTasks: [
-        { projectId: null, title: "Ambiguous", description: null, status: "todo", priority: "low", assigneeId: null, reason: "r", confidence: "high" },
+        { projectId: null, title: "Ambiguous", description: null, status: "todo", priority: "low", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
@@ -395,8 +402,8 @@ describe("journal", () => {
     });
     const raw: AiInterpretation = {
       ...empty,
-      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, reason: "r", confidence: "high" }],
-      newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, reason: "r", confidence: "high" }],
+      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
+      newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     await moveTask(owner.id, t.id, "done"); // race: now the stored transition is invalid

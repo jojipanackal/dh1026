@@ -38,6 +38,8 @@ const newTask = {
   status: "todo" as const,
   priority: "low" as const,
   assigneeId: null,
+  dueDate: null,
+  estimateHours: null,
   reason: "r",
   confidence: "high" as const,
 };

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:42:03+05:30 — Capture task commitments in the execution agent
+
+- Changed: Extended the journal interpretation and review flow to carry explicit target dates and effort estimates for new tasks and existing-task scope changes. The resolver drops metadata no-ops, the proposal card lets a person edit both fields, and the transactional apply path persists them through normal task activity history. Updated the prompt and integration coverage.
+- Why: A usable execution agent must record not only that work exists, but the commitment that lets it detect scope drift and sprint risk later.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (89/89), `npm run test:integration` (43/43), and `git diff --check` passed.
+- Limitations: This is a Phase 10 milestone, not completion of Phase 10. Authentication, external channel adapters, and automated follow-ups remain unfinished.
+
 ## 2026-10-25T02:34:13+05:30 — Append the revised execution-agent roadmap
 
 - Changed: Updated `docs/PHASES.md`, `docs/PROGRESS.md`, and `README.md` to preserve the completed foundation phases while adding the active execution-agent roadmap as Phases 10–13: web-first agent, task/dependency graph, evidence-backed status and sprint movement, and stale-work follow-ups.

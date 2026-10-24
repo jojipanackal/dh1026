@@ -22,6 +22,19 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Phase 10 milestone — Task commitments and scope changes (2026-10-25T02:42:03+05:30)
+
+- Implemented:
+  - AI task proposals now carry explicit nullable `dueDate` and `estimateHours` fields for both new work and updates to existing work.
+  - Existing task resolution treats dates and estimates like other mutable fields: equal values become no-ops, while changed values remain reviewable.
+  - The proposal card displays and edits target date and effort, and approved values flow through the normal transactional task update/create services and activity history.
+  - The journal prompt tells the agent to capture only explicitly stated commitments, including scope changes, and never infer dates or estimates.
+- Files and areas changed: `src/lib/journal/interpretation-schema.ts`, `src/lib/journal/resolve.ts`, `src/lib/journal/prompt.ts`, `src/server/journal.ts`, `src/app/journal/proposal-card.tsx`, `tests/journal.test.ts`, `tests/integration/journal.test.ts`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (89/89), `npm run test:integration` (43/43), and `git diff --check` pass.
+- Decisions affecting later phases: estimates and target dates are explicit evidence captured from a person or edited during review; they are not inferred from wording. Activity history remains the source of prior commitments.
+- Remaining limitations: Phase 10 still needs clearer multi-turn task-capture prompts, real authentication, and broader read-only answers. Phases 11–13 are not complete.
+- Next phase: Continue Phase 10 with authenticated team identity and richer daily-conversation task capture.
+
 ## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
 
 - Implemented:
