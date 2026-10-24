@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:51:42+05:30 — Add the cross-project Tasks workspace and demo conversation
+
+- Changed: Added the primary **Tasks** tab with a database-backed execution queue, All work/My work scopes, search and project/status/priority/assignee filters, summary counts, dependency context, direct task links, and global task creation. Expanded the demo seed with grounded Joji task questions and answer cards for the launch chain.
+- Why: The task runner needs a shared operational view alongside the natural-language Agent, and the demo should show a believable conversation that leads to persisted work rather than isolated sample rows.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (51/51), `npm run db:seed:demo`, authenticated HTTP 200 checks for `/tasks` and `/journal`, and content checks for the landing-page queue and seeded questions passed.
+- Limitations: The Tasks tab is intentionally focused on the current execution workflow; bulk editing, saved views, and calendar/timeline layouts remain future work.
+
 ## 2026-10-25T03:44:45+05:30 — Move follow-ups into a server-side worker
 
 - Changed: Added `scripts/follow-up-worker.ts`, `npm run agent:worker`, and `npm run agent:follow-ups`. The continuous worker scans every project membership, uses a PostgreSQL advisory lock, and shares the existing evidence-based sweep and database deduplication. The browser heartbeat remains a local fallback.

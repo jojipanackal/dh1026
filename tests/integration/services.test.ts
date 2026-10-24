@@ -10,7 +10,14 @@ import {
   getProjectForMember,
   listProjectsForUser,
 } from "@/server/projects";
-import { createTask, getTaskForMember, listTasks, moveTask, updateTask } from "@/server/tasks";
+import {
+  createTask,
+  getTaskForMember,
+  listTasks,
+  listTasksForUser,
+  moveTask,
+  updateTask,
+} from "@/server/tasks";
 import { ensureTestDb, insertUser, truncateAll } from "./helpers";
 
 beforeEach(async () => {
@@ -145,6 +152,34 @@ describe("projects", () => {
 });
 
 describe("tasks", () => {
+  it("lists a member's shared task queue with filters and assignee context", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const member = await insertUser("Member", "member@example.com");
+    await addProjectMember(owner.id, project.id, {
+      userId: member.id,
+      role: "member",
+    });
+    const task = await createTask(owner.id, project.id, {
+      title: "Wire signup form",
+      description: "Connect the launch form",
+      status: "blocked",
+      priority: "high",
+      assigneeId: member.id,
+      dueDate: "2026-10-25",
+      estimateHours: 2,
+    });
+    const visible = await listTasksForUser(owner.id, { status: "blocked" });
+    expect(visible).toHaveLength(1);
+    expect(visible[0]).toMatchObject({
+      id: task.id,
+      projectName: "Demo Project",
+      assigneeName: "Member",
+      status: "blocked",
+    });
+    expect(await listTasksForUser(member.id, { scope: "mine" })).toHaveLength(1);
+    expect(await listTasksForUser(owner.id, { search: "missing" })).toHaveLength(0);
+  });
+
   it("rejects an assignee who is not a project member", async () => {
     const { owner, project } = await makeProjectWithOwner();
     const outsider = await insertUser("Out", "out@example.com");

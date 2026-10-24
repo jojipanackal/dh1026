@@ -75,8 +75,11 @@ workflow before adding external chat adapters.
 
 ### Current status
 
-- Working features: application shell with responsive navigation (Agent,
-  Projects, Team, Integrations); a membership-scoped Team directory showing teammates,
+- Working features: application shell with responsive navigation (Agent, Tasks,
+  Projects, Team, Integrations); a cross-project Tasks execution queue with
+  search, scope, project/status/priority/assignee filters, dependency context,
+  workload counts, direct task links, and global task creation; a membership-scoped
+  Team directory showing teammates,
   projects, roles, and workload; demo user switcher (httpOnly cookie,
   no authentication); project creation and listing with per-status task
   counts; project detail page with Overview/Board/List/Activity/Members

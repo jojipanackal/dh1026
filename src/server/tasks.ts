@@ -1,11 +1,13 @@
 import "server-only";
 
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
   activityEvents,
   projectMemberships,
+  projects,
+  taskDependencies,
   tasks,
   users,
   type ActivityChanges,
@@ -38,6 +40,92 @@ export type TaskListFilter = {
   assigneeId?: string | null; // null = explicitly unassigned
   priority?: TaskPriority;
 };
+
+export type WorkspaceTaskFilter = TaskListFilter & {
+  projectId?: string;
+  search?: string;
+  scope?: "all" | "mine";
+  includeCancelled?: boolean;
+};
+
+export async function listTasksForUser(
+  userId: string,
+  filter: WorkspaceTaskFilter = {},
+) {
+  const conditions = [eq(projectMemberships.userId, userId)];
+  if (filter.projectId) conditions.push(eq(tasks.projectId, filter.projectId));
+  if (filter.status) conditions.push(eq(tasks.status, filter.status));
+  if (filter.priority) conditions.push(eq(tasks.priority, filter.priority));
+  if (filter.assigneeId !== undefined) {
+    conditions.push(
+      filter.assigneeId === null
+        ? isNull(tasks.assigneeId)
+        : eq(tasks.assigneeId, filter.assigneeId),
+    );
+  }
+  if (filter.scope === "mine") conditions.push(eq(tasks.assigneeId, userId));
+  if (filter.search?.trim()) {
+    conditions.push(ilike(tasks.title, `%${filter.search.trim()}%`));
+  }
+  if (!filter.includeCancelled && filter.status !== "cancelled") {
+    conditions.push(sql`${tasks.status} <> 'cancelled'`);
+  }
+
+  const rows = await db
+    .select({
+      id: tasks.id,
+      projectId: tasks.projectId,
+      projectName: projects.name,
+      title: tasks.title,
+      description: tasks.description,
+      status: tasks.status,
+      priority: tasks.priority,
+      assigneeId: tasks.assigneeId,
+      assigneeName: users.name,
+      dueDate: tasks.dueDate,
+      estimateHours: tasks.estimateHours,
+      updatedAt: tasks.updatedAt,
+      completedAt: tasks.completedAt,
+    })
+    .from(projectMemberships)
+    .innerJoin(projects, eq(projects.id, projectMemberships.projectId))
+    .innerJoin(tasks, eq(tasks.projectId, projects.id))
+    .leftJoin(users, eq(users.id, tasks.assigneeId))
+    .where(and(...conditions))
+    .orderBy(asc(TASK_SORT_ORDER), asc(PRIORITY_ORDER), asc(tasks.dueDate), desc(tasks.updatedAt));
+
+  const taskIds = rows.map((task) => task.id);
+  const dependencyRows =
+    taskIds.length === 0
+      ? []
+      : await db
+          .select({
+            blockedTaskId: taskDependencies.blockedTaskId,
+            waitingOn: taskDependencies.waitingOn,
+            blockingUserName: users.name,
+            createdAt: taskDependencies.createdAt,
+          })
+          .from(taskDependencies)
+          .leftJoin(users, eq(users.id, taskDependencies.blockingUserId))
+          .where(
+            and(
+              eq(taskDependencies.status, "open"),
+              inArray(taskDependencies.blockedTaskId, taskIds),
+            ),
+          )
+          .orderBy(desc(taskDependencies.createdAt));
+  const dependencyByTask = new Map<string, (typeof dependencyRows)[number]>();
+  for (const dependency of dependencyRows) {
+    if (!dependencyByTask.has(dependency.blockedTaskId)) {
+      dependencyByTask.set(dependency.blockedTaskId, dependency);
+    }
+  }
+
+  return rows.map((task) => ({
+    ...task,
+    dependency: dependencyByTask.get(task.id) ?? null,
+  }));
+}
 
 export async function listTasks(
   projectId: string,

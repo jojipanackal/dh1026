@@ -287,6 +287,45 @@ async function ensureEvidence(
   )[0];
 }
 
+async function ensureDemoQuestion(
+  db: ReturnType<typeof drizzle>,
+  authorId: string,
+  body: string,
+  submissionKey: string,
+  createdAt: Date,
+  interpretation: Record<string, unknown>,
+) {
+  const [existing] = await db
+    .select()
+    .from(journalEntries)
+    .where(
+      and(
+        eq(journalEntries.authorId, authorId),
+        eq(journalEntries.submissionKey, submissionKey),
+      ),
+    )
+    .limit(1);
+  if (existing) return existing;
+  return (
+    await db
+      .insert(journalEntries)
+      .values({
+        projectId: null,
+        authorId,
+        body,
+        submissionKey,
+        channel: "web",
+        conversationKey: "web",
+        status: "ready",
+        interpretation,
+        model: "task-query",
+        createdAt,
+        interpretedAt: createdAt,
+      })
+      .returning()
+  )[0];
+}
+
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set (see .env.example)");
@@ -412,10 +451,11 @@ async function main() {
       });
     }
 
+    const evidenceByTask = new Map<string, typeof journalEntries.$inferSelect>();
     for (const evidence of EVIDENCE) {
       const author = demoUsers.get(evidence.email)!;
       const task = taskByTitle.get(evidence.taskTitle)!;
-      await ensureEvidence(
+      const entry = await ensureEvidence(
         db,
         project.id,
         author.id,
@@ -424,7 +464,94 @@ async function main() {
         evidence.key,
         ago(evidence.minutesAgo),
       );
+      evidenceByTask.set(evidence.taskTitle, entry);
     }
+
+    const dependencyByTaskTitle = new Map<string, (typeof DEMO_DEPENDENCIES)[number]>(
+      DEMO_DEPENDENCIES.map((dependency) => [dependency.blockedTaskTitle, dependency]),
+    );
+    const answerItem = (taskTitle: string) => {
+      const task = taskByTitle.get(taskTitle)!;
+      const evidence = evidenceByTask.get(taskTitle);
+      const dependency = dependencyByTaskTitle.get(taskTitle);
+      const assignee = [...demoUsers.values()].find((user) => user.id === task.assigneeId);
+      return {
+        id: task.id,
+        title: task.title,
+        projectId: project.id,
+        projectName: project.name,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        assigneeName: assignee?.name ?? null,
+        lastUpdate: evidence
+          ? {
+              authorId: evidence.authorId,
+              authorName: assignee?.name ?? "Teammate",
+              body: evidence.body,
+              createdAt: evidence.createdAt.toISOString(),
+            }
+          : null,
+        dependency: dependency
+          ? {
+              description: dependency.description,
+              waitingOn: dependency.waitingOn,
+              blockingUserName: dependency.waitingOn,
+              createdAt: evidence?.createdAt.toISOString() ?? new Date().toISOString(),
+            }
+          : null,
+      };
+    };
+    const baseInterpretation = (summary: string, tasksForAnswer: unknown[]) => ({
+      summary,
+      answer: {
+        kind: "task_list",
+        summary,
+        targetName: "the team",
+        tasks: tasksForAnswer,
+      },
+      taskUpdates: [],
+      newTasks: [],
+      blockers: [],
+      decisions: [],
+      clarifications: [],
+      issues: [],
+    });
+    const joji = demoUsers.get("joji@example.com")!;
+    await ensureDemoQuestion(
+      db,
+      joji.id,
+      "What is George doing on the signup form?",
+      "4e8d2c5e-44d0-4e7e-9c5b-000000000005",
+      ago(12),
+      {
+        ...baseInterpretation(
+          "George's signup form is blocked on Joji's landing page. His last update was recorded 40 minutes ago.",
+          [answerItem("Add the signup form")],
+        ),
+        answer: {
+          ...baseInterpretation("George's signup form is blocked on Joji's landing page.", [answerItem("Add the signup form")]).answer,
+          targetName: "George",
+        },
+      },
+    );
+    await ensureDemoQuestion(
+      db,
+      joji.id,
+      "What is blocked?",
+      "4e8d2c5e-44d0-4e7e-9c5b-000000000006",
+      ago(7),
+      {
+        ...baseInterpretation(
+          "Three connected tasks are blocked in the launch chain: signup, QA, and publishing.",
+          [
+            answerItem("Add the signup form"),
+            answerItem("QA the landing page on staging"),
+            answerItem("Publish the launch"),
+          ],
+        ),
+      },
+    );
 
     console.log(`Demo ready: ${project.name}`);
     console.log(`Project id: ${project.id}`);

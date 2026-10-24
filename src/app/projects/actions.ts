@@ -84,6 +84,31 @@ export async function createTaskAction(
   }
 }
 
+export async function createGlobalTaskAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const user = await requireCurrentUser();
+    const projectId = z.uuid().parse(text(formData, "projectId"));
+    const input = createTaskInput.parse({
+      title: text(formData, "title"),
+      description: text(formData, "description"),
+      priority: text(formData, "priority") || "medium",
+      assigneeId: text(formData, "assigneeId"),
+      dueDate: text(formData, "dueDate"),
+      estimateHours: text(formData, "estimateHours"),
+      completionDetails: text(formData, "completionDetails"),
+    });
+    await createTask(user.id, projectId, input);
+    revalidatePath("/tasks");
+    revalidatePath(`/projects/${projectId}`);
+    return { success: true };
+  } catch (error) {
+    return toFormState(error);
+  }
+}
+
 export async function updateTaskAction(
   projectId: string,
   _prev: FormState,

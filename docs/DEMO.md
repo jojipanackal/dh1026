@@ -15,7 +15,7 @@ npm run dev
 ```
 
 Open `http://localhost:3000`, choose **Joji** from the user menu, and open
-**Agent**.
+**Tasks**.
 
 The seed creates these project members:
 
@@ -27,6 +27,14 @@ The seed creates these project members:
 | Jaice | Writing and handing off the launch copy |
 
 ## Demo story
+
+Start with the **Tasks** tab. It is the cross-project execution queue: use
+**All work** to see the whole launch chain, **My work** to see Joji's two
+assignments, or filter by **Blocked** to make the waiting chain visible. Every
+row links to the editable task record and shows the project, owner, priority,
+due date, and dependency context. Use **New task** to capture a small task
+directly; use **Ask Agent** when the work needs scope or ownership clarified
+through conversation.
 
 The project contains six simple tasks with a connected dependency chain:
 
@@ -73,6 +81,35 @@ handoff, and the staging deployment.
 
 Review the proposal, select the task update, and apply it. The completion note
 appears on the task and in its history.
+
+## Three demo workflows
+
+### 1. Morning plan to execution queue
+
+Open **Agent** as Joji. The morning briefing summarizes the six-task launch.
+Reply with:
+
+```text
+I will work on building the landing page first. The signup form is waiting on me.
+```
+
+The entry becomes the working record, and the **Tasks** tab remains the shared
+view for the resulting status and dependency state.
+
+### 2. Find the hidden wait
+
+From **Agent**, ask `What is blocked?` and open the signup task from the answer
+card. The task detail shows the owner, status, dependency, and history. Switch
+to **George** to see the same team's follow-up in George's private Agent
+conversation. Resolve the dependency from the project overview and return to
+**Tasks** to see the queue move.
+
+### 3. Close work with proof
+
+From **Agent**, submit a completion update with what was verified and handed
+off. Review and apply the proposal, then open **Tasks** and the task detail.
+The status, completion details, updated timestamp, and activity history all
+show the handoff instead of only a chat message.
 
 ## Five-minute team check-ins
 

@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Tasks workspace milestone — Cross-project execution queue (2026-10-25T03:51:42+05:30)
+
+- Implemented:
+  - Added the primary Tasks tab with All work/My work scopes, search and project/status/priority/assignee filters, summary counts, dependency context, and direct links into the existing editable task detail flow.
+  - Added global task creation from the Tasks tab while retaining Agent as the natural-language capture path.
+  - Seeded a grounded Joji conversation history with task questions and answer cards linked to the real landing-page launch records.
+- Files and areas changed: `src/app/tasks/page.tsx`, `src/app/tasks/new-task-dialog.tsx`, `src/components/app-shell/nav-items.ts`, `src/server/tasks.ts`, `src/app/projects/actions.ts`, `scripts/seed-demo.ts`, `tests/integration/services.test.ts`, `README.md`, `docs/DEMO.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (51/51), demo seed, authenticated HTTP 200 checks for `/tasks` and `/journal`, and content checks pass.
+- Decisions affecting later phases: Tasks is a shared execution surface over the existing task source of truth, not a second task system. Demo conversation entries use persisted task ids and evidence so the UI behaves like normal Agent history.
+- Remaining limitations: No bulk edits, saved views, calendar/timeline layout, or visual browser screenshot review was available in this environment.
+- Next phase: Use the Tasks workspace as the primary demo entry point, then add acknowledgement/quiet-hour policy to worker-generated follow-ups.
+
 ## Background worker milestone — Server-side five-minute check-ins (2026-10-25T03:44:45+05:30)
 
 - Implemented:
