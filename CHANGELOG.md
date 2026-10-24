@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-24T22:16:09+05:30 — De-duplicate Project Runner planning docs
+
+- Changed: `docs/TECH.md`, `docs/PHASES.md`, `docs/PROGRESS.md`.
+- Why: The PRD, TECH, and PHASES docs repeated each other and `AGENTS.md`. Each now has one job: PRD defines what to build, TECH defines how, PHASES defines the build order, and PROGRESS records completed phases. Removed TECH's copy of the build order and generic coding rules, PHASES' copy of the PRD success criteria, and PHASES' references to the nonexistent `PROJECT.md` and `MCP.md`. Added a phase-report template to the empty `PROGRESS.md`.
+- Validation: Checked that the relative links and section anchors in the edited docs point to existing files and headings.
+- Limitations: Docs-only; no implementation yet. Track choice is not yet recorded in the README.
+
 ## 2026-10-24T22:03:16+05:30 — Adapt template for Devin Hacks Kochi
 
 - Changed: `RULES.md`, `README.md`, `SUBMISSION.md`, `AGENTS.md`, `AI_USAGE.md`, `CHANGELOG.md`, `.github/pull_request_template.md`.
