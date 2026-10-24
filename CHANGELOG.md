@@ -4,7 +4,7 @@ Record each meaningful project change during the event, newest first. Update thi
 
 ## Event build log
 
-No project implementation has been recorded yet. Replace this sentence with entries as you build:
+Add entries as you build, newest first:
 
 ```text
 ## <actual timestamp> — <short change title>
@@ -15,7 +15,14 @@ No project implementation has been recorded yet. Replace this sentence with entr
 - Limitations: <known issues or "None identified in these checks">
 ```
 
-## Template setup — 10 October 2026
+## 2026-10-24T22:03:16+05:30 — Adapt template for Devin Hacks Kochi
+
+- Changed: `RULES.md`, `README.md`, `SUBMISSION.md`, `AGENTS.md`, `AI_USAGE.md`, `CHANGELOG.md`, `.github/pull_request_template.md`.
+- Why: The template came from an earlier Codex event; this event is Devin Hacks Kochi, solo, 12 hours, with four tracks.
+- Validation: Checked local Markdown links and searched for leftover Codex, team, and old-date references.
+- Limitations: Event date, venue, start time, and deadline are TBD until confirmed by organizers. No project implementation yet.
+
+## Template setup — 10 October 2026 (earlier Codex event)
 
 - Changed: Added the event README, rules, agent guide, change log, AI usage record, submission checklist, Git ignore rules, and pull request checklist.
 - Why: Give participants a consistent starting point for event rules, basic coding patterns, documented changes, and regular commits.

@@ -1,39 +1,33 @@
-# DevDay Exchange Community Hackathon: Kochi
+# Devin Hacks Kochi
 
-A repository template for participants at the 10–11 October 2026 hackathon. It contains event rules and documentation scaffolding; build your project from scratch at the event.
+A solo, 12-hour hackathon project. This repository started from a documentation template; the project itself is built from scratch at the event.
 
-**[Event and registration on Luma](https://luma.com/z10nz8gp)** · **[Event rules](RULES.md)** · **[Agent instructions](AGENTS.md)**
+**[Event rules and tracks](RULES.md)** · **[Agent instructions](AGENTS.md)** · **[Submission](SUBMISSION.md)**
 
 ## Event details
 
 | Detail | Information |
 | --- | --- |
-| Venue | JAIN University, Kochi |
-| Location | [Open the venue map](https://maps.app.goo.gl/Eme7gR7NDXSNRANu5) |
-| Rooms | 2008 and 2009 |
-| Check-in | 10 October 2026, 6:00 PM IST |
-| Kick-off | 10 October 2026, 6:30 PM IST |
-| Wrap-up | 11 October 2026, by 10:00 AM IST |
-| Participation | Solo or a team of up to 4 participants |
-| Theme | Open — build anything you like |
-
-Keep your approved Luma QR code ready for entry, and bring your laptop and charger. Eligible checked-in participants will receive Codex credits and OpenAI API credits.
+| Event | Devin Hacks Kochi |
+| Format | Solo, 12 hours |
+| Date and venue | TBD |
+| Submission deadline | TBD (IST) |
+| Tracks | Kill the Busywork · Make the Invisible Visible · Works Anyway · Make Room for Play |
+| AI tool | Devin |
 
 ## Use this template
 
-1. Select **Use this template → Create a new repository** on GitHub. Create your own project repository and clone it.
-2. Read [RULES.md](RULES.md) and [AGENTS.md](AGENTS.md) before building. Begin project implementation at the event.
-3. Fill in the project overview below as you build. Use any suitable language or framework, keeping the implementation simple.
-4. Record meaningful changes in [CHANGELOG.md](CHANGELOG.md) and your Codex usage in [AI_USAGE.md](AI_USAGE.md). Commit after completed milestones; aim for a meaningful checkpoint about every 30 minutes.
-5. Complete [SUBMISSION.md](SUBMISSION.md) with your code repository, short project description, and working demo. Follow submission instructions announced by the organizers.
-
-This template has no application code or required technology stack. The documentation and commit cadence are repository workflow guidance; the event participation rules are in [RULES.md](RULES.md).
+1. Read [RULES.md](RULES.md) and [AGENTS.md](AGENTS.md), then pick a track.
+2. Fill in the project overview below as you build. Use any suitable language or framework, keeping the implementation simple.
+3. Record meaningful changes in [CHANGELOG.md](CHANGELOG.md) and your Devin usage in [AI_USAGE.md](AI_USAGE.md). Commit after completed milestones; aim for a meaningful checkpoint about every 30 minutes.
+4. Complete [SUBMISSION.md](SUBMISSION.md) with your code repository, short project description, and working demo before the deadline.
 
 ## Project overview — complete during the event
 
 - **Project name:** TODO
+- **Track:** TODO — one of the four tracks in [RULES.md](RULES.md)
 - **Short description:** TODO — what it does, who it helps, and why it matters.
-- **Team:** TODO — participant names and GitHub handles; maximum 4 members.
+- **Builder:** TODO — your name and GitHub handle
 - **Working demo:** TODO — link or local demo instructions.
 - **Technology stack:** TODO
 
