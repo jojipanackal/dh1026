@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T01:42:14+05:30 — Jeera ASCII wordmark on empty journal
+
+- Changed: `src/components/jeera-wordmark.tsx` renders "JEERA" generated with figlet's ANSI Shadow font, shown centered on the empty journal thread above the composer; rows fade/rise in with staggered delays then a slow ambient pulse (`globals.css`, respects prefers-reduced-motion). Journal helper labels ("No entries yet", "Enter to send", private-journal tagline) removed in the same pass.
+- Why: User asked for an OpenCode-style ASCII label above the input, and to strip helper text.
+- Validation: typecheck and lint pass; Playwright confirmed `pre[aria-label=Jeera]` renders on an empty thread (new test user) and screenshot reviewed.
+- Limitations: Wordmark only shows when the thread is empty (by design, like OpenCode's start screen).
+
 ## 2026-10-25T01:26:40+05:30 — Project-agnostic journal chat
 
 - Changed: `/journal` is now one project-free chat per user — no project picker, header or labels. Journal entries are author-scoped (`journal_entries.project_id` nullable, migration `0003`); interpretation resolves the project per proposed item across all of the user's member projects (prompt now lists PROJECTS, per-project MEMBERS, and tasks tagged with `project=`); new tasks carry `projectId` (null → clarification question, unselectable in review); apply checks membership per item. Sidebar Conversations group removed; proposal card shows each item's project subtly.

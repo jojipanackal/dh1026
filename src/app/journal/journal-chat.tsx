@@ -12,6 +12,7 @@ import {
 } from "@/app/journal/actions";
 import { AppliedCard, ProposalCard } from "@/app/journal/proposal-card";
 import { Button } from "@/components/ui/button";
+import { JeeraWordmark } from "@/components/jeera-wordmark";
 import { dayKeyIst, formatDateTime, formatRelativeDay } from "@/lib/format";
 import type { Resolved } from "@/lib/journal/resolve";
 import { cn } from "@/lib/utils";
@@ -231,6 +232,11 @@ export function JournalChat({
     <div className="flex flex-col">
       <div className="px-4 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          {entries.length === 0 && optimistic.length === 0 ? (
+            <div className="flex min-h-[55svh] items-center justify-center">
+              <JeeraWordmark />
+            </div>
+          ) : null}
           {entries.map((entry, i) => (
             <div key={entry.id} className="contents">
               {(i === 0 ||
