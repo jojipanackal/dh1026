@@ -24,27 +24,52 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 
 ## Project overview — complete during the event
 
-- **Project name:** TODO
+- **Project name:** Project Runner
 - **Track:** TODO — one of the four tracks in [RULES.md](RULES.md)
 - **Short description:** TODO — what it does, who it helps, and why it matters.
 - **Builder:** TODO — your name and GitHub handle
 - **Working demo:** TODO — link or local demo instructions.
-- **Technology stack:** TODO
+- **Technology stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · Drizzle ORM · PostgreSQL · Zod · Vitest
 
 ### Run the project
 
-Replace these placeholders with commands that actually work for your project:
-
-1. Prerequisites and versions: TODO
-2. Dependency installation: TODO
-3. Environment setup: TODO — list required variable names and provide a sanitized `.env.example` if needed.
-4. Start the project: TODO
-5. Run checks or tests: TODO
+1. Prerequisites and versions: Node.js 22+, npm 10+, PostgreSQL 14+ running locally.
+2. Dependency installation: `npm install`
+3. Environment setup: copy `.env.example` to `.env.local` and set `DATABASE_URL`
+   to a `postgresql://` connection string, e.g.
+   `postgresql://YOUR_USER@localhost:5432/project_runner`.
+4. Create the database and apply migrations:
+   - `createdb project_runner` (add `-h /tmp` if your server listens on the
+     `/tmp` socket)
+   - `npm run db:migrate`
+5. Start the project: `npm run dev`, then open http://localhost:3000
+6. Run checks or tests:
+   - `npm run lint` — ESLint
+   - `npm run typecheck` — `tsc --noEmit`
+   - `npm test` — Vitest unit tests
+   - `npm run build` — production build (does not require a live database)
+   - `npm run db:generate` — regenerate migrations after schema changes
+   - `curl http://localhost:3000/api/health` — returns JSON health status
+     (200 when the database is reachable, 503 otherwise)
 
 ### Current status
 
-- Working features: TODO
-- Known limitations: TODO
-- Libraries, APIs, and public datasets used: TODO — include source links and applicable attribution.
+- Working features: application shell with responsive navigation (Overview,
+  Journal, Tasks, Team, Knowledge); Overview page with a live database health
+  card; `GET /api/health` endpoint; PostgreSQL connection via Drizzle ORM with
+  a `users` table migration; shared loading/empty/error state components;
+  custom 404 and error pages; environment validation (`parseServerEnv`) with
+  unit tests.
+- Known limitations: Journal, Tasks, Team, and Knowledge pages are honest
+  placeholders — those features land in later phases (see
+  [docs/PHASES.md](docs/PHASES.md)). No authentication yet.
+- Libraries, APIs, and public datasets used:
+  - Next.js, React, Tailwind CSS — https://nextjs.org, https://tailwindcss.com
+  - shadcn/ui components — https://ui.shadcn.com
+  - Drizzle ORM + drizzle-kit — https://orm.drizzle.team
+  - PostgreSQL driver `pg` — https://node-postgres.com
+  - Zod — https://zod.dev
+  - Vitest — https://vitest.dev
+  - lucide-react icons — https://lucide.dev
 
 See [AI_USAGE.md](AI_USAGE.md) for AI assistance and [CHANGELOG.md](CHANGELOG.md) for the development record.
