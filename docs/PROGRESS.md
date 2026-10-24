@@ -22,6 +22,15 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Tasks runner milestone — Inline status movement (2026-10-25T03:54:06+05:30)
+
+- Implemented: Added an inline status control to each Tasks queue row, reusing lifecycle validation, authorization, activity history, and `/tasks` revalidation from the existing move action.
+- Files and areas changed: `src/app/tasks/task-status-menu.tsx`, `src/app/tasks/page.tsx`, `src/app/projects/actions.ts`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: Typecheck, lint, 95 unit tests, diff check, and authenticated HTTP content checks pass.
+- Decisions affecting later phases: Tasks remains a shared operational surface; moving status is direct, while dependency resolution still requires the explicit project action.
+- Remaining limitations: No bulk status movement or drag-and-drop on the cross-project queue; project boards retain drag-and-drop.
+- Next phase: Final browser rehearsal when a browser surface is available.
+
 ## Demo polish milestone — Guided Agent entry points (2026-10-25T03:53:07+05:30)
 
 - Implemented: Added always-visible prompt chips for the seeded Agent workflows and corrected Tasks open/overdue counts so cancelled work remains terminal.

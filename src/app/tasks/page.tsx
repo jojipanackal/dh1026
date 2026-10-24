@@ -2,9 +2,10 @@ import Link from "next/link";
 import { connection } from "next/server";
 
 import { GlobalNewTaskDialog } from "@/app/tasks/new-task-dialog";
+import { TaskStatusMenu } from "@/app/tasks/task-status-menu";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
-import { PriorityBadge, StatusBadge } from "@/components/status-badge";
+import { PriorityBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -307,7 +308,7 @@ function TaskTable({ tasks }: { tasks: Awaited<ReturnType<typeof listTasksForUse
                     {task.dependency ? <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400">Waiting on {task.dependency.blockingUserName ?? task.dependency.waitingOn ?? "dependency"}</Badge> : null}
                   </div>
                 </td>
-                <td className="px-3 py-3"><StatusBadge status={task.status} /></td>
+                <td className="px-3 py-3"><TaskStatusMenu projectId={task.projectId} taskId={task.id} status={task.status} /></td>
                 <td className="px-3 py-3">
                   <span className="flex items-center gap-2 whitespace-nowrap">
                     <span className="flex size-6 items-center justify-center rounded-full bg-brand/15 text-xs font-medium text-brand">{task.assigneeName?.charAt(0).toUpperCase() ?? "?"}</span>

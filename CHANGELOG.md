@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:54:06+05:30 — Add inline task status movement
+
+- Changed: Added an inline status control to every Tasks queue row, connected to the existing lifecycle-validated `moveTask` action and activity history. Task moves now revalidate the shared `/tasks` workspace.
+- Why: The Tasks tab should be an execution surface, not only a report; the demo needs to show work moving without leaving the queue.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), `git diff --check`, and authenticated HTTP content checks for status controls passed.
+- Limitations: Status movement still follows the existing task lifecycle; dependency resolution remains a separate explicit project action.
+
 ## 2026-10-25T03:53:07+05:30 — Polish the demo entry points
 
 - Changed: Added persistent Agent prompt chips for the seeded task questions and corrected Tasks counts/due styling so cancelled work is not presented as open or overdue.

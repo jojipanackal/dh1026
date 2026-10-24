@@ -154,6 +154,7 @@ export async function moveTaskAction(
     });
     await moveTask(user.id, input.taskId, input.status);
     revalidatePath(`/projects/${projectId}`);
+    revalidatePath("/tasks");
     return { success: true };
   } catch (error) {
     return toFormState(error);
