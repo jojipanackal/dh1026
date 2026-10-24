@@ -13,6 +13,7 @@ export type TaskAnswerItem = {
 };
 
 export type TaskEvidence = {
+  authorId?: string;
   authorName: string;
   body: string;
   createdAt: string;
@@ -28,6 +29,7 @@ export type TaskAnswer = {
 type TaskRecord = Omit<TaskAnswerItem, "lastUpdate"> & {
   assigneeId: string | null;
   lastUpdate?: TaskEvidence | null;
+  evidence?: TaskEvidence[];
 };
 
 type AnswerContext = {
@@ -47,7 +49,7 @@ const priorityRank: Record<string, number> = {
 function mentionsTaskQuestion(body: string): boolean {
   const text = body.toLowerCase();
   const asksForInformation = /\b(what|which|show|list|give|tell|help|prioriti[sz]e)\b/.test(text);
-  const mentionsTasks = /\b(tasks?|work|to[- ]?dos?|assigned|priorit(?:y|ise|ize)|status|progress|update|waiting)\b/.test(text);
+  const mentionsTasks = /\b(tasks?|work|to[- ]?dos?|assigned|priorit(?:y|ise|ize)|status|progress|update|waiting|doing|working|happening)\b/.test(text);
   return asksForInformation && mentionsTasks;
 }
 
@@ -125,7 +127,11 @@ export function answerTaskQuestion(
       priority: task.priority,
       dueDate: task.dueDate,
       assigneeName: task.assigneeName,
-      lastUpdate: task.lastUpdate ?? null,
+      lastUpdate:
+        (target && task.evidence?.find((evidence) => evidence.authorId === target.id)) ??
+        task.lastUpdate ??
+        task.evidence?.[0] ??
+        null,
     })),
   };
 }

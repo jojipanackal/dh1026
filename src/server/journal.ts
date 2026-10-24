@@ -224,6 +224,7 @@ export async function interpretEntry(
           .select({
             body: journalEntries.body,
             interpretation: journalEntries.interpretation,
+            authorId: journalEntries.authorId,
             authorName: users.name,
             createdAt: journalEntries.createdAt,
           })
@@ -237,7 +238,7 @@ export async function interpretEntry(
           )
           .orderBy(desc(journalEntries.createdAt))
           .limit(200);
-  const evidenceByTask = new Map<string, TaskEvidence>();
+  const evidenceByTask = new Map<string, TaskEvidence[]>();
   for (const row of evidenceRows) {
     const interpretation = row.interpretation as {
       taskUpdates?: { taskId?: string }[];
@@ -247,14 +248,15 @@ export async function interpretEntry(
       ...(interpretation?.taskUpdates ?? []).map((item) => item.taskId),
       ...(interpretation?.blockers ?? []).map((item) => item.taskId),
     ];
-    for (const taskId of taskIds) {
-      if (taskId && !evidenceByTask.has(taskId)) {
-        evidenceByTask.set(taskId, {
-          authorName: row.authorName,
-          body: row.body,
-          createdAt: row.createdAt.toISOString(),
-        });
-      }
+    for (const taskId of new Set(taskIds.filter((id): id is string => Boolean(id)))) {
+      const evidence = evidenceByTask.get(taskId) ?? [];
+      evidence.push({
+        authorId: row.authorId,
+        authorName: row.authorName,
+        body: row.body,
+        createdAt: row.createdAt.toISOString(),
+      });
+      evidenceByTask.set(taskId, evidence);
     }
   }
   // Up to 6 earlier entries by this author, oldest first, so the model can
@@ -310,7 +312,7 @@ export async function interpretEntry(
       dueDate: task.dueDate,
       assigneeId: task.assigneeId,
       assigneeName: task.assigneeName,
-      lastUpdate: evidenceByTask.get(task.id) ?? null,
+      evidence: evidenceByTask.get(task.id) ?? [],
     })),
     membersByProject,
   });

@@ -90,4 +90,35 @@ describe("answerTaskQuestion", () => {
 
     expect(answer?.tasks.map((task) => task.id)).toEqual(["task-blocked"]);
   });
+
+  it("uses the named teammate's evidence when a task has multiple updates", () => {
+    const answer = answerTaskQuestion("What is Priya doing on Fix the payment callback?", {
+      ...context,
+      tasks: [
+        {
+          ...context.tasks[0],
+          evidence: [
+            {
+              authorId: george,
+              authorName: "George",
+              body: "I started the callback fix",
+              createdAt: "2026-10-25T01:00:00.000Z",
+            },
+            {
+              authorId: priya,
+              authorName: "Priya",
+              body: "I am testing the callback on staging",
+              createdAt: "2026-10-25T00:30:00.000Z",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(answer?.tasks[0]?.lastUpdate).toMatchObject({
+      authorId: priya,
+      authorName: "Priya",
+      body: "I am testing the callback on staging",
+    });
+  });
 });

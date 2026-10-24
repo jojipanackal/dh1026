@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:46:52+05:30 — Ground status answers in the named teammate
+
+- Changed: Preserved multiple journal evidence records per task, including author ids, and made task answers select the named teammate's latest update for questions such as “What is Priya doing on Checkout?”. Expanded the read-only question classifier and added a regression test.
+- Why: A current task status is not enough when several people have reported work on the same task; the answer must identify the requested person's recorded evidence.
+- Validation: `npm test` (91/91), `npm run test:integration` (44/44), `npm run typecheck`, `npm run lint`, and `git diff --check` passed.
+- Limitations: Evidence is still limited to the recent interpreted journal window; richer history search remains a later phase.
+
 ## 2026-10-25T02:45:34+05:30 — Gate new work on accountable planning context
 
 - Changed: Extended the Phase 10 conversation path so new work carries editable scope plus explicit owner, effort estimate, and target-date questions. New tasks with missing planning context remain unselectable until the author replies; existing-task scope changes persist through the normal activity history. Added focused unit and integration coverage.

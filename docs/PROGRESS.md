@@ -36,6 +36,18 @@ movement, then stale-work follow-ups.
 - Remaining limitations: Phase 10 still needs clearer multi-turn task-capture prompts, real authentication, and broader read-only answers. Phases 11–13 are not complete.
 - Next phase: Continue Phase 10 with authenticated team identity and richer daily-conversation task capture.
 
+## Phase 12 milestone — Person-specific status evidence (2026-10-25T02:46:52+05:30)
+
+- Implemented:
+  - Status evidence now retains the author id and a recent evidence list per task instead of only the globally newest entry.
+  - Questions naming a teammate and a task select that teammate's latest recorded update, preserving author, body, and timestamp for the answer card.
+  - The read-only classifier recognizes natural phrasing such as “What is Priya doing on Checkout?”.
+- Files and areas changed: `src/lib/journal/answers.ts`, `src/server/journal.ts`, `tests/journal-answers.test.ts`.
+- Checks run and results: `npm test` (91/91), `npm run test:integration` (44/44), `npm run typecheck`, `npm run lint`, and `git diff --check` pass.
+- Decisions affecting later phases: Evidence selection is explicit and author-aware; a missing teammate update remains unknown rather than being inferred from another person's update.
+- Remaining limitations: The evidence window is bounded to recent interpreted entries, and project/dependency history still needs richer retrieval.
+- Next phase: Continue Phase 12 with dependency-aware and project-level read-only answers.
+
 ## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
 
 - Implemented:
