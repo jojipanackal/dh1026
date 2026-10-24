@@ -68,23 +68,30 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 - Working features: application shell with responsive navigation (Overview,
   Journal, Projects, Team, Knowledge); demo user switcher (httpOnly cookie,
   no authentication); project creation and listing with per-status task
-  counts; project detail page with tasks table, status filter, members
-  panel, owner-only "add member" form, and recent activity feed; task
-  create/edit forms with lifecycle validation (todo, in_progress, blocked,
-  done, cancelled) and per-field change history; `completed_at` set on done
-  and cleared on reopen; activity events recorded for project/member/task
-  changes; Overview page with a live database health card;
+  counts; project detail page with Overview/Board/List/Activity/Members
+  views — the overview shows progress, reported blockers with reasons,
+  overdue and due-soon work, inferred stall warnings, journal blockers
+  awaiting review, and recent activity; the board supports drag-and-drop
+  status moves; task create/edit forms with lifecycle validation (todo,
+  in_progress, blocked, done, cancelled) and per-field change history;
+  `completed_at` set on done and cleared on reopen; activity events
+  recorded for project/member/task changes; an AI journal chat at
+  `/journal` that interprets entries into reviewable task changes applied
+  in one transaction; Overview page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
-  (`users`, `projects`, `project_memberships`, `tasks`, `activity_events`);
-  shared loading/empty/error state components; custom 404 and error pages;
-  environment validation (`parseServerEnv`) with unit tests; service-level
-  integration tests against a separate test database.
-- Known limitations: Journal, Team, and Knowledge pages are honest
-  placeholders — those features land in later phases (see
+  (`users`, `projects`, `project_memberships`, `tasks`,
+  `journal_entries`, `activity_events`); shared loading/empty/error state
+  components; custom 404 and error pages; environment validation
+  (`parseServerEnv`) with unit tests; service-level integration tests
+  against a separate test database.
+- Known limitations: Team and Knowledge pages are honest placeholders —
+  those features land in later phases (see
   [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
-  switcher only). Under Next.js cacheComponents, a not-found page rendered
-  from request-time checks (e.g. a non-member opening a project URL)
-  streams with a 200 status — a platform limitation, not a data leak.
+  switcher only). Manually blocked tasks have no reason field yet, so the
+  overview can only show "no reason recorded" for them. Under Next.js
+  cacheComponents, a not-found page rendered from request-time checks
+  (e.g. a non-member opening a project URL) streams with a 200 status — a
+  platform limitation, not a data leak.
 - Libraries, APIs, and public datasets used:
   - Next.js, React, Tailwind CSS — https://nextjs.org, https://tailwindcss.com
   - shadcn/ui components — https://ui.shadcn.com

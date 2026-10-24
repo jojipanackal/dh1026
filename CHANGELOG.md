@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T00:45:00+05:30 — Phase 4: project overview with progress and blockers
+
+- Changed: `/projects/[projectId]` opens on a new "Overview" view (first tab, now the default). `src/server/overview.ts` adds `getProjectOverview` (membership-checked): status counts and done %, currently blocked tasks with who marked them and the recorded reason (read from `activity_events`, including journal-applied `blockedReason`), overdue open tasks, upcoming priorities (high/urgent or due within 7 days), and blockers reported in journal entries that are still awaiting review. Rules live in `src/lib/overview.ts` (`latestBlockerInfo`, `dayDiff`, `isStalled`) and the UI in `overview-view.tsx`. In-progress tasks with no change for 4+ days appear under "Needs attention" explicitly badged "inferred — not reported", keeping reported blockers distinct from system guesses. `src/lib/dates.ts` gains `todayIst`, reused by `isOverdue`.
+- Why: Phase 4 of `docs/PHASES.md` — a central view of project execution that surfaces blocked work with its reported cause and separates reported facts from inference.
+- Validation: lint and typecheck pass; 76/76 unit and 36/36 integration tests pass, including a journal-apply → blocked-reason → overview check. The project page was fetched over HTTP on the dev server: all five cards render, a manually blocked task shows "no reason recorded", and the progress bar/done % match the database.
+- Limitations: Manual status moves capture no blocked reason, so those tasks show "no reason recorded" until a journal entry adds one. Stall detection is a fixed 4-day heuristic. The build was not re-run while the dev server was up.
+
 ## 2026-10-25T00:30:54+05:30 — Phase 3: AI journal chat
 
 - Changed: `/journal` is now an AI chat. Entries are stored first; OpenAI (via the AI SDK) interprets them into a validated proposal, which deterministic checks verify against real records. The user ticks items to apply in a proposal card, and they are applied in one transaction with journal-sourced activity events. Also adds: migration `0002` (`journal_entries`, `activity_events.journal_entry_id`); `OPENAI_API_KEY` and `OPENAI_MODEL` env vars; an env parsing fix so optional variables are forwarded; "via journal" badges in activity.

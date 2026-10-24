@@ -11,6 +11,7 @@ import { PriorityBadge, StatusBadge } from "@/components/status-badge";
 import { AddMemberForm } from "@/app/projects/[projectId]/add-member-form";
 import { FilterBar } from "@/app/projects/[projectId]/filter-bar";
 import { NewTaskDialog } from "@/app/projects/[projectId]/new-task-dialog";
+import { OverviewView } from "@/app/projects/[projectId]/overview-view";
 import { TaskBoard } from "@/app/projects/[projectId]/task-board";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { parseTaskFilters } from "@/lib/tasks/filters";
 import { TASK_STATUS_LABELS, type TaskStatus } from "@/lib/tasks/lifecycle";
 import { getCurrentUser } from "@/server/current-user";
 import { AppError } from "@/server/errors";
+import { getProjectOverview } from "@/server/overview";
 import {
   getProjectForMember,
   listUsersNotInProject,
@@ -41,7 +43,7 @@ import { listActivity, listTasks } from "@/server/tasks";
 // carries a 200 status (Next.js streaming semantics).
 export const instant = false;
 
-const VIEWS = ["board", "list", "activity", "members"] as const;
+const VIEWS = ["overview", "board", "list", "activity", "members"] as const;
 type View = (typeof VIEWS)[number];
 
 export default async function ProjectPage({
@@ -68,7 +70,7 @@ export default async function ProjectPage({
   const viewParam = str(query.view);
   const view: View = (VIEWS as readonly string[]).includes(viewParam ?? "")
     ? (viewParam as View)
-    : "board";
+    : "overview";
 
   let data;
   try {
@@ -89,14 +91,19 @@ export default async function ProjectPage({
     memberIds,
   );
 
-  const [taskList, activity, candidates] = await Promise.all([
-    listTasks(projectId, user.id, {
-      status: view === "list" ? filters.status : undefined,
-      assigneeId: filters.assignee,
-      priority: filters.priority,
-    }),
+  const [taskList, activity, candidates, overview] = await Promise.all([
+    view === "overview"
+      ? Promise.resolve([])
+      : listTasks(projectId, user.id, {
+          status: view === "list" ? filters.status : undefined,
+          assigneeId: filters.assignee,
+          priority: filters.priority,
+        }),
     listActivity(projectId, user.id, { limit: 20 }),
     role === "owner" ? listUsersNotInProject(projectId) : Promise.resolve([]),
+    view === "overview"
+      ? getProjectOverview(projectId, user.id)
+      : Promise.resolve(null),
   ]);
 
   const userNames = new Map(members.map((m) => [m.userId, m.name]));
@@ -104,7 +111,7 @@ export default async function ProjectPage({
 
   const viewHref = (v: View) => {
     const p = new URLSearchParams();
-    if (v !== "board") p.set("view", v);
+    if (v !== "overview") p.set("view", v);
     for (const [k, val] of [
       ["assignee", str(query.assignee)],
       ["priority", str(query.priority)],
@@ -153,6 +160,15 @@ export default async function ProjectPage({
             <FilterBar members={members} />
           </Suspense>
         </div>
+      ) : null}
+
+      {view === "overview" && overview ? (
+        <OverviewView
+          projectId={projectId}
+          overview={overview}
+          activity={activity}
+          userNames={userNames}
+        />
       ) : null}
 
       {view === "board" ? (

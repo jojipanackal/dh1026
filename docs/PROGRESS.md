@@ -13,6 +13,28 @@ One entry per completed phase from [PHASES.md](PHASES.md), newest first. Report 
 - Next phase:
 ```
 
+## Phase 4 — Project Progress and Blockers (2026-10-25T00:45+05:30)
+
+- Implemented:
+  - A new "Overview" view on `/projects/[projectId]` — the first tab and the default when no `?view=` is given (`?view=board` keeps the board).
+  - `getProjectOverview` in `src/server/overview.ts` (membership-checked) returns: status counts and done % (cancelled excluded from the denominator); blocked tasks with who marked them and the reported reason; overdue open tasks; upcoming priorities (high/urgent or due within 7 days); inferred stalls; and blockers from journal entries still in `ready` (awaiting review).
+  - Reported blocker reasons come from `activity_events`: the reason is taken from the newest event carrying `blockedReason` at or after the latest status→blocked transition, so a reason from a previous block cycle is never shown as current (`src/lib/overview.ts` `latestBlockerInfo`). Tasks blocked manually show "no reason recorded".
+  - Reported vs inferred is visible in the UI: the "Needs attention" card separates Overdue and "Reported in journal, not yet applied" (links to the entry) from "Possible stalls", which carry an "inferred — not reported" badge and an explanatory caption (in progress with no change for > 4 days).
+  - Each section has its own empty state; the page keeps the shared error/not-found handling.
+- Files and areas changed: `src/lib/overview.ts` (new, pure rules), `src/lib/dates.ts` (`todayIst`, now shared with `isOverdue`), `src/server/overview.ts` (new), `src/app/projects/[projectId]/overview-view.tsx` (new), `src/app/projects/[projectId]/page.tsx` (new default view), `tests/overview.test.ts`, `tests/integration/overview.test.ts`, `README.md`, `CHANGELOG.md`.
+- Checks run and results:
+  - lint and typecheck: pass. `npm test`: 76/76 pass. `npm run test:integration`: 36/36 pass, covering membership rejection, counts/done %, journal-applied blocker reason with entry link, manual block with no reason, overdue/upcoming/stall selection, pending-review blockers, and the empty project case.
+  - Rendered over HTTP on the dev server against real data (Kochi Metro App): 200; all five cards render; the manually blocked "Order lanyards" shows "no reason recorded" + who marked it; an overdue task and the 29% done figure match the database.
+- Decisions affecting later phases:
+  - Blockers still have no dedicated table; reported reasons live in `activity_events.changes.blockedReason`. If a later phase adds a `blockers` table, `latestBlockerInfo` is the place to swap the read.
+  - Stall inference is a fixed 4-day rule in `src/lib/overview.ts`, not an AI call. Phase 6 follow-ups can reuse `isStalled`/`staleDays` for "work appears stalled" triggers.
+  - The Overview view defaults for the project page; the board moved to `?view=board`. Easy to flip back if the default is wrong.
+- Remaining limitations:
+  - Manual blocks capture no reason, so "no reason recorded" is common until journal apply writes one. A reason prompt on manual block is a candidate improvement.
+  - Pending-review blockers read up to 30 recent `ready` entries per project — enough for the demo, not a complete history.
+  - `npm run build` was not re-run while the dev server was up.
+- Next phase: Phase 5 — Team Bandwidth and Workload.
+
 ## Phase 3 — Natural-Language Journal and AI Interpretation (2026-10-25T00:31+05:30)
 
 - Implemented:
