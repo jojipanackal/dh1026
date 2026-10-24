@@ -22,6 +22,13 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Chat polish — Remove purple AI identity icons (2026-10-25T03:24:29+05:30)
+
+- Implemented: Removed the purple Sparkles/Bot avatar treatment from Agent briefing, assistant, loading, header, and empty states while preserving text labels and interaction behavior.
+- Files and areas changed: `src/app/journal/journal-chat.tsx`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, and an HTTP smoke check pass; the rendered page contains no `lucide-sparkles` or purple avatar markup.
+- Remaining limitations: None identified in these checks.
+
 ## Shell polish — Remove Jira-like logo mark (2026-10-25T03:21:36+05:30)
 
 - Implemented: Removed the square-kanban icon from the desktop and mobile shell so the header presents Jeera without the Jira-like mark.

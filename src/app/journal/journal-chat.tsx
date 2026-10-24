@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   ArrowUpRight,
-  Bot,
   CalendarDays,
   CheckCircle2,
   CircleDot,
   ListTodo,
   SendHorizonal,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -141,10 +139,7 @@ function AgentBriefingCard({ message }: { message: AgentMessage }) {
   if (message.payload.kind !== "morning_briefing") return null;
   const briefing = message.payload;
   return (
-    <div className="flex gap-3">
-      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-        <Sparkles className="size-3.5" />
-      </span>
+    <div>
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">Jeera</span>
@@ -218,10 +213,7 @@ function AssistantMessage({
 }) {
   const resolved = entry.interpretation;
   return (
-    <div className="flex gap-3">
-      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-        <Sparkles className="size-3.5" />
-      </span>
+    <div>
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">Jeera</span>
@@ -415,21 +407,16 @@ export function JournalChat({
     <div className="flex min-h-[calc(100svh-5rem)] flex-col">
       <div className="mx-auto w-full max-w-4xl px-1 pb-6 pt-1 sm:px-4">
         <div className="mb-8 flex items-start justify-between gap-4 border-b pb-6">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/12 text-brand">
-              <Sparkles className="size-5" />
-            </span>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand">
-                Execution agent
-              </p>
-              <h1 className="mt-1 text-xl font-semibold tracking-tight">
-                Chat with Jeera
-              </h1>
-              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Tell Jeera what changed, ask what is happening, or let it keep the team moving.
-              </p>
-            </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand">
+              Execution agent
+            </p>
+            <h1 className="mt-1 text-xl font-semibold tracking-tight">
+              Chat with Jeera
+            </h1>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              Tell Jeera what changed, ask what is happening, or let it keep the team moving.
+            </p>
           </div>
           <span className="hidden rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
             Enter to send · Shift + Enter for a new line
@@ -439,10 +426,7 @@ export function JournalChat({
         <div className="flex flex-col gap-6">
           {timeline.length === 0 && optimistic.length === 0 ? (
             <div className="rounded-2xl border border-dashed bg-card/50 px-6 py-10 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand/12 text-brand">
-                <Bot className="size-6" />
-              </div>
-              <h2 className="mt-4 text-base font-medium">What should Jeera keep track of?</h2>
+              <h2 className="text-base font-medium">What should Jeera keep track of?</h2>
               <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
                 Ask about work, record a dependency, or describe a scope change. Consequential task updates always wait for your approval.
               </p>
@@ -505,10 +489,7 @@ export function JournalChat({
                   {m.body}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-                  <Sparkles className="size-3.5" />
-                </span>
+              <div>
                 <div className="flex items-center gap-3 rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
                   <TypingDots />
                   <span className="text-muted-foreground">Interpreting…</span>

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:24:29+05:30 — Remove the purple AI chat avatar
+
+- Changed: Removed the purple Sparkles/Bot avatar treatment from briefing messages, assistant responses, loading responses, the chat header, and the empty Agent state. Text labels and message content remain unchanged.
+- Why: The decorative AI icon made the conversation feel more like an AI demo than a natural task conversation.
+- Validation: `npm run typecheck`, `npm run lint`, and an HTTP smoke check confirmed the Agent page no longer renders the Sparkles avatar/icon.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T03:21:36+05:30 — Remove the Jira-like shell mark
 
 - Changed: Removed the square-kanban logo chip from the desktop and mobile app shell, leaving the Jeera wordmark and navigation controls in place.
