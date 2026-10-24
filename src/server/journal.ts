@@ -13,6 +13,7 @@ import {
   users,
 } from "@/db/schema";
 import { getAiConfig } from "@/lib/env";
+import { answerTaskQuestion } from "@/lib/journal/answers";
 import { isUuid } from "@/lib/ids";
 import { resolveInterpretation, type Resolved } from "@/lib/journal/resolve";
 import type { JournalPromptContext } from "@/lib/journal/prompt";
@@ -137,9 +138,6 @@ export async function interpretEntry(
     return entry;
   }
 
-  const config = (deps.getConfig ?? getAiConfig)();
-  const interpret = deps.interpret ?? interpretJournal;
-
   const fail = async (message: string) => {
     const [updated] = await db
       .update(journalEntries)
@@ -148,10 +146,6 @@ export async function interpretEntry(
       .returning();
     return updated;
   };
-
-  if (!config.ok) {
-    return fail(config.error);
-  }
 
   const [author] = await db
     .select()
@@ -172,6 +166,8 @@ export async function interpretEntry(
             assigneeId: tasks.assigneeId,
             projectId: tasks.projectId,
             projectName: projects.name,
+            dueDate: tasks.dueDate,
+            updatedAt: tasks.updatedAt,
           })
           .from(tasks)
           .innerJoin(projects, eq(projects.id, tasks.projectId))
@@ -223,6 +219,71 @@ export async function interpretEntry(
       };
     }),
   };
+
+  const taskAnswer = answerTaskQuestion(entry.body, {
+    authorId: userId,
+    authorName: author.name,
+    tasks: taskRows.map((task) => ({
+      id: task.id,
+      title: task.title,
+      projectId: task.projectId,
+      projectName: task.projectName,
+      status: task.status as TaskStatus,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      assigneeId: task.assigneeId,
+      assigneeName: task.assigneeName,
+    })),
+    membersByProject,
+  });
+
+  if (taskAnswer) {
+    const [updated] = await db
+      .update(journalEntries)
+      .set({
+        status: "ready",
+        interpretation: resolveInterpretation(
+          {
+            summary: taskAnswer.summary,
+            taskUpdates: [],
+            newTasks: [],
+            blockers: [],
+            decisions: [],
+            clarifications: [],
+          },
+          {
+            projects: projectRows,
+            tasks: taskRows.map((task) => ({
+              id: task.id,
+              title: task.title,
+              status: task.status as TaskStatus,
+              priority: task.priority,
+              assigneeId: task.assigneeId,
+              projectId: task.projectId,
+            })),
+            membersByProject: Object.fromEntries(
+              Object.entries(membersByProject).map(([projectId, members]) => [
+                projectId,
+                members.map((member) => member.id),
+              ]),
+            ),
+          },
+          taskAnswer,
+        ),
+        interpretationError: null,
+        model: "task-query",
+        interpretedAt: new Date(),
+      })
+      .where(eq(journalEntries.id, entry.id))
+      .returning();
+    return updated;
+  }
+
+  const config = (deps.getConfig ?? getAiConfig)();
+  const interpret = deps.interpret ?? interpretJournal;
+  if (!config.ok) {
+    return fail(config.error);
+  }
 
   try {
     const { createOpenAI } = await import("@ai-sdk/openai");

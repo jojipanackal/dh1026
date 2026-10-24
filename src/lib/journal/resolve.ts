@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 
 import type { AiInterpretation } from "./interpretation-schema";
+import type { TaskAnswer } from "./answers";
 import {
   aiBlocker,
   aiDecision,
@@ -46,6 +47,7 @@ export type ResolvedBlocker = AiBlocker & {
 
 export type Resolved = {
   summary: string;
+  answer?: TaskAnswer | null;
   taskUpdates: ResolvedTaskUpdate[];
   newTasks: ResolvedNewTask[];
   blockers: ResolvedBlocker[];
@@ -89,6 +91,7 @@ function jaccard(a: string, b: string): number {
 export function resolveInterpretation(
   raw: AiInterpretation,
   ctx: Ctx,
+  answer: TaskAnswer | null = null,
 ): Resolved {
   const issues: string[] = [];
   const projectById = new Map(ctx.projects.map((p) => [p.id, p]));
@@ -208,6 +211,7 @@ export function resolveInterpretation(
 
   return {
     summary: raw.summary,
+    answer,
     taskUpdates,
     newTasks,
     blockers,

@@ -114,6 +114,41 @@ describe("journal", () => {
     expect(row.interpretationError).toContain("OPENAI_API_KEY");
   });
 
+  it("answers task questions from trusted records without calling the AI provider", async () => {
+    const { owner, project } = await fixture();
+    const task = await createTask(owner.id, project.id, {
+      title: "Prepare the demo",
+      description: null,
+      priority: "urgent",
+      assigneeId: owner.id,
+      dueDate: "2026-10-25",
+      estimateHours: null,
+    });
+    const entry = await submitJournalEntry(
+      owner.id,
+      {
+        body: "Which tasks assigned to Own should be prioritized for today?",
+        submissionKey: key(),
+      },
+      {
+        getConfig: () => ({
+          ok: false as const,
+          error: "AI is not configured: set OPENAI_API_KEY in .env.local",
+        }),
+        interpret: async () => {
+          throw new Error("The provider should not be called for task questions");
+        },
+      },
+    );
+    const [row] = await db.select().from(journalEntries).where(eq(journalEntries.id, entry.id));
+    const interpretation = row.interpretation as {
+      answer?: { kind: string; tasks: { id: string }[] };
+    };
+    expect(row.status).toBe("ready");
+    expect(interpretation.answer?.kind).toBe("task_list");
+    expect(interpretation.answer?.tasks.map((item) => item.id)).toEqual([task.id]);
+  });
+
   it("same submissionKey twice gives one entry", async () => {
     const { owner } = await fixture();
     const k = key();

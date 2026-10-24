@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:03:00+05:30 — Split task questions from journal proposals
+
+- Changed: Added a deterministic read-only task-query path in `src/lib/journal/answers.ts` and `src/server/journal.ts`, so questions such as “Which tasks assigned to George should be prioritized for today?” return George's open tasks ordered by priority and due date instead of producing a clarification proposal. Added `TaskAnswer` data to resolved journal interpretations and a linked task-search card in `src/app/journal/journal-chat.tsx`. Refreshed the journal header, empty state, message bubbles, composer, and quick prompts; task context now includes due dates.
+- Why: The old prompt only supported journal-update interpretation, so a normal question was incorrectly treated as missing update information. The chat also needed a clearer chatbot-style answer surface.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (89/89), and `npm run test:integration` (41/41) pass. Browser automation was unavailable in this session; the running dev server remained available for manual review.
+- Limitations: The first read-only tool covers task-list questions; broader project-history questions still use the proposal interpreter and need a future read-only tool.
+
 ## 2026-10-25T01:42:14+05:30 — Jeera ASCII wordmark on empty journal
 
 - Changed: `src/components/jeera-wordmark.tsx` renders "JEERA" generated with figlet's ANSI Shadow font, shown centered on the empty journal thread above the composer; rows fade/rise in with staggered delays then a slow ambient pulse (`globals.css`, respects prefers-reduced-motion). Journal helper labels ("No entries yet", "Enter to send", private-journal tagline) removed in the same pass.

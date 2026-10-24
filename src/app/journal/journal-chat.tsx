@@ -1,8 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { SendHorizonal, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bot,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  ListTodo,
+  SendHorizonal,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -12,7 +22,6 @@ import {
 } from "@/app/journal/actions";
 import { AppliedCard, ProposalCard } from "@/app/journal/proposal-card";
 import { Button } from "@/components/ui/button";
-import { JeeraWordmark } from "@/components/jeera-wordmark";
 import { dayKeyIst, formatDateTime, formatRelativeDay } from "@/lib/format";
 import type { Resolved } from "@/lib/journal/resolve";
 import { cn } from "@/lib/utils";
@@ -42,6 +51,69 @@ function TypingDots() {
   );
 }
 
+function priorityLabel(priority: string) {
+  return priority.charAt(0).toUpperCase() + priority.slice(1);
+}
+
+function TaskAnswerCard({ answer }: { answer: NonNullable<Resolved["answer"]> }) {
+  return (
+    <div className="mt-3 overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <div className="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
+        <ListTodo className="size-4 text-brand" />
+        <span className="text-xs font-medium">Task search</span>
+        <span className="text-xs text-muted-foreground">
+          {answer.tasks.length} open {answer.tasks.length === 1 ? "task" : "tasks"}
+        </span>
+      </div>
+      {answer.tasks.length > 0 ? (
+        <div className="divide-y">
+          {answer.tasks.map((task) => (
+            <Link
+              key={task.id}
+              href={`/projects/${task.projectId}/tasks/${task.id}`}
+              className="group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
+            >
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+                {task.status === "blocked" ? (
+                  <CircleDot className="size-3.5" />
+                ) : task.status === "done" ? (
+                  <CheckCircle2 className="size-3.5" />
+                ) : (
+                  <span className="size-1.5 rounded-full bg-current" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium group-hover:text-brand">
+                  {task.title}
+                </span>
+                <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  <span>{task.projectName}</span>
+                  <span>·</span>
+                  <span>{priorityLabel(task.priority)} priority</span>
+                  {task.dueDate ? (
+                    <>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="size-3" />
+                        {task.dueDate}
+                      </span>
+                    </>
+                  ) : null}
+                </span>
+              </span>
+              <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="px-4 py-4 text-sm text-muted-foreground">
+          Nothing needs attention right now.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function AssistantMessage({
   entry,
   membersByProject,
@@ -64,9 +136,11 @@ function AssistantMessage({
         <Sparkles className="size-3.5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="mb-1 font-mono text-xs text-muted-foreground">
-          Jeera AI{entry.model ? ` · ${entry.model}` : ""}
-        </p>
+        <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Jeera</span>
+          <span>·</span>
+          <span>{entry.model === "task-query" ? "Task search" : "Work journal"}</span>
+        </div>
 
         {entry.status === "pending" ? (
           <div className="flex items-center gap-3 rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
@@ -97,12 +171,16 @@ function AssistantMessage({
         {entry.status === "ready" && resolved ? (
           <div className="flex flex-col gap-2">
             <p className="text-sm">{resolved.summary}</p>
-            <ProposalCard
-              entryId={entry.id}
-              resolved={resolved}
-              membersByProject={membersByProject}
-            />
-            {resolved.decisions.length > 0 ? (
+            {resolved.answer ? (
+              <TaskAnswerCard answer={resolved.answer} />
+            ) : (
+              <ProposalCard
+                entryId={entry.id}
+                resolved={resolved}
+                membersByProject={membersByProject}
+              />
+            )}
+            {!resolved.answer && resolved.decisions.length > 0 ? (
               <div className="rounded-2xl bg-card px-4 py-3 text-sm">
                 <p className="mb-1 text-xs font-medium text-muted-foreground">
                   Decisions
@@ -124,7 +202,7 @@ function AssistantMessage({
                 </p>
               </div>
             ) : null}
-            {resolved.clarifications.length > 0 ? (
+            {!resolved.answer && resolved.clarifications.length > 0 ? (
               <div className="rounded-2xl bg-card px-4 py-3 text-sm">
                 <ul className="flex flex-col gap-1">
                   {resolved.clarifications.map((c, i) => (
@@ -136,7 +214,7 @@ function AssistantMessage({
                 </p>
               </div>
             ) : null}
-            {resolved.issues.length > 0 ? (
+            {!resolved.answer && resolved.issues.length > 0 ? (
               <p className="text-xs text-muted-foreground">
                 {resolved.issues.join(" · ")}
               </p>
@@ -229,12 +307,52 @@ export function JournalChat({
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="px-4 py-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="flex min-h-[calc(100svh-5rem)] flex-col">
+      <div className="mx-auto w-full max-w-4xl px-1 pb-6 pt-1 sm:px-4">
+        <div className="mb-8 flex items-start justify-between gap-4 border-b pb-6">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/12 text-brand">
+              <Sparkles className="size-5" />
+            </span>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand">
+                Work journal
+              </p>
+              <h1 className="mt-1 text-xl font-semibold tracking-tight">
+                Chat with Jeera
+              </h1>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Ask about your work, or write an update for Jeera to turn into a reviewable change.
+              </p>
+            </div>
+          </div>
+          <span className="hidden rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+            Enter to send · Shift + Enter for a new line
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (
-            <div className="flex min-h-[55svh] items-center justify-center">
-              <JeeraWordmark />
+            <div className="rounded-2xl border border-dashed bg-card/50 px-6 py-10 text-center">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand/12 text-brand">
+                <Bot className="size-6" />
+              </div>
+              <h2 className="mt-4 text-base font-medium">What would you like to know?</h2>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                Ask a read-only question or tell Jeera what changed. Proposed task updates always wait for your approval.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {["What are my tasks for today?", "Show blocked work", "I finished the registration flow"].map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => setText(prompt)}
+                    className="rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-foreground"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
           {entries.map((entry, i) => (
@@ -255,7 +373,7 @@ export function JournalChat({
                 className="flex flex-col gap-3 scroll-mt-4"
               >
               <div className="self-end">
-                <div className="max-w-xl rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
+                <div className="max-w-[min(38rem,85vw)] rounded-2xl rounded-br-md border bg-muted/70 px-4 py-3 text-sm whitespace-pre-wrap shadow-sm">
                   {entry.body}
                 </div>
                 <p className="mt-1 text-right font-mono text-xs text-muted-foreground">
@@ -276,7 +394,7 @@ export function JournalChat({
           {optimistic.map((m) => (
             <div key={m.key} className="flex flex-col gap-3">
               <div className="self-end">
-                <div className="max-w-xl rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap opacity-70">
+                <div className="max-w-[min(38rem,85vw)] rounded-2xl rounded-br-md border bg-muted/70 px-4 py-3 text-sm whitespace-pre-wrap opacity-70 shadow-sm">
                   {m.body}
                 </div>
               </div>
@@ -295,11 +413,11 @@ export function JournalChat({
         </div>
       </div>
 
-      <div className="sticky bottom-0 bg-background/95 px-4 pb-3 pt-2 backdrop-blur">
-        <div className="mx-auto max-w-3xl">
+      <div className="sticky bottom-0 mt-auto bg-background/95 px-1 pb-1 pt-3 backdrop-blur sm:px-4">
+        <div className="mx-auto max-w-4xl">
           <div
             className={cn(
-              "rounded-3xl border bg-card shadow-sm transition-shadow",
+              "rounded-2xl border bg-card shadow-sm transition-shadow",
               "focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40",
             )}
           >
@@ -318,7 +436,7 @@ export function JournalChat({
               }}
               rows={1}
               maxLength={5000}
-              placeholder="Tell Jeera what you worked on, what's blocked, or what you decided…"
+              placeholder="Ask about tasks, or tell Jeera what you worked on…"
               className="max-h-48 min-h-11 w-full resize-none bg-transparent px-4 pt-3.5 text-sm outline-none placeholder:text-muted-foreground"
             />
             <div className="flex items-center justify-end px-3 pb-2.5">

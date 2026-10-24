@@ -39,6 +39,7 @@ export type JournalPromptContext = {
     priority: string;
     assigneeName: string | null;
     projectName: string;
+    dueDate?: string | null;
   }[];
   membersByProject: Record<string, { id: string; name: string }[]>;
   recent?: RecentJournalTurn[];
@@ -59,7 +60,7 @@ export function buildJournalPrompt(context: JournalPromptContext, body: string) 
     ? context.tasks
         .map(
           (t) =>
-            `- ${t.id} | ${t.title} | project=${t.projectName} | status=${t.status} | priority=${t.priority} | assignee=${t.assigneeName ?? "unassigned"}`,
+            `- ${t.id} | ${t.title} | project=${t.projectName} | status=${t.status} | priority=${t.priority} | assignee=${t.assigneeName ?? "unassigned"} | due=${t.dueDate ?? "none"}`,
         )
         .join("\n")
     : "(none)";

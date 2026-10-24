@@ -76,9 +76,10 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
   status moves; task create/edit forms with lifecycle validation (todo,
   in_progress, blocked, done, cancelled) and per-field change history;
   `completed_at` set on done and cleared on reopen; activity events
-  recorded for project/member/task changes; an AI journal chat at
-  `/journal` that interprets entries into reviewable task changes applied
-  in one transaction; Overview page with a live database health card;
+  recorded for project/member/task changes; a chatbot-style journal at
+  `/journal` that answers trusted task-list questions and interprets work
+  updates into reviewable task changes applied in one transaction; Overview
+  page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
   (`users`, `projects`, `project_memberships`, `tasks`,
   `journal_entries`, `activity_events`); shared loading/empty/error state
