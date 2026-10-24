@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function MobileProjectSelect({
+export function ProjectSelect({
   projects,
   selected,
 }: {

@@ -7,7 +7,7 @@ import {
   type ThreadEntry,
 } from "@/app/journal/journal-chat";
 import { Suspense } from "react";
-import { MobileProjectSelect } from "@/app/journal/project-select";
+import { ProjectSelect } from "@/app/journal/project-select";
 import { isUuid } from "@/lib/ids";
 import type { Resolved } from "@/lib/journal/resolve";
 import { getCurrentUser } from "@/server/current-user";
@@ -84,24 +84,18 @@ export default async function JournalPage({
 
   return (
     <div>
-      {/* Plain (unpinned) header: project name on desktop, project picker
-          on mobile (the sidebar Conversations group handles switching). */}
-      <div className="mx-auto w-full max-w-3xl pb-4">
-        <div className="hidden items-baseline gap-3 md:flex">
-          <h1 className="text-sm font-medium">{projectName}</h1>
-          <p className="text-xs text-muted-foreground">
-            Your private journal — AI proposes changes; nothing applies until
-            you say so.
-          </p>
-        </div>
-        <div className="md:hidden">
+      {/* Plain (unpinned) header: project picker plus a hint about the
+          review-then-apply model. */}
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 pb-4">
+        <div className="w-full md:w-56">
           <Suspense fallback={null}>
-            <MobileProjectSelect
-              projects={projectList}
-              selected={selected}
-            />
+            <ProjectSelect projects={projectList} selected={selected} />
           </Suspense>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Your private journal — AI proposes changes; nothing applies until
+          you say so.
+        </p>
       </div>
 
       <JournalChat

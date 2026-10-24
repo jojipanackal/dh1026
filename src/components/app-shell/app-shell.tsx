@@ -1,12 +1,10 @@
 import { Suspense } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { SquareKanban } from "lucide-react";
 
 import { AppNav } from "@/components/app-shell/app-nav";
-import { Conversations } from "@/components/app-shell/conversations";
 import { ThemeToggle } from "@/components/app-shell/theme-toggle";
 import { UserSwitcher } from "@/components/app-shell/user-switcher";
 import {
@@ -14,7 +12,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarProvider,
@@ -64,10 +61,6 @@ function Shell({
                 <AppNav />
               </Suspense>
             </SidebarGroup>
-            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-              <SidebarGroupLabel>Conversations</SidebarGroupLabel>
-              <Conversations />
-            </SidebarGroup>
           </SidebarContent>
 
           <SidebarFooter>
@@ -75,14 +68,7 @@ function Shell({
               <div className="flex items-center gap-1 group-data-[collapsible=icon]:justify-center">
                 <UserSwitcher />
               </div>
-              <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:hidden">
-                <Badge
-                  variant="outline"
-                  className="text-xs font-normal text-muted-foreground"
-                  title="Demo identity — no authentication"
-                >
-                  Demo identity · no auth
-                </Badge>
+              <div className="flex items-center justify-end gap-2 group-data-[collapsible=icon]:hidden">
                 <ThemeToggle className="shrink-0" />
               </div>
             </div>

@@ -46,10 +46,10 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
      `/tmp` socket)
    - `createdb project_runner_test` (only needed for `npm run test:integration`)
    - `npm run db:migrate`
-5. Seed demo users: `npm run db:seed` (idempotent, 5 users only)
+5. Seed demo users: `npm run db:seed` (idempotent, 4 users only)
 6. Start the project: `npm run dev`, then open http://localhost:3000
-7. Pick a demo user in the sidebar ("Demo identity — no authentication";
-   the choice is stored in an httpOnly cookie, not a login).
+7. Pick a demo user from the user menu at the bottom of the sidebar (the
+   choice is stored in an httpOnly cookie — demo identity, not a login).
 8. Run checks or tests:
    - `npm run lint` — ESLint
    - `npm run typecheck` — `tsc --noEmit`

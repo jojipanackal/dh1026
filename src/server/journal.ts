@@ -568,7 +568,8 @@ export async function listJournalThread(
     .limit(limit);
 }
 
-// Latest entry per project for the rail's excerpt/time (own entries only).
+// Latest entry per project, used to pick the journal's default project
+// (own entries only).
 export async function listLatestEntryPerProject(userId: string) {
   const rows = await db
     .select({
@@ -589,8 +590,7 @@ export async function listLatestEntryPerProject(userId: string) {
 }
 
 // The journal page's implicit selection when no projectId param is given:
-// most recently journaled project, else the first project. Kept here so the
-// sidebar Conversations rail marks the same project active by default.
+// most recently journaled project, else the first project.
 export function pickDefaultProjectId(
   projectIds: string[],
   latest: Map<string, { createdAt: Date }>,

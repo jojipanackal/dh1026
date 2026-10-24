@@ -54,8 +54,3 @@ export function dayKeyIst(value: Date | string): string {
   return dayKeyFormat.format(new Date(value));
 }
 
-// Collapse a message body to a single truncated line for list previews.
-export function excerpt(body: string, max = 60): string {
-  const oneLine = body.replace(/\s+/g, " ").trim();
-  return oneLine.length > max ? `${oneLine.slice(0, max)}…` : oneLine;
-}

@@ -7,11 +7,10 @@ import { users } from "../src/db/schema";
 loadEnvConfig(process.cwd());
 
 const DEMO_USERS = [
-  { name: "Asha Menon", email: "asha.menon@example.com" },
-  { name: "Rahul Nair", email: "rahul.nair@example.com" },
-  { name: "Priya Varghese", email: "priya.varghese@example.com" },
-  { name: "Arjun Pillai", email: "arjun.pillai@example.com" },
-  { name: "Meera Thomas", email: "meera.thomas@example.com" },
+  { name: "Joji", email: "joji@example.com" },
+  { name: "George", email: "george@example.com" },
+  { name: "Vaishakh", email: "vaishakh@example.com" },
+  { name: "Jaice", email: "jaice@example.com" },
 ];
 
 async function main() {

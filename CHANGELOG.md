@@ -29,6 +29,13 @@ Add entries as you build, newest first:
 - Validation: Measured in a browser (Playwright, 1440x900): the scrollbar gutter is 15px beside the message column, the composer is anchored near the viewport bottom, and the page does not scroll (document height = viewport). Lint and typecheck pass.
 - Limitations: None identified in these checks.
 
+## 2026-10-25T01:10:00+05:30 — Simplify sidebar footer and rename demo users
+
+- Changed: Removed the "Conversations" rail from the sidebar (`conversations.tsx`, `conversations-nav.tsx` deleted); the journal page now shows its project picker on all breakpoints instead of relying on the rail (`MobileProjectSelect` → `ProjectSelect`). Removed the "Demo identity · no auth" badge from the footer; the user switcher trigger is now full-width so clicking the name opens the user menu. Demo users renamed to Joji, George, Vaishakh, Jaice in `scripts/seed.ts` and in the dev database (the unused fifth seeded user was deleted; it had no references). `excerpt` helper removed from `lib/format.ts` (only the rail used it).
+- Why: User direction — a simpler sidebar without the conversations rail or the no-auth label, and real teammate names for the demo.
+- Validation: lint and typecheck pass; 76/76 unit and 36/36 integration tests pass; `/journal` returns 200 with no "Conversations"/"Demo identity" markup and shows the project picker and new user names.
+- Limitations: Journal project switching on desktop now goes through the picker in the page header. Existing journal entries may still mention old demo names in their text.
+
 ## 2026-10-25T01:01:00+05:30 — Collapsed sidebar shows expand icon
 
 - Changed: Collapsed (icon) sidebar header now renders `SidebarTrigger` (PanelLeft icon, expands on click) instead of the logo chip; `collapsed-logo-button.tsx` removed.

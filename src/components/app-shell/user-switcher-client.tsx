@@ -27,7 +27,7 @@ export function UserSwitcherClient({
   const current = users.find((u) => u.id === currentUserId);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:flex-none">
       <Select
         value={currentUserId ?? ""}
         disabled={pending}
@@ -38,7 +38,7 @@ export function UserSwitcherClient({
         }}
       >
         <SelectTrigger
-          className="h-7 w-auto gap-1.5 rounded-md border-transparent bg-transparent px-2 text-sm shadow-none hover:bg-muted group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:[&>svg]:hidden"
+          className="h-7 w-auto min-w-0 flex-1 gap-1.5 rounded-md border-transparent bg-transparent px-2 text-sm shadow-none hover:bg-muted group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:[&>svg]:hidden"
           size="sm"
         >
           {current ? (
