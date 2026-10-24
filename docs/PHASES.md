@@ -307,6 +307,7 @@ real movement from stale activity.
 
 - Answer task, person, project, and dependency status questions.
 - Show the latest evidence, author, timestamp, and confidence/freshness.
+- Preserve interruptions, resumptions, handoffs, and next steps as task-linked context without changing task status unless the author explicitly changes it.
 - Distinguish reported facts, applied task state, and agent inference.
 - Track sprint movement through meaningful transitions, scope changes, dependency resolution, and review handoffs.
 - Explain why a task or sprint is at risk.
@@ -314,6 +315,7 @@ real movement from stale activity.
 ### Acceptance criteria
 
 - “What is B doing on Checkout?” returns the latest grounded evidence when available.
+- “What happened to B’s work?” includes the latest interruption or resumption context when recorded.
 - “What is blocked?” identifies dependency owners and evidence age.
 - Silence is shown as stale or unknown, never as proof that someone is idle.
 - Sprint risk explanations link to concrete tasks, dependencies, or missing evidence.

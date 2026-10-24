@@ -50,6 +50,7 @@ const base = {
   newTasks: [],
   blockers: [],
   decisions: [],
+  contextNotes: [],
   clarifications: [],
 };
 
@@ -349,6 +350,53 @@ describe("resolveInterpretation", () => {
       ctx,
     );
     expect(r.blockers[0].projectId).toBe(P1);
+  });
+
+  it("keeps interruptions as context without changing task status", () => {
+    const r = resolveInterpretation(
+      {
+        ...base,
+        contextNotes: [
+          {
+            taskId: T1,
+            kind: "pause",
+            note: "I got pulled into a production issue and will return later.",
+            nextStep: "Resume the badge print setup",
+            followUpInHours: 2,
+            confidence: "high",
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(r.contextNotes[0]).toMatchObject({
+      taskId: T1,
+      taskTitle: "Print badges",
+      projectId: P1,
+      kind: "pause",
+      followUpInHours: 2,
+    });
+    expect(r.taskUpdates).toHaveLength(0);
+  });
+
+  it("asks when to check back after an open-ended pause", () => {
+    const r = resolveInterpretation(
+      {
+        ...base,
+        contextNotes: [
+          {
+            taskId: T1,
+            kind: "pause",
+            note: "I am temporarily occupied with another issue.",
+            nextStep: null,
+            followUpInHours: null,
+            confidence: "high",
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(r.clarifications).toContain('When should I check back on "Print badges"?');
   });
 });
 

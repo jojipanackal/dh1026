@@ -248,18 +248,28 @@ export async function interpretEntry(
     const interpretation = row.interpretation as {
       taskUpdates?: { taskId?: string }[];
       blockers?: { taskId?: string }[];
+      contextNotes?: {
+        taskId?: string | null;
+        kind?: "progress" | "pause" | "resume" | "handoff" | "context";
+        note?: string;
+        nextStep?: string | null;
+      }[];
     } | null;
     const taskIds = [
       ...(interpretation?.taskUpdates ?? []).map((item) => item.taskId),
       ...(interpretation?.blockers ?? []).map((item) => item.taskId),
+      ...(interpretation?.contextNotes ?? []).map((item) => item.taskId),
     ];
     for (const taskId of new Set(taskIds.filter((id): id is string => Boolean(id)))) {
       const evidence = evidenceByTask.get(taskId) ?? [];
+      const context = interpretation?.contextNotes?.find((note) => note.taskId === taskId);
       evidence.push({
         authorId: row.authorId,
         authorName: row.authorName,
-        body: row.body,
+        body: context?.note ?? row.body,
         createdAt: row.createdAt.toISOString(),
+        kind: context?.kind,
+        nextStep: context?.nextStep,
       });
       evidenceByTask.set(taskId, evidence);
     }
@@ -369,6 +379,7 @@ export async function interpretEntry(
             newTasks: [],
             blockers: [],
             decisions: [],
+            contextNotes: [],
             clarifications: [],
           },
           {

@@ -29,6 +29,7 @@ const empty: AiInterpretation = {
   newTasks: [],
   blockers: [],
   decisions: [],
+  contextNotes: [],
   clarifications: [],
 };
 

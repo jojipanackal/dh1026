@@ -46,6 +46,7 @@ const SUGGESTED_PROMPTS = [
   "What are my tasks for today?",
   "What is blocked?",
   "What is George doing on the signup form?",
+  "I got pulled into another issue; I will return to the landing page in 2 hours.",
 ] as const;
 
 function TypingDots() {
@@ -114,9 +115,11 @@ function TaskAnswerCard({ answer }: { answer: NonNullable<Resolved["answer"]> })
                 {task.lastUpdate ? (
                   <span className="mt-2 block line-clamp-2 text-xs text-muted-foreground/80">
                     <span className="font-medium text-muted-foreground">
+                      {task.lastUpdate.kind ? `${task.lastUpdate.kind} · ` : ""}
                       {task.lastUpdate.authorName} · {formatDateTime(new Date(task.lastUpdate.createdAt))}
                     </span>{" "}
                     {task.lastUpdate.body}
+                    {task.lastUpdate.nextStep ? ` Next: ${task.lastUpdate.nextStep}` : ""}
                   </span>
                 ) : null}
                 {task.dependency ? (
@@ -354,6 +357,7 @@ function AssistantMessage({
             <AppliedCard
               appliedChanges={entry.appliedChanges}
               taskProjects={taskProjects}
+              contextNotes={resolved?.contextNotes ?? []}
             />
           </div>
         ) : null}

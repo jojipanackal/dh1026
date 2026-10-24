@@ -90,7 +90,7 @@ A journal submission should follow this general flow:
 6. Validate the result against a schema using Zod.
 7. Resolve references to existing records and detect possible ambiguities or duplicate tasks.
 8. Apply permitted changes through application services, requesting confirmation where required.
-9. Store the original message with channel provenance and record the resulting changes/dependencies.
+9. Store the original message with channel provenance and record the resulting changes, dependencies, and task-linked context notes.
 10. Refresh the relevant project views and workload indicators.
 11. Return a concise explanation of what changed and what requires attention in the originating channel.
 
@@ -106,6 +106,7 @@ An interpretation may contain:
 - Reported blockers.
 - Technical decisions and rationale.
 - Proposed follow-up actions.
+- Task-linked context notes for progress, pauses, resumptions, handoffs, and next steps.
 - References to existing entities.
 - Uncertainties or clarification requests.
 
@@ -118,6 +119,7 @@ Requirements:
 - Require real database records for entity references.
 - Make operations idempotent where practical to reduce duplicate changes during retries.
 - Preserve the source journal entry for traceability.
+- Keep context notes separate from task status so an interruption does not become a false blocker or completion.
 
 ## 6. Data and Persistence
 
@@ -184,6 +186,7 @@ For the MVP, background work runs in a separate Node process in this repository:
 - The worker scans all project memberships, uses a PostgreSQL advisory lock to prevent concurrent copies, and relies on the unique `(user_id, dedupe_key)` constraint for retry-safe message creation.
 - The web heartbeat remains a fallback for local demos, not the production scheduler.
 - Follow-up rules stay explicit and evidence-based; channel delivery, quiet hours, acknowledgement, dismissal, and escalation are separate policy work.
+- A task-linked pause with an explicit check-in interval suppresses that task's follow-up until the interval elapses; a pause without a time produces a clarification question instead of inventing a schedule.
 
 The worker is intentionally not a second application or task system. It imports the same service layer and writes to the same PostgreSQL source of truth. A deployment still needs a process supervisor or hosted scheduled job to restart/run it reliably.
 

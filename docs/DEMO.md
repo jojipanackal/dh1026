@@ -71,6 +71,30 @@ Which tasks assigned to George should be prioritized for today?
 Expected result: Jeera returns George's open work ordered by priority and due
 date.
 
+To show context memory without changing task state, submit:
+
+```text
+I got pulled into a production issue. The landing page is still in progress;
+I will return to it in 2 hours.
+```
+
+Expected result: Jeera records a **pause** context note against the landing-page
+task, keeps the task `In progress`, and pauses the worker's follow-up until the
+two-hour check-in window. Ask the Agent:
+
+```text
+What is Joji doing on the landing page?
+```
+
+The answer should include the interruption and the next step. Later submit:
+
+```text
+I am back on the landing page and continuing the responsive layout.
+```
+
+That creates a **resume** context note and lets normal stale-work follow-ups
+continue.
+
 Open the project **Overview** and use **Resolve & resume** on one dependency in
 the chain. The selected task moves from Blocked to In progress and both the
 dependency resolution and task transition are recorded in activity history.

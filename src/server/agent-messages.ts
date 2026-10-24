@@ -199,6 +199,13 @@ type FollowUpTask = {
   updatedAt: Date;
 };
 
+type ContextMemory = {
+  createdAt: Date;
+  kind: "progress" | "pause" | "resume" | "handoff" | "context";
+  followUpInHours: number | null;
+  nextStep: string | null;
+};
+
 function minutesSince(date: Date, now: Date) {
   return Math.max(1, Math.floor((now.getTime() - date.getTime()) / 60_000));
 }
@@ -263,18 +270,38 @@ async function runFollowUpSweepForProjects(projectIds: string[], now: Date) {
     .orderBy(desc(journalEntries.createdAt))
     .limit(300);
   const lastEvidence = new Map<string, Date>();
+  const latestContext = new Map<string, ContextMemory>();
   for (const row of evidenceRows) {
     const interpretation = row.interpretation as {
       taskUpdates?: { taskId?: string }[];
       blockers?: { taskId?: string }[];
+      contextNotes?: {
+        taskId?: string | null;
+        kind?: ContextMemory["kind"];
+        followUpInHours?: number | null;
+        nextStep?: string | null;
+      }[];
     } | null;
     const taskIds = [
       ...(interpretation?.taskUpdates ?? []).map((item) => item.taskId),
       ...(interpretation?.blockers ?? []).map((item) => item.taskId),
+      ...(interpretation?.contextNotes ?? []).map((item) => item.taskId),
     ];
     for (const taskId of new Set(taskIds.filter((id): id is string => Boolean(id)))) {
       const key = `${row.authorId}:${taskId}`;
       if (!lastEvidence.has(key)) lastEvidence.set(key, row.createdAt);
+    }
+    for (const note of interpretation?.contextNotes ?? []) {
+      if (!note.taskId || !note.kind) continue;
+      const key = `${row.authorId}:${note.taskId}`;
+      if (!latestContext.has(key)) {
+        latestContext.set(key, {
+          createdAt: row.createdAt,
+          kind: note.kind,
+          followUpInHours: note.followUpInHours ?? null,
+          nextStep: note.nextStep ?? null,
+        });
+      }
     }
   }
 
@@ -310,6 +337,14 @@ async function runFollowUpSweepForProjects(projectIds: string[], now: Date) {
     const evidenceAt = lastEvidence.get(`${task.assigneeId}:${task.id}`) ?? task.updatedAt;
     const minutes = minutesSince(evidenceAt, now);
     if (minutes < FOLLOW_UP_INTERVAL_MINUTES) continue;
+    const context = latestContext.get(`${task.assigneeId}:${task.id}`);
+    if (
+      context?.kind === "pause" &&
+      context.followUpInHours !== null &&
+      minutes < context.followUpInHours * 60
+    ) {
+      continue;
+    }
     const recipientName = memberNames.get(task.assigneeId) ?? "there";
     const dependency = dependencyByTask.get(task.id) ?? null;
     const dependencyText = dependency

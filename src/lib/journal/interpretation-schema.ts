@@ -91,12 +91,43 @@ export const aiDecision = z.object({
   relatedTaskId: z.string().nullable(),
 });
 
+export const aiContextNote = z.object({
+  taskId: z
+    .string()
+    .nullable()
+    .describe("Existing task id this context belongs to, or null when it is not task-specific"),
+  kind: z
+    .enum(["progress", "pause", "resume", "handoff", "context"])
+    .describe("The coordination context: progress, pause, resume, handoff, or general context"),
+  note: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .describe("The durable context that teammates should know about"),
+  nextStep: z
+    .string()
+    .trim()
+    .max(500)
+    .nullable()
+    .describe("The next step or expected resumption action, when stated"),
+  followUpInHours: z
+    .number()
+    .int()
+    .min(0)
+    .max(168)
+    .nullable()
+    .describe("How many hours to wait before checking again, when explicitly stated"),
+  confidence,
+});
+
 export const aiInterpretation = z.object({
   summary: z.string().describe("One or two sentence summary of the entry"),
   taskUpdates: z.array(aiTaskUpdate),
   newTasks: z.array(aiNewTask),
   blockers: z.array(aiBlocker),
   decisions: z.array(aiDecision),
+  contextNotes: z.array(aiContextNote),
   clarifications: z
     .array(z.string())
     .describe("Questions to ask the author when something is ambiguous"),

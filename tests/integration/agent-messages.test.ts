@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { tasks } from "@/db/schema";
+import { journalEntries, tasks } from "@/db/schema";
 import { addProjectMember, createProject } from "@/server/projects";
 import {
   listAgentMessages,
@@ -16,6 +16,46 @@ beforeAll(ensureTestDb);
 afterEach(truncateAll);
 
 describe("runTeamFollowUpSweep", () => {
+  it("respects a task-linked pause until its requested check-in time", async () => {
+    const owner = await insertUser("Owner", "owner@example.com");
+    const project = await createProject(owner.id, { name: "Launch" });
+    const task = await createTask(owner.id, project.id, {
+      title: "Build page",
+      description: null,
+      status: "in_progress",
+      priority: "high",
+      assigneeId: owner.id,
+      dueDate: null,
+      estimateHours: 3,
+    });
+    await db.insert(journalEntries).values({
+      authorId: owner.id,
+      body: "I got pulled into an incident and will return later.",
+      submissionKey: crypto.randomUUID(),
+      status: "ready",
+      interpretation: {
+        summary: "Recorded a pause.",
+        taskUpdates: [],
+        newTasks: [],
+        blockers: [],
+        decisions: [],
+        contextNotes: [{
+          taskId: task.id,
+          kind: "pause",
+          note: "I got pulled into an incident and will return later.",
+          nextStep: "Resume the page",
+          followUpInHours: 2,
+          confidence: "high",
+        }],
+        clarifications: [],
+      },
+      createdAt: new Date("2026-10-25T11:45:00.000Z"),
+    });
+
+    expect(await runTeamFollowUpSweep(owner.id, new Date("2026-10-25T12:30:00.000Z"))).toEqual({ created: 0 });
+    expect(await runTeamFollowUpSweep(owner.id, new Date("2026-10-25T14:00:00.000Z"))).toEqual({ created: 1 });
+  });
+
   it("checks stale active work for teammates and deduplicates a time bucket", async () => {
     const owner = await insertUser("Owner", "owner@example.com");
     const teammate = await insertUser("Teammate", "teammate@example.com");

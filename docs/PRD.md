@@ -61,7 +61,8 @@ Users must be able to talk to Jeera in a daily conversation and submit free-form
 The system should interpret these updates and identify relevant project information.
 
 **Expected behavior:**
-- Extract relevant tasks, status changes, blockers, decisions, and follow-up actions.
+- Extract relevant tasks, status changes, blockers, decisions, follow-up actions, and task-linked context.
+- Preserve interruptions, resumptions, handoffs, and next steps even when the task status does not change.
 - Associate information with existing tasks or propose new tasks when appropriate.
 - Ask for clarification when an update is ambiguous or important information is missing.
 - Allow users to review or correct AI-generated interpretations.
@@ -129,6 +130,7 @@ The platform should reduce the need for manual status chasing.
 - Request updates when important information is missing.
 - Follow up on blockers or work that appears stalled.
 - Ask targeted questions that help clarify progress, dependencies, or next actions.
+- Ask when to check back after an open-ended interruption and respect an explicit check-in time.
 - Avoid excessive, repetitive, or irrelevant reminders.
 - Allow users to respond naturally and have relevant project information updated.
 

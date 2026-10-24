@@ -163,6 +163,18 @@ const EVIDENCE = [
     minutesAgo: 30,
   },
   {
+    email: "joji@example.com",
+    body: "I got pulled into a production issue. The landing page is still in progress; I will return to the page after that is handled.",
+    taskTitle: "Build the landing page",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000011",
+    minutesAgo: 15,
+    contextNote: {
+      kind: "pause",
+      nextStep: "Resume the landing page",
+      followUpInHours: 2,
+    } as const,
+  },
+  {
     email: "george@example.com",
     body: "I am waiting on Joji's landing page before I can add the signup form.",
     taskTitle: "Add the signup form",
@@ -323,6 +335,11 @@ async function ensureEvidence(
   body: string,
   submissionKey: string,
   createdAt: Date,
+  contextNote?: {
+    kind: "progress" | "pause" | "resume" | "handoff" | "context";
+    nextStep: string | null;
+    followUpInHours: number | null;
+  },
 ) {
   const [existing] = await db
     .select()
@@ -349,14 +366,27 @@ async function ensureEvidence(
         interpretation: {
           summary: body,
           answer: null,
-          taskUpdates: [{ taskId, taskTitle: "demo evidence", projectId }],
+          taskUpdates: contextNote ? [] : [{ taskId, taskTitle: "demo evidence", projectId }],
           newTasks: [],
           blockers: [],
           decisions: [],
+          contextNotes: contextNote
+            ? [{
+                taskId,
+                kind: contextNote.kind,
+                note: body,
+                nextStep: contextNote.nextStep,
+                followUpInHours: contextNote.followUpInHours,
+                confidence: "high",
+              }]
+            : [],
           clarifications: [],
           issues: [],
         },
-        appliedChanges: { updatedTaskIds: [taskId], createdTaskIds: [] },
+        appliedChanges: {
+          updatedTaskIds: contextNote ? [] : [taskId],
+          createdTaskIds: [],
+        },
         model: "demo-seed",
         createdAt,
         interpretedAt: createdAt,
@@ -542,6 +572,7 @@ async function main() {
         evidence.body,
         evidence.key,
         ago(evidence.minutesAgo),
+        evidence.contextNote,
       );
       evidenceByTask.set(evidence.taskTitle, entry);
     }
@@ -554,6 +585,11 @@ async function main() {
       const evidence = evidenceByTask.get(taskTitle);
       const dependency = dependencyByTaskTitle.get(taskTitle);
       const assignee = [...demoUsers.values()].find((user) => user.id === task.assigneeId);
+      const contextNote = evidence
+        ? (evidence.interpretation as {
+            contextNotes?: { taskId?: string; kind?: string; nextStep?: string | null }[];
+          } | null)?.contextNotes?.find((note) => note.taskId === task.id)
+        : null;
       return {
         id: task.id,
         title: task.title,
@@ -569,6 +605,8 @@ async function main() {
               authorName: assignee?.name ?? "Teammate",
               body: evidence.body,
               createdAt: evidence.createdAt.toISOString(),
+              kind: contextNote?.kind,
+              nextStep: contextNote?.nextStep,
             }
           : null,
         dependency: dependency

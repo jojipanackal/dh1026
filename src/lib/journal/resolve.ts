@@ -10,12 +10,14 @@ import type { AiInterpretation } from "./interpretation-schema";
 import type { TaskAnswer } from "./answers";
 import {
   aiBlocker,
+  aiContextNote,
   aiDecision,
   aiNewTask,
   aiTaskUpdate,
 } from "./interpretation-schema";
 
 type AiBlocker = z.infer<typeof aiBlocker>;
+type AiContextNote = z.infer<typeof aiContextNote>;
 type AiDecision = z.infer<typeof aiDecision>;
 type AiNewTask = z.infer<typeof aiNewTask>;
 type AiTaskUpdate = z.infer<typeof aiTaskUpdate>;
@@ -31,9 +33,13 @@ type CompatibleTaskUpdate = Omit<
   >;
 type CompatibleNewTask = Omit<AiNewTask, "dueDate" | "estimateHours"> &
   Partial<Pick<AiNewTask, "dueDate" | "estimateHours">>;
-type CompatibleInterpretation = Omit<AiInterpretation, "taskUpdates" | "newTasks"> & {
+type CompatibleInterpretation = Omit<
+  AiInterpretation,
+  "taskUpdates" | "newTasks" | "contextNotes"
+> & {
   taskUpdates: CompatibleTaskUpdate[];
   newTasks: CompatibleNewTask[];
+  contextNotes?: AiContextNote[];
 };
 
 export type ResolvedTaskUpdate = AiTaskUpdate & {
@@ -67,6 +73,11 @@ export type ResolvedBlocker = AiBlocker & {
   waitingOnUserId: string | null;
 };
 
+export type ResolvedContextNote = AiContextNote & {
+  taskTitle: string | null;
+  projectId: string | null;
+};
+
 export type Resolved = {
   summary: string;
   answer?: TaskAnswer | null;
@@ -74,6 +85,7 @@ export type Resolved = {
   newTasks: ResolvedNewTask[];
   blockers: ResolvedBlocker[];
   decisions: AiDecision[];
+  contextNotes: ResolvedContextNote[];
   clarifications: string[];
   issues: string[];
 };
@@ -121,6 +133,7 @@ export function resolveInterpretation(
   answer: TaskAnswer | null = null,
 ): Resolved {
   const issues: string[] = [];
+  const clarifications = [...raw.clarifications];
   const projectById = new Map(ctx.projects.map((p) => [p.id, p]));
   const taskById = new Map(ctx.tasks.map((t) => [t.id, t]));
   const cleanAssignee = (id: string | null, projectId: string) => {
@@ -294,6 +307,23 @@ export function resolveInterpretation(
     relatedTaskId: d.relatedTaskId && taskById.has(d.relatedTaskId) ? d.relatedTaskId : null,
   }));
 
+  const contextNotes: ResolvedContextNote[] = (raw.contextNotes ?? []).flatMap((note) => {
+    const task = note.taskId ? taskById.get(note.taskId) : undefined;
+    if (note.taskId && !task) {
+      issues.push("Dropped context for an unknown task");
+      return [];
+    }
+    if (note.kind === "pause" && note.followUpInHours === null && task) {
+      clarifications.push(`When should I check back on "${task.title}"?`);
+    }
+    return [{
+      ...note,
+      taskId: task?.id ?? null,
+      taskTitle: task?.title ?? null,
+      projectId: task?.projectId ?? null,
+    }];
+  });
+
   return {
     summary: raw.summary,
     answer,
@@ -301,7 +331,8 @@ export function resolveInterpretation(
     newTasks,
     blockers,
     decisions,
-    clarifications: raw.clarifications,
+    contextNotes,
+    clarifications: [...new Set(clarifications)],
     issues,
   };
 }

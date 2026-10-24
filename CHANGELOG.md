@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:07:29+05:30 — Remember coordination context and respect pauses
+
+- Changed: Added structured task-linked context notes for progress, pauses, resumptions, handoffs, next steps, and explicit check-in intervals. Teammate status answers now use the latest context evidence, context-only updates can be saved without changing task status, and the follow-up worker defers timed pauses. The demo includes a seeded interruption and a guided prompt.
+- Why: Real coordination requires remembering why someone temporarily stopped, what they will do next, and when it is appropriate to ask again; an `In progress` status alone cannot represent that.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (97/97), `npm run test:integration` (53/53), `git diff --check`, and context-memory integration coverage passed.
+- Limitations: Context is stored in the journal interpretation JSON and currently has no standalone searchable timeline or quiet-hours policy; external channel delivery remains out of scope.
+
 ## 2026-10-25T05:05:00+05:30 — Make Tasks a dependency graph and expand the demo
 
 - Changed: Added a Graph view as the default Tasks tab, with recorded dependency arrows, waiting-on context, independent work, and links into task details. Expanded the dedicated launch demo from six to ten tasks, five open dependency links, richer teammate evidence, and a broader blocked-work conversation.

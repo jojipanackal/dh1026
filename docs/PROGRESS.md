@@ -22,6 +22,15 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Coordinator context milestone — Interruptions and resumptions (2026-10-25T05:07:29+05:30)
+
+- Implemented: Added structured task-linked context notes for progress, pauses, resumptions, handoffs, next steps, and explicit check-in intervals. Context-only updates are reviewable/savable without changing task status; teammate answers show the latest context; the worker defers timed pauses.
+- Files and areas changed: `src/lib/journal/interpretation-schema.ts`, `src/lib/journal/prompt.ts`, `src/lib/journal/resolve.ts`, `src/server/journal.ts`, `src/server/agent-messages.ts`, `src/app/journal/journal-chat.tsx`, `src/app/journal/proposal-card.tsx`, `src/lib/agent/telegram.ts`, `scripts/seed-demo.ts`, tests, `README.md`, `docs/PRD.md`, `docs/TECH.md`, `docs/PHASES.md`, `docs/DEMO.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: Typecheck, lint, 97 unit tests, 53 integration tests, and diff check pass.
+- Decisions affecting later phases: Task status remains a state machine; coordination context is evidence attached to the journal entry and task, so interruptions do not become false blockers or completions.
+- Remaining limitations: Context is stored inside interpretation JSON rather than a standalone searchable event table; quiet hours, acknowledgement, and escalation are still future policy work.
+- Next phase: Add a dedicated searchable context timeline and make follow-up acknowledgement/resolution explicit before external channel delivery.
+
 ## Tasks graph milestone — Connected demo dependency map (2026-10-25T05:05:00+05:30)
 
 - Implemented: Made Graph the default Tasks view, showing recorded handoffs as connected blocking → blocked cards with waiting-on context, plus independent work. Kept Queue as the filtered execution table with inline status movement.

@@ -121,7 +121,8 @@ export function ProposalCard({
   const hasProposals =
     resolved.taskUpdates.length > 0 ||
     resolved.newTasks.length > 0 ||
-    resolved.blockers.length > 0;
+    resolved.blockers.length > 0 ||
+    resolved.contextNotes.length > 0;
 
   function apply() {
     startTransition(async () => {
@@ -204,6 +205,46 @@ export function ProposalCard({
   return (
     <div className="mt-2 rounded-xl border bg-card">
       <div className="flex flex-col divide-y text-sm">
+        {resolved.contextNotes.map((note, i) => (
+          <div key={`c${i}`} className="bg-brand/5 px-3 py-2.5">
+            <div className="flex items-start gap-2.5">
+              <span className="mt-0.5 rounded-full border border-brand/30 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand">
+                {note.kind}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  {note.taskTitle && note.projectId && note.taskId ? (
+                    <Link
+                      href={`/projects/${note.projectId}/tasks/${note.taskId}`}
+                      className="font-medium underline-offset-4 hover:underline"
+                    >
+                      {note.taskTitle}
+                    </Link>
+                  ) : (
+                    <span className="font-medium">Team context</span>
+                  )}
+                  {note.confidence !== "high" ? (
+                    <Badge variant="outline" className="font-normal">
+                      {note.confidence}
+                    </Badge>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">{note.note}</p>
+                {note.nextStep ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Next: {note.nextStep}
+                  </p>
+                ) : null}
+                {note.followUpInHours !== null ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Check back in {note.followUpInHours} hour{note.followUpInHours === 1 ? "" : "s"}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ))}
+
         {resolved.taskUpdates.map((u, i) => (
           <div key={`u${i}`} className="px-3 py-2.5">
             <div className="flex items-start gap-2.5">
@@ -669,14 +710,24 @@ export function ProposalCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-3 py-2.5">
-        <Button size="sm" onClick={apply} disabled={pending || count === 0}>
-          {pending ? "Applying…" : `Apply ${count} change${count === 1 ? "" : "s"}`}
+        <Button
+          size="sm"
+          onClick={apply}
+          disabled={pending || (count === 0 && resolved.contextNotes.length === 0)}
+        >
+          {pending
+            ? "Saving…"
+            : count > 0
+            ? `Apply ${count} change${count === 1 ? "" : "s"}`
+            : "Save context"}
         </Button>
         <Button size="sm" variant="ghost" onClick={dismiss} disabled={pending}>
           Dismiss
         </Button>
         <span className="text-xs text-muted-foreground max-sm:basis-full">
-          Proposed by AI. Nothing changes until you apply.
+          {resolved.contextNotes.length > 0
+            ? "Context is kept with the journal and shared in task answers."
+            : "Proposed by AI. Nothing changes until you apply."}
         </span>
       </div>
     </div>
@@ -686,10 +737,12 @@ export function ProposalCard({
 export function AppliedCard({
   appliedChanges,
   taskProjects,
+  contextNotes,
 }: {
   appliedChanges: { updatedTaskIds?: string[]; createdTaskIds?: string[] } | null;
   // Task id -> project id, so each applied change can link to its task.
   taskProjects: Record<string, string>;
+  contextNotes: Resolved["contextNotes"];
 }) {
   const updated = appliedChanges?.updatedTaskIds ?? [];
   const created = appliedChanges?.createdTaskIds ?? [];
@@ -719,6 +772,17 @@ export function AppliedCard({
           <li key={id}>{taskLink(id, "Created task")}</li>
         ))}
       </ul>
+      {contextNotes.length > 0 ? (
+        <div className="mt-2 border-t pt-2 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">Context saved</p>
+          {contextNotes.map((note, index) => (
+            <p key={index} className="mt-0.5">
+              {note.taskTitle ? `${note.taskTitle}: ` : ""}{note.note}
+              {note.nextStep ? ` Next: ${note.nextStep}` : ""}
+            </p>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

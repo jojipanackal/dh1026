@@ -62,7 +62,9 @@ export function formatTelegramReply(entry: {
       ].filter(Boolean);
       lines.push(`• ${task.title} (${details.join(", ")})`);
       if (task.lastUpdate) {
-        lines.push(`  ${task.lastUpdate.authorName}: ${task.lastUpdate.body}`);
+        lines.push(
+          `  ${task.lastUpdate.kind ? `${task.lastUpdate.kind} · ` : ""}${task.lastUpdate.authorName}: ${task.lastUpdate.body}${task.lastUpdate.nextStep ? ` Next: ${task.lastUpdate.nextStep}` : ""}`,
+        );
       }
       if (task.dependency) {
         lines.push(

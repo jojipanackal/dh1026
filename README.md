@@ -98,7 +98,10 @@ workflow before adding external chat adapters.
   keeps incomplete new work in clarification until those commitments are
   answered before applying approved changes; blocked work can be explicitly
   resolved and resumed from the project overview; web messages carry channel
-  provenance and the server exposes a normalized ingress boundary for future
+  provenance and task-linked context notes preserve interruptions, resumptions,
+  handoffs, and next steps without forcing a status change; teammate answers
+  include that dated context and timed pauses suppress follow-ups until their
+  check-in window; the server exposes a normalized ingress boundary for future
   Slack/Google Chat adapters; Overview
   page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations

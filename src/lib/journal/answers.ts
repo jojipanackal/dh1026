@@ -25,6 +25,8 @@ export type TaskEvidence = {
   authorName: string;
   body: string;
   createdAt: string;
+  kind?: "progress" | "pause" | "resume" | "handoff" | "context";
+  nextStep?: string | null;
 };
 
 export type TaskAnswer = {

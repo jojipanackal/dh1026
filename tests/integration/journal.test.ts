@@ -43,6 +43,7 @@ const empty: AiInterpretation = {
   newTasks: [],
   blockers: [],
   decisions: [],
+  contextNotes: [],
   clarifications: [],
 };
 
@@ -83,6 +84,47 @@ describe("journal", () => {
     expect(interp2.taskUpdates[0].taskTitle).toBe("Task A");
     expect(interp2.taskUpdates[0].projectId).toBe(project.id);
     expect(row.model).toBe("mock-model");
+  });
+
+  it("answers a teammate question from an interruption context note", async () => {
+    const { owner, project } = await fixture();
+    const teammate = await insertUser("Teammate", "teammate@example.com");
+    await addProjectMember(owner.id, project.id, { userId: teammate.id, role: "member" });
+    const task = await createTask(owner.id, project.id, {
+      title: "Build page",
+      description: null,
+      status: "in_progress",
+      priority: "high",
+      assigneeId: teammate.id,
+      dueDate: null,
+      estimateHours: 3,
+    });
+    await submitJournalEntry(
+      teammate.id,
+      { body: "I got pulled into a production issue and will return to the page in two hours.", submissionKey: key() },
+      interp({
+        ...empty,
+        contextNotes: [{
+          taskId: task.id,
+          kind: "pause",
+          note: "I got pulled into a production issue and will return to the page in two hours.",
+          nextStep: "Resume the page",
+          followUpInHours: 2,
+          confidence: "high",
+        }],
+      }),
+    );
+
+    const question = await submitJournalEntry(
+      owner.id,
+      { body: "What is Teammate doing on Build page?", submissionKey: key() },
+      interp(empty),
+    );
+    const answer = (question.interpretation as { answer?: { tasks: { lastUpdate?: { body: string; kind?: string } | null }[] } }).answer;
+    expect(answer?.tasks[0]?.lastUpdate).toMatchObject({
+      body: "I got pulled into a production issue and will return to the page in two hours.",
+      kind: "pause",
+    });
   });
 
   it("invalid AI output -> failed with safe message, nothing changed", async () => {
