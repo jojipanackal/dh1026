@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T01:06:59+05:30 — Journal as a plain daily conversation
+
+- Changed: Removed the inner scroll container and fixed-height wrapper from `/journal` — the thread now scrolls with the page like a normal document, with a `sticky bottom-0` composer (no separate scrollbar). Header is a plain, unpinned project name. Entries are grouped by IST day with "Today"/"Yesterday"/date separators — each day starts a fresh conversation.
+- Why: User asked to remove the custom scroller and pinned header; the journal is a daily chat with the agent, not a CRUD list.
+- Validation: Browser check (1440x900): no inner scrollers remain, page scrolls naturally (docH 2510 > vh 900), composer stays sticky-bottom, day separator renders. Lint and typecheck pass.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T00:53:27+05:30 — Journal chat scrollbar and composer position
 
 - Changed: In the journal thread, the scrollbar now sits right next to the message column (bounded scroll area `max-w-[52rem]` + `scrollbar-gutter: stable`) instead of at the page edge, and the composer sits at the bottom of the thread with less dead space below it.

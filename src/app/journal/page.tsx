@@ -82,13 +82,11 @@ export default async function JournalPage({
     createdAt: e.createdAt.toISOString(),
   }));
 
-  // Full-height chat: the container's py-10 plus the mobile top bar (h-12)
-  // bound the thread's internal scroll area so the composer stays pinned.
   return (
-    <div className="flex h-[calc(100svh-8rem)] min-h-96 flex-col md:h-[calc(100svh-5rem)]">
-      {/* Slim header: project name on desktop, project picker on mobile
-          (the sidebar Conversations group handles switching on desktop). */}
-      <div className="mx-auto w-full max-w-3xl shrink-0 pb-4">
+    <div>
+      {/* Plain (unpinned) header: project name on desktop, project picker
+          on mobile (the sidebar Conversations group handles switching). */}
+      <div className="mx-auto w-full max-w-3xl pb-4">
         <div className="hidden items-baseline gap-3 md:flex">
           <h1 className="text-sm font-medium">{projectName}</h1>
           <p className="text-xs text-muted-foreground">

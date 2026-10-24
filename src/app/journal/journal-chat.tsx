@@ -12,7 +12,7 @@ import {
 } from "@/app/journal/actions";
 import { AppliedCard, ProposalCard } from "@/app/journal/proposal-card";
 import { Button } from "@/components/ui/button";
-import { formatDateTime } from "@/lib/format";
+import { dayKeyIst, formatDateTime, formatRelativeDay } from "@/lib/format";
 import type { Resolved } from "@/lib/journal/resolve";
 import { cn } from "@/lib/utils";
 
@@ -180,7 +180,6 @@ export function JournalChat({
     { key: string; body: string }[]
   >([]);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const areaRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll: to the anchored entry if present, else to the bottom.
   useEffect(() => {
@@ -231,23 +230,31 @@ export function JournalChat({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div
-        ref={areaRef}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-6"
-      >
+    <div className="flex flex-col">
+      <div className="px-4 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No entries yet. Tell Jeera what you worked on below.
             </p>
           ) : null}
-          {entries.map((entry) => (
-            <div
-              key={entry.id}
-              id={`entry-${entry.id}`}
-              className="flex flex-col gap-3 scroll-mt-4"
-            >
+          {entries.map((entry, i) => (
+            <div key={entry.id} className="contents">
+              {(i === 0 ||
+                dayKeyIst(entry.createdAt) !==
+                  dayKeyIst(entries[i - 1].createdAt)) && (
+                <div className="flex items-center gap-3 py-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {formatRelativeDay(entry.createdAt)}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              )}
+              <div
+                id={`entry-${entry.id}`}
+                className="flex flex-col gap-3 scroll-mt-4"
+              >
               <div className="self-end">
                 <div className="max-w-xl rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
                   {entry.body}
@@ -264,6 +271,7 @@ export function JournalChat({
                 onRetry={() => retry(entry.id)}
                 onDismiss={() => dismiss(entry.id)}
               />
+              </div>
             </div>
           ))}
           {optimistic.map((m) => (
@@ -288,7 +296,7 @@ export function JournalChat({
         </div>
       </div>
 
-      <div className="shrink-0 px-4 pt-2">
+      <div className="sticky bottom-0 bg-background/95 px-4 pb-3 pt-2 backdrop-blur">
         <div className="mx-auto max-w-3xl">
           <div
             className={cn(

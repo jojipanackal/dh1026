@@ -50,6 +50,10 @@ export function formatRelativeDay(value: Date | string, now = new Date()): strin
   return dayLabelFormat.format(new Date(value));
 }
 
+export function dayKeyIst(value: Date | string): string {
+  return dayKeyFormat.format(new Date(value));
+}
+
 // Collapse a message body to a single truncated line for list previews.
 export function excerpt(body: string, max = 60): string {
   const oneLine = body.replace(/\s+/g, " ").trim();
