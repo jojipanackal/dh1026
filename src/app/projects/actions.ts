@@ -20,6 +20,7 @@ import { createTask, updateTask } from "@/server/tasks";
 export type FormState = {
   error?: string;
   fieldErrors?: Record<string, string>;
+  success?: boolean;
 };
 
 function toFormState(error: unknown): FormState {
@@ -52,7 +53,7 @@ export async function createProjectAction(
     });
     await createProject(user.id, input);
     revalidatePath("/projects");
-    return {};
+    return { success: true };
   } catch (error) {
     return toFormState(error);
   }
