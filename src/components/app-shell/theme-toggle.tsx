@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   // Theme is unknown on the server; this store yields false during SSR and
   // hydration, true afterwards — no effect needed.
@@ -20,6 +20,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon-sm"
+      className={className}
       aria-label="Toggle theme"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >

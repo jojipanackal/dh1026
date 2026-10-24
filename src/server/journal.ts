@@ -587,3 +587,18 @@ export async function listLatestEntryPerProject(userId: string) {
   }
   return latest;
 }
+
+// The journal page's implicit selection when no projectId param is given:
+// most recently journaled project, else the first project. Kept here so the
+// sidebar Conversations rail marks the same project active by default.
+export function pickDefaultProjectId(
+  projectIds: string[],
+  latest: Map<string, { createdAt: Date }>,
+): string | undefined {
+  return (
+    projectIds
+      .map((id) => ({ id, at: latest.get(id)?.createdAt }))
+      .filter((p) => p.at)
+      .sort((a, b) => (a.at! < b.at! ? 1 : -1))[0]?.id ?? projectIds[0]
+  );
+}

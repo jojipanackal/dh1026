@@ -22,6 +22,13 @@ Add entries as you build, newest first:
 - Validation: lint and typecheck pass; 76/76 unit and 36/36 integration tests pass, including a journal-apply → blocked-reason → overview check. The project page was fetched over HTTP on the dev server: all five cards render, a manually blocked task shows "no reason recorded", and the progress bar/done % match the database.
 - Limitations: Manual status moves capture no blocked reason, so those tasks show "no reason recorded" until a journal entry adds one. Stall detection is a fixed 4-day heuristic. The build was not re-run while the dev server was up.
 
+## 2026-10-25T00:44:43+05:30 — ChatGPT-style collapsible sidebar and chat layout
+
+- Changed: Replaced the top-bar and inset panel with a collapsible sidebar (shadcn `sidebar`, `tooltip`, `sheet`; off-canvas drawer on mobile, ⌘B toggle, state persisted in the `sidebar_state` cookie). Sidebar holds main nav, a "Conversations" group listing projects by recent journal activity, and a footer with the user switcher, demo badge and theme toggle. `/journal` dropped its project rail: centered `max-w-3xl` thread, user bubbles right-aligned, plain-text assistant replies with avatar, and a rounded composer with an in-box send button.
+- Why: User asked for a ChatGPT-like collapsible sidebar and chat layout (referencing the Vercel eve chat template).
+- Validation: lint, typecheck and 67/67 unit tests pass. Playwright verified collapse toggle, cookie persistence across reloads, mobile drawer, 390px scrollWidth = 390, zero console errors. Screenshots reviewed.
+- Limitations: Production build not run while dev server was up. Conversations rail caps at 10 projects.
+
 ## 2026-10-25T00:30:54+05:30 — Phase 3: AI journal chat
 
 - Changed: `/journal` is now an AI chat. Entries are stored first; OpenAI (via the AI SDK) interprets them into a validated proposal, which deterministic checks verify against real records. The user ticks items to apply in a proposal card, and they are applied in one transaction with journal-sourced activity events. Also adds: migration `0002` (`journal_entries`, `activity_events.journal_entry_id`); `OPENAI_API_KEY` and `OPENAI_MODEL` env vars; an env parsing fix so optional variables are forwarded; "via journal" badges in activity.

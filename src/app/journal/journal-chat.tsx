@@ -95,9 +95,7 @@ function AssistantMessage({
 
         {entry.status === "ready" && resolved ? (
           <div className="flex flex-col gap-2">
-            <div className="rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
-              <p>{resolved.summary}</p>
-            </div>
+            <p className="text-sm">{resolved.summary}</p>
             <ProposalCard
               entryId={entry.id}
               projectId={projectId}
@@ -105,7 +103,7 @@ function AssistantMessage({
               members={members}
             />
             {resolved.decisions.length > 0 ? (
-              <div className="rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
+              <div className="rounded-2xl bg-card px-4 py-3 text-sm">
                 <p className="mb-1 text-xs font-medium text-muted-foreground">
                   Decisions
                 </p>
@@ -127,7 +125,7 @@ function AssistantMessage({
               </div>
             ) : null}
             {resolved.clarifications.length > 0 ? (
-              <div className="rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
+              <div className="rounded-2xl bg-card px-4 py-3 text-sm">
                 <ul className="flex flex-col gap-1">
                   {resolved.clarifications.map((c, i) => (
                     <li key={i}>{c}</li>
@@ -149,9 +147,7 @@ function AssistantMessage({
         {entry.status === "applied" ? (
           <div className="flex flex-col gap-2">
             {resolved ? (
-              <div className="rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm">
-                <p>{resolved.summary}</p>
-              </div>
+              <p className="text-sm">{resolved.summary}</p>
             ) : null}
             <AppliedCard
               projectId={projectId}
@@ -161,9 +157,7 @@ function AssistantMessage({
         ) : null}
 
         {entry.status === "dismissed" ? (
-          <p className="rounded-2xl rounded-tl-md bg-card px-4 py-3 text-sm text-muted-foreground">
-            Dismissed.
-          </p>
+          <p className="text-sm text-muted-foreground">Dismissed.</p>
         ) : null}
       </div>
     </div>
@@ -242,7 +236,7 @@ export function JournalChat({
         ref={areaRef}
         className="min-h-0 flex-1 overflow-y-auto px-4 py-6"
       >
-        <div className="mx-auto flex max-w-[760px] flex-col gap-6">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No entries yet. Tell Project Runner what you worked on below.
@@ -255,7 +249,7 @@ export function JournalChat({
               className="flex flex-col gap-3 scroll-mt-4"
             >
               <div className="self-end">
-                <div className="max-w-xl rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
+                <div className="max-w-xl rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
                   {entry.body}
                 </div>
                 <p className="mt-1 text-right font-mono text-xs text-muted-foreground">
@@ -275,7 +269,7 @@ export function JournalChat({
           {optimistic.map((m) => (
             <div key={m.key} className="flex flex-col gap-3">
               <div className="self-end">
-                <div className="max-w-xl rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap opacity-70">
+                <div className="max-w-xl rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap opacity-70">
                   {m.body}
                 </div>
               </div>
@@ -294,37 +288,47 @@ export function JournalChat({
         </div>
       </div>
 
-      <div className="border-t px-4 py-3">
-        <div className="mx-auto flex max-w-[760px] items-end gap-2">
-          <textarea
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(e.target.scrollHeight, 8 * 24)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            rows={1}
-            maxLength={5000}
-            placeholder="Tell Project Runner what you worked on, what's blocked, or what you decided…"
+      <div className="shrink-0 px-4 pb-5 pt-2">
+        <div className="mx-auto max-w-3xl">
+          <div
             className={cn(
-              "min-h-10 flex-1 resize-none rounded-2xl border bg-muted/40 px-4 py-2.5 text-sm",
-              "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "rounded-3xl border bg-card shadow-sm transition-shadow",
+              "focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40",
             )}
-          />
-          <Button
-            size="icon"
-            aria-label="Send"
-            disabled={pending || !text.trim()}
-            onClick={send}
           >
-            <SendHorizonal className="size-4" />
-          </Button>
+            <textarea
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 8 * 24)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              rows={1}
+              maxLength={5000}
+              placeholder="Tell Project Runner what you worked on, what's blocked, or what you decided…"
+              className="max-h-48 min-h-11 w-full resize-none bg-transparent px-4 pt-3.5 text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <div className="flex items-center justify-end px-3 pb-2.5">
+              <Button
+                size="icon"
+                aria-label="Send"
+                className="size-8 rounded-full"
+                disabled={pending || !text.trim()}
+                onClick={send}
+              >
+                <SendHorizonal className="size-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Enter to send · Shift+Enter for a new line
+          </p>
         </div>
       </div>
     </div>

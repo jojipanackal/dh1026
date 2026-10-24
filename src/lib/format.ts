@@ -26,3 +26,32 @@ export function formatDate(value: string | Date): string {
     typeof value === "string" ? new Date(`${value}T00:00:00Z`) : value;
   return dateFormat.format(date);
 }
+
+const dayKeyFormat = new Intl.DateTimeFormat("en-CA", {
+  timeZone: DISPLAY_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const dayLabelFormat = new Intl.DateTimeFormat("en-IN", {
+  timeZone: DISPLAY_TIME_ZONE,
+  day: "numeric",
+  month: "short",
+});
+
+// Sidebar-friendly day label: "Today", "Yesterday", or a short date.
+export function formatRelativeDay(value: Date | string, now = new Date()): string {
+  const dayKey = dayKeyFormat.format(new Date(value));
+  if (dayKey === dayKeyFormat.format(now)) return "Today";
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (dayKey === dayKeyFormat.format(yesterday)) return "Yesterday";
+  return dayLabelFormat.format(new Date(value));
+}
+
+// Collapse a message body to a single truncated line for list previews.
+export function excerpt(body: string, max = 60): string {
+  const oneLine = body.replace(/\s+/g, " ").trim();
+  return oneLine.length > max ? `${oneLine.slice(0, max)}…` : oneLine;
+}

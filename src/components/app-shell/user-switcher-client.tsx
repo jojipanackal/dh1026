@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleUserRound } from "lucide-react";
 import { useTransition } from "react";
 
 import { setDemoUser } from "@/app/actions";
@@ -38,15 +39,19 @@ export function UserSwitcherClient({
         }}
       >
         <SelectTrigger
-          className="h-7 w-auto gap-1.5 rounded-md border-transparent bg-transparent px-2 text-sm shadow-none hover:bg-muted"
+          className="h-7 w-auto gap-1.5 rounded-md border-transparent bg-transparent px-2 text-sm shadow-none hover:bg-muted group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:[&>svg]:hidden"
           size="sm"
         >
           {current ? (
             <span className="flex size-5 items-center justify-center rounded-full bg-brand text-[10px] font-medium text-brand-foreground">
               {initial(current.name)}
             </span>
-          ) : null}
-          <SelectValue placeholder="Pick a demo user" />
+          ) : (
+            <CircleUserRound className="size-4 text-muted-foreground" />
+          )}
+          <span className="group-data-[collapsible=icon]:hidden">
+            <SelectValue placeholder="Pick a demo user" />
+          </span>
         </SelectTrigger>
         <SelectContent>
           {users.map((user) => (
@@ -58,7 +63,7 @@ export function UserSwitcherClient({
       </Select>
       <Badge
         variant="outline"
-        className="shrink-0 text-xs font-normal text-muted-foreground"
+        className="shrink-0 text-xs font-normal text-muted-foreground group-data-[collapsible=icon]:hidden"
         title="Demo identity — no authentication"
       >
         <span className="hidden sm:inline">Demo identity · no auth</span>
