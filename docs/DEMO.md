@@ -28,15 +28,14 @@ The seed creates these project members:
 
 ## Demo story
 
-Start with the **Tasks** tab. It is the cross-project execution queue: use
-**All work** to see the whole launch chain, **My work** to see Joji's two
-assignments, or filter by **Blocked** to make the waiting chain visible. Every
-row links to the editable task record and shows the project, owner, priority,
-due date, and dependency context. Use **New task** to capture a small task
-directly; use **Ask Agent** when the work needs scope or ownership clarified
-through conversation.
+Start with the **Tasks** tab on **Graph** view. It is the cross-project
+dependency map: each arrow shows a recorded handoff and the card on the right
+shows who is waiting. Switch to **Queue** for the sortable execution table,
+inline status movement, filters, and direct task editing. Use **New task** to
+capture a small task directly; use **Ask Agent** when the work needs scope or
+ownership clarified through conversation.
 
-The project contains six simple tasks with a connected dependency chain:
+The project contains ten tasks with a connected dependency graph:
 
 - Jaice's **Write the landing page copy** is done with completion details.
 - Joji is building the **landing page**.
@@ -44,6 +43,10 @@ The project contains six simple tasks with a connected dependency chain:
 - Vaishakh's **QA the landing page on staging** waits on George's signup form.
 - Joji's **Publish the launch** waits on Vaishakh's QA sign-off.
 - George owns **Set up basic launch analytics**.
+- Vaishakh is running **Run the accessibility pass** in parallel.
+- **Validate analytics events** waits on the analytics setup.
+- **Prepare the launch announcement** waits on publishing.
+- Jaice's **Write the launch FAQ** is done as supporting launch work.
 
 Try these messages as Joji:
 
@@ -58,8 +61,8 @@ the signup form is waiting on Joji.
 What is blocked?
 ```
 
-Expected result: Jeera shows the signup form, staging QA, and publishing as a
-connected chain of work waiting on Joji, George, and Vaishakh respectively.
+Expected result: Jeera shows five blocked tasks across the main launch chain,
+analytics validation, and the announcement handoff.
 
 ```text
 Which tasks assigned to George should be prioritized for today?

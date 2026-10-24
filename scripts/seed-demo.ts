@@ -108,6 +108,43 @@ const DEMO_TASKS: DemoTask[] = [
     dueDate: istDate(2),
     estimateHours: 2,
   },
+  {
+    title: "Run the accessibility pass",
+    description: "Check keyboard navigation, contrast, focus states, and mobile tap targets.",
+    status: "in_progress",
+    priority: "high",
+    assigneeEmail: "vaishakh@example.com",
+    dueDate: istDate(),
+    estimateHours: 2,
+  },
+  {
+    title: "Validate analytics events",
+    description: "Verify page-view and signup events in the analytics dashboard.",
+    status: "blocked",
+    priority: "high",
+    assigneeEmail: "george@example.com",
+    dueDate: istDate(3),
+    estimateHours: 2,
+  },
+  {
+    title: "Prepare the launch announcement",
+    description: "Write the announcement and customer-facing launch notes after publishing.",
+    status: "blocked",
+    priority: "medium",
+    assigneeEmail: "jaice@example.com",
+    dueDate: istDate(3),
+    estimateHours: 1,
+  },
+  {
+    title: "Write the launch FAQ",
+    description: "Document the signup flow, launch date, and common customer questions.",
+    status: "done",
+    priority: "low",
+    assigneeEmail: "jaice@example.com",
+    dueDate: istDate(-2),
+    estimateHours: 2,
+    completionDetails: "FAQ covers signup, launch timing, and the support escalation path.",
+  },
 ];
 
 const EVIDENCE = [
@@ -139,6 +176,34 @@ const EVIDENCE = [
     key: "4e8d2c5e-44d0-4e7e-9c5b-000000000004",
     minutesAgo: 55,
   },
+  {
+    email: "vaishakh@example.com",
+    body: "I am running the accessibility pass now. Keyboard navigation is mostly good; I am checking focus states and mobile tap targets.",
+    taskTitle: "Run the accessibility pass",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000007",
+    minutesAgo: 25,
+  },
+  {
+    email: "george@example.com",
+    body: "Analytics validation is waiting on the page-view and signup events being configured first.",
+    taskTitle: "Validate analytics events",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000008",
+    minutesAgo: 65,
+  },
+  {
+    email: "jaice@example.com",
+    body: "The launch announcement is drafted, but I am waiting for the page to publish before I can send it.",
+    taskTitle: "Prepare the launch announcement",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000009",
+    minutesAgo: 35,
+  },
+  {
+    email: "jaice@example.com",
+    body: "The launch FAQ is done and covers signup, timing, and the support escalation path.",
+    taskTitle: "Write the launch FAQ",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000010",
+    minutesAgo: 80,
+  },
 ];
 
 const DEMO_DEPENDENCIES = [
@@ -162,6 +227,20 @@ const DEMO_DEPENDENCIES = [
     blockingEmail: "vaishakh@example.com",
     waitingOn: "Vaishakh",
     description: "Publishing waits for staging QA sign-off.",
+  },
+  {
+    blockedTaskTitle: "Validate analytics events",
+    blockingTaskTitle: "Set up basic launch analytics",
+    blockingEmail: "george@example.com",
+    waitingOn: "George",
+    description: "Analytics validation needs the tracking events configured first.",
+  },
+  {
+    blockedTaskTitle: "Prepare the launch announcement",
+    blockingTaskTitle: "Publish the launch",
+    blockingEmail: "joji@example.com",
+    waitingOn: "Joji",
+    description: "The announcement can go out after the launch is published.",
   },
 ] as const;
 
@@ -543,11 +622,13 @@ async function main() {
       ago(7),
       {
         ...baseInterpretation(
-          "Three connected tasks are blocked in the launch chain: signup, QA, and publishing.",
+          "Five connected tasks are blocked across the launch chain: signup, QA, publishing, analytics validation, and the announcement.",
           [
             answerItem("Add the signup form"),
             answerItem("QA the landing page on staging"),
             answerItem("Publish the launch"),
+            answerItem("Validate analytics events"),
+            answerItem("Prepare the launch announcement"),
           ],
         ),
       },

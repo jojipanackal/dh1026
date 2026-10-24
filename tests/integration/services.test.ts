@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { activityEvents, tasks } from "@/db/schema";
+import { activityEvents, taskDependencies, tasks } from "@/db/schema";
 import { AppError } from "@/server/errors";
 import {
   addProjectMember,
@@ -13,6 +13,7 @@ import {
 import {
   createTask,
   getTaskForMember,
+  listTaskEdgesForUser,
   listTasks,
   listTasksForUser,
   moveTask,
@@ -168,6 +169,23 @@ describe("tasks", () => {
       dueDate: "2026-10-25",
       estimateHours: 2,
     });
+    const blockingTask = await createTask(owner.id, project.id, {
+      title: "Build page",
+      description: null,
+      status: "in_progress",
+      priority: "urgent",
+      assigneeId: owner.id,
+      dueDate: null,
+      estimateHours: 4,
+    });
+    await db.insert(taskDependencies).values({
+      blockedTaskId: task.id,
+      blockingTaskId: blockingTask.id,
+      blockingUserId: owner.id,
+      description: "The form needs the page shell first",
+      waitingOn: "Owner",
+      createdBy: owner.id,
+    });
     const visible = await listTasksForUser(owner.id, { status: "blocked" });
     expect(visible).toHaveLength(1);
     expect(visible[0]).toMatchObject({
@@ -178,6 +196,13 @@ describe("tasks", () => {
     });
     expect(await listTasksForUser(member.id, { scope: "mine" })).toHaveLength(1);
     expect(await listTasksForUser(owner.id, { search: "missing" })).toHaveLength(0);
+    expect(await listTaskEdgesForUser(owner.id, [task.id, blockingTask.id])).toMatchObject([
+      {
+        blockedTaskId: task.id,
+        blockingTaskId: blockingTask.id,
+        waitingOn: "Owner",
+      },
+    ]);
   });
 
   it("rejects an assignee who is not a project member", async () => {

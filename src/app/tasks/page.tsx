@@ -3,6 +3,7 @@ import { connection } from "next/server";
 
 import { GlobalNewTaskDialog } from "@/app/tasks/new-task-dialog";
 import { TaskStatusMenu } from "@/app/tasks/task-status-menu";
+import { TaskGraph } from "@/app/tasks/task-graph";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { PriorityBadge } from "@/components/status-badge";
@@ -15,7 +16,7 @@ import { TASK_STATUS_LABELS, type TaskStatus } from "@/lib/tasks/lifecycle";
 import { TASK_PRIORITIES, type TaskPriority } from "@/lib/tasks/validation";
 import { getCurrentUser } from "@/server/current-user";
 import { listMemberProjects } from "@/server/journal";
-import { listTasksForUser } from "@/server/tasks";
+import { listTaskEdgesForUser, listTasksForUser } from "@/server/tasks";
 
 export const instant = false;
 
@@ -104,6 +105,7 @@ export default async function TasksPage({
     ? requestedProject
     : undefined;
   const scope = first(query.scope) === "mine" ? "mine" : "all";
+  const view = first(query.view) === "queue" ? "queue" : "graph";
   const status = validStatus(first(query.status));
   const priority = validPriority(first(query.priority));
   const search = first(query.q)?.trim() || undefined;
@@ -116,6 +118,7 @@ export default async function TasksPage({
     projectId,
     search,
   });
+  const edges = await listTaskEdgesForUser(user.id, tasks.map((task) => task.id));
   const today = todayIst();
   const openTasks = tasks.filter(
     (task) => task.status !== "done" && task.status !== "cancelled",
@@ -155,7 +158,17 @@ export default async function TasksPage({
         <StatCard label="Due / overdue" value={dueTasks.length} tone="text-red-500" />
       </div>
 
-      <section className="mt-8 rounded-xl border bg-card">
+      <div className="mt-8 flex items-center gap-1 border-b text-sm">
+        <WorkspaceViewLink active={view === "graph"} label="Graph" query={query} view="graph" />
+        <WorkspaceViewLink active={view === "queue"} label="Queue" query={query} view="queue" />
+      </div>
+
+      {view === "graph" ? (
+        <div className="mt-4">
+          <TaskGraph tasks={tasks} edges={edges} />
+        </div>
+      ) : (
+      <section className="mt-4 rounded-xl border bg-card">
         <div className="flex flex-col gap-4 border-b px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-sm font-semibold">Execution queue</h2>
@@ -200,6 +213,7 @@ export default async function TasksPage({
             })}
           </FilterSelect>
           <input type="hidden" name="scope" value={scope} />
+          <input type="hidden" name="view" value="queue" />
           <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-1">
             <Button type="submit" size="sm">Filter</Button>
             <Button type="button" variant="ghost" size="sm" asChild>
@@ -219,6 +233,7 @@ export default async function TasksPage({
           <TaskTable tasks={tasks} />
         )}
       </section>
+      )}
     </div>
   );
 }
@@ -270,6 +285,33 @@ function ScopeLink({
     <Link
       href={`/tasks?${params.toString()}`}
       className={`rounded-md px-2.5 py-1.5 transition-colors ${active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function WorkspaceViewLink({
+  active,
+  label,
+  query,
+  view,
+}: {
+  active: boolean;
+  label: string;
+  query: Record<string, string | string[] | undefined>;
+  view: "graph" | "queue";
+}) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (key === "view" || value === undefined) continue;
+    params.set(key, Array.isArray(value) ? value[0] ?? "" : value);
+  }
+  params.set("view", view);
+  return (
+    <Link
+      href={`/tasks?${params.toString()}`}
+      className={`-mb-px border-b-2 px-3 py-2.5 transition-colors ${active ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
     >
       {label}
     </Link>

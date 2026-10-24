@@ -48,6 +48,14 @@ export type WorkspaceTaskFilter = TaskListFilter & {
   includeCancelled?: boolean;
 };
 
+export type TaskGraphEdge = {
+  blockedTaskId: string;
+  blockingTaskId: string | null;
+  waitingOn: string | null;
+  blockingUserName: string | null;
+  description: string;
+};
+
 export async function listTasksForUser(
   userId: string,
   filter: WorkspaceTaskFilter = {},
@@ -125,6 +133,35 @@ export async function listTasksForUser(
     ...task,
     dependency: dependencyByTask.get(task.id) ?? null,
   }));
+}
+
+export async function listTaskEdgesForUser(userId: string, taskIds: string[]) {
+  if (taskIds.length === 0) return [] satisfies TaskGraphEdge[];
+  return db
+    .select({
+      blockedTaskId: taskDependencies.blockedTaskId,
+      blockingTaskId: taskDependencies.blockingTaskId,
+      waitingOn: taskDependencies.waitingOn,
+      blockingUserName: users.name,
+      description: taskDependencies.description,
+    })
+    .from(taskDependencies)
+    .innerJoin(tasks, eq(tasks.id, taskDependencies.blockedTaskId))
+    .innerJoin(
+      projectMemberships,
+      and(
+        eq(projectMemberships.projectId, tasks.projectId),
+        eq(projectMemberships.userId, userId),
+      ),
+    )
+    .leftJoin(users, eq(users.id, taskDependencies.blockingUserId))
+    .where(
+      and(
+        eq(taskDependencies.status, "open"),
+        inArray(taskDependencies.blockedTaskId, taskIds),
+      ),
+    )
+    .orderBy(asc(taskDependencies.createdAt));
 }
 
 export async function listTasks(

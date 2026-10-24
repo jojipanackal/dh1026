@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:05:00+05:30 — Make Tasks a dependency graph and expand the demo
+
+- Changed: Added a Graph view as the default Tasks tab, with recorded dependency arrows, waiting-on context, independent work, and links into task details. Expanded the dedicated launch demo from six to ten tasks, five open dependency links, richer teammate evidence, and a broader blocked-work conversation.
+- Why: The demo needs to make Jeera's core value visible immediately: work moves through handoffs, and the agent can explain who is waiting on whom.
+- Validation: `npm run typecheck`, `npm run lint`, `npm run test:integration` (51/51), `npm run db:seed:demo`, authenticated Tasks HTTP checks, and `git diff --check` passed.
+- Limitations: The graph is a responsive dependency map, not yet a drag-and-drop planner or timeline; the Queue remains the editing surface for filters and inline status movement.
+
 ## 2026-10-25T03:54:06+05:30 — Add inline task status movement
 
 - Changed: Added an inline status control to every Tasks queue row, connected to the existing lifecycle-validated `moveTask` action and activity history. Task moves now revalidate the shared `/tasks` workspace.

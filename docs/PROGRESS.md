@@ -22,6 +22,15 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Tasks graph milestone — Connected demo dependency map (2026-10-25T05:05:00+05:30)
+
+- Implemented: Made Graph the default Tasks view, showing recorded handoffs as connected blocking → blocked cards with waiting-on context, plus independent work. Kept Queue as the filtered execution table with inline status movement.
+- Files and areas changed: `src/app/tasks/task-graph.tsx`, `src/app/tasks/page.tsx`, `src/server/tasks.ts`, `scripts/seed-demo.ts`, `tests/integration/services.test.ts`, `README.md`, `docs/DEMO.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: Typecheck, lint, integration suite (51/51), repeatable demo seed, authenticated Tasks HTTP checks, and diff check pass.
+- Decisions affecting later phases: The graph is a read-only projection over `task_dependencies`; task edits and lifecycle transitions still use the existing Queue/detail actions and one source of truth.
+- Remaining limitations: No graph drag-and-drop, timeline layout, bulk editing, or channel delivery yet.
+- Next phase: Rehearse the full demo, then add acknowledgement and quiet-hour policy to follow-up delivery.
+
 ## Tasks runner milestone — Inline status movement (2026-10-25T03:54:06+05:30)
 
 - Implemented: Added an inline status control to each Tasks queue row, reusing lifecycle validation, authorization, activity history, and `/tasks` revalidation from the existing move action.
