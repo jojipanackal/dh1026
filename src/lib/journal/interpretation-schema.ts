@@ -20,6 +20,10 @@ export const aiTaskUpdate = z.object({
     .string()
     .nullable()
     .describe("Member id to assign, or null if the assignee is unchanged"),
+  description: z
+    .string()
+    .nullable()
+    .describe("New task scope or description, or null if unchanged"),
   dueDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

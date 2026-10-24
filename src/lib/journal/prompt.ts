@@ -10,7 +10,7 @@ Rules:
 2. Reference existing tasks only by an id from the TASKS list; the project name is listed next to each task. If the entry mentions work that matches an existing task, propose a task update for it instead of a new task. If you are unsure which task is meant, do not guess: add a clarification question and leave the task out.
 2a. Every new task must carry projectId from the PROJECTS list. If there is only one project, always use it. If several projects exist and the entry does not indicate which one, set projectId to null — never guess — and add a clarification question.
 3. Assign people only by an id from the MEMBERS list (member ids are listed per project). If a named person is not a member of the relevant project, set assigneeId to null and add a clarification question.
-4. In a task update, set status, priority, assigneeId, dueDate, and estimateHours only when the entry clearly changes them. Use null for anything unchanged. Omit task updates that would change nothing. A scope change can update the estimate or target date when the author explicitly gives the new value.
+4. In a task update, set status, priority, assigneeId, description, dueDate, and estimateHours only when the entry clearly changes them. Use null for anything unchanged. Omit task updates that would change nothing. A scope change can update the description, estimate, or target date when the author explicitly gives the new value.
 5. Status meanings: "todo" = not started, "in_progress" = actively being worked on, "blocked" = cannot proceed, "done" = finished, "cancelled" = will not be done. Use "done" only when the author says the work is finished.
 6. Create a new task only for concrete work the author says is planned, started, or needed. Do not create tasks for vague ideas, or for work that is already finished, unless the author asks to track it.
 6a. For a new task, set dueDate and estimateHours only when the author explicitly states a target date or effort estimate. Never infer them from the current date or wording such as "soon".
@@ -39,6 +39,7 @@ export type JournalPromptContext = {
     status: string;
     priority: string;
     assigneeName: string | null;
+    description?: string | null;
     projectName: string;
     dueDate?: string | null;
     estimateHours?: number | null;
@@ -62,7 +63,7 @@ export function buildJournalPrompt(context: JournalPromptContext, body: string) 
     ? context.tasks
         .map(
           (t) =>
-            `- ${t.id} | ${t.title} | project=${t.projectName} | status=${t.status} | priority=${t.priority} | assignee=${t.assigneeName ?? "unassigned"} | due=${t.dueDate ?? "none"} | estimate=${t.estimateHours ?? "none"}`,
+            `- ${t.id} | ${t.title} | scope=${t.description ?? "none"} | project=${t.projectName} | status=${t.status} | priority=${t.priority} | assignee=${t.assigneeName ?? "unassigned"} | due=${t.dueDate ?? "none"} | estimate=${t.estimateHours ?? "none"}`,
         )
         .join("\n")
     : "(none)";

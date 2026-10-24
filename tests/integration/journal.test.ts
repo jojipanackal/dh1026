@@ -66,7 +66,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(
@@ -172,6 +172,7 @@ describe("journal", () => {
             status: "in_progress",
             priority: null,
             assigneeId: null,
+            description: null,
             dueDate: null,
             estimateHours: null,
             reason: "testing on staging",
@@ -264,23 +265,24 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, dueDate: "2026-10-30", estimateHours: 6, reason: "r", confidence: "high" },
+        { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, description: "Expanded scope", dueDate: "2026-10-30", estimateHours: 6, reason: "r", confidence: "high" },
       ],
       newTasks: [
-        { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: null, dueDate: "2026-10-31", estimateHours: 12, reason: "r", confidence: "high" },
+        { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: owner.id, dueDate: "2026-10-31", estimateHours: 12, reason: "r", confidence: "high" },
       ],
       blockers: [{ taskId: t.id, description: "waiting on vendor", waitingOn: "vendor" }],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     // blocker forces status blocked; keep the update selection too (merged)
     await applyJournalEntry(owner.id, entry.id, {
-      taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: member.id, dueDate: "2026-10-30", estimateHours: 6 }],
-      newTasks: [{ index: 0, title: "New thing", status: "todo", priority: "high", assigneeId: null, dueDate: "2026-10-31", estimateHours: 12 }],
+      taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: member.id, description: "Expanded scope", dueDate: "2026-10-30", estimateHours: 6 }],
+      newTasks: [{ index: 0, title: "New thing", status: "todo", priority: "high", assigneeId: owner.id, dueDate: "2026-10-31", estimateHours: 12 }],
       blockers: [{ index: 0 }],
     });
     const [row] = await db.select().from(tasks).where(eq(tasks.id, t.id));
     expect(row.status).toBe("blocked"); // blocker wins the merge
     expect(row.assigneeId).toBe(member.id);
+    expect(row.description).toBe("Expanded scope");
     expect(row.dueDate).toBe("2026-10-30");
     expect(row.estimateHours).toBe(6);
     const [createdTask] = await db.select().from(tasks).where(eq(tasks.title, "New thing"));
@@ -310,10 +312,10 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [
-        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
       ],
       newTasks: [
-        { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: owner.id, dueDate: "2026-11-01", estimateHours: 4, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
@@ -346,13 +348,13 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       newTasks: [
-        { projectId: null, title: "Implicit", description: null, status: "todo", priority: "low", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { projectId: null, title: "Implicit", description: null, status: "todo", priority: "low", assigneeId: owner.id, dueDate: "2026-11-02", estimateHours: 2, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     await applyJournalEntry(owner.id, entry.id, {
       taskUpdates: [],
-      newTasks: [{ index: 0, title: "Implicit", status: "todo", priority: "low", assigneeId: null }],
+      newTasks: [{ index: 0, title: "Implicit", status: "todo", priority: "low", assigneeId: owner.id }],
       blockers: [],
     });
     const [created] = await db.select().from(tasks).where(eq(tasks.title, "Implicit"));
@@ -365,7 +367,7 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       newTasks: [
-        { projectId: null, title: "Ambiguous", description: null, status: "todo", priority: "low", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" },
+        { projectId: null, title: "Ambiguous", description: null, status: "todo", priority: "low", assigneeId: null, dueDate: "2026-11-03", estimateHours: 3, reason: "r", confidence: "high" },
       ],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
@@ -386,6 +388,42 @@ describe("journal", () => {
     }
   });
 
+  it("new work without commitments stays review-blocked", async () => {
+    const { owner, project } = await fixture();
+    const raw: AiInterpretation = {
+      ...empty,
+      newTasks: [
+        {
+          projectId: project.id,
+          title: "Needs planning",
+          description: "Investigate the new flow",
+          status: "todo",
+          priority: "medium",
+          assigneeId: null,
+          dueDate: null,
+          estimateHours: null,
+          reason: "r",
+          confidence: "high",
+        },
+      ],
+    };
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
+    const [row] = await db.select().from(journalEntries).where(eq(journalEntries.id, entry.id));
+    const resolved = row.interpretation as {
+      newTasks: { needsClarification: boolean; clarificationQuestions: string[] }[];
+    };
+    expect(resolved.newTasks[0].needsClarification).toBe(true);
+    expect(resolved.newTasks[0].clarificationQuestions).toHaveLength(3);
+    await expectAppError(
+      applyJournalEntry(owner.id, entry.id, {
+        taskUpdates: [],
+        newTasks: [{ index: 0, title: "Needs planning", status: "todo", priority: "medium", assigneeId: owner.id }],
+        blockers: [],
+      }),
+      "VALIDATION",
+    );
+  });
+
   it("apply twice -> CONFLICT", async () => {
     const { owner } = await fixture();
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(empty));
@@ -402,15 +440,15 @@ describe("journal", () => {
     });
     const raw: AiInterpretation = {
       ...empty,
-      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
-      newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
+      taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, description: null, dueDate: null, estimateHours: null, reason: "r", confidence: "high" }],
+      newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, dueDate: "2026-11-04", estimateHours: 5, reason: "r", confidence: "high" }],
     };
     const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     await moveTask(owner.id, t.id, "done"); // race: now the stored transition is invalid
     await expectAppError(
       applyJournalEntry(owner.id, entry.id, {
         taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: null }],
-        newTasks: [{ index: 0, title: "Also new", status: "todo", priority: "medium", assigneeId: null }],
+      newTasks: [{ index: 0, title: "Also new", status: "todo", priority: "medium", assigneeId: owner.id }],
         blockers: [],
       }),
       "VALIDATION",

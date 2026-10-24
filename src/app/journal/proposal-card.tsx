@@ -87,6 +87,7 @@ export function ProposalCard({
       status: (u.status ?? u.fromStatus) as TaskStatus,
       priority: (u.priority ?? "medium") as TaskPriority,
       assigneeId: u.assigneeId,
+      description: u.description ?? u.fromDescription,
       dueDate: u.dueDate ?? u.fromDueDate,
       estimateHours: u.estimateHours ?? u.fromEstimateHours,
     })),
@@ -102,6 +103,7 @@ export function ProposalCard({
       status: n.status as "todo" | "in_progress" | "blocked",
       priority: n.priority,
       assigneeId: n.assigneeId,
+      description: n.description,
       dueDate: n.dueDate,
       estimateHours: n.estimateHours,
     })),
@@ -126,23 +128,25 @@ export function ProposalCard({
         taskUpdates: resolved.taskUpdates
           .map((_, index) => ({ index, ...updates[index] }))
           .filter((s) => s.checked)
-          .map(({ index, status, priority, assigneeId, dueDate, estimateHours }) => ({
+          .map(({ index, status, priority, assigneeId, description, dueDate, estimateHours }) => ({
             index,
             status,
             priority,
             assigneeId,
+            description,
             dueDate,
             estimateHours,
           })),
         newTasks: resolved.newTasks
           .map((_, index) => ({ index, ...news[index] }))
           .filter((s) => s.checked)
-          .map(({ index, title, status, priority, assigneeId, dueDate, estimateHours }) => ({
+          .map(({ index, title, status, priority, assigneeId, description, dueDate, estimateHours }) => ({
             index,
             title: title.trim() || resolved.newTasks[index].title,
             status,
             priority,
             assigneeId,
+            description,
             dueDate,
             estimateHours,
           })),
@@ -252,6 +256,11 @@ export function ProposalCard({
                       {memberName(updates[i].assigneeId)}
                     </p>
                   ) : null}
+                  {u.description !== null || updates[i].description !== u.fromDescription ? (
+                    <p className="line-clamp-2">
+                      Scope: {u.fromDescription ?? "—"} → {updates[i].description ?? "—"}
+                    </p>
+                  ) : null}
                   {u.dueDate !== null || updates[i].dueDate !== u.fromDueDate ? (
                     <p>
                       Target: {u.fromDueDate ?? "—"} → {updates[i].dueDate ?? "—"}
@@ -323,6 +332,23 @@ export function ProposalCard({
                         )
                       }
                       members={membersByProject[u.projectId] ?? []}
+                    />
+                    <textarea
+                      value={updates[i].description ?? ""}
+                      maxLength={5000}
+                      rows={2}
+                      onChange={(e) =>
+                        setUpdates((s) =>
+                          s.map((x, j) =>
+                            j === i
+                              ? { ...x, description: e.target.value || null }
+                              : x,
+                          ),
+                        )
+                      }
+                      placeholder="Scope or description"
+                      className="min-h-14 w-full resize-y rounded-md border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+                      aria-label="Scope or description"
                     />
                     <Input
                       type="date"
@@ -398,12 +424,19 @@ export function ProposalCard({
                   </span>
                 </div>
                 {n.needsClarification ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Which project does this belong to?
-                  </p>
+                  <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    {n.clarificationQuestions.map((question) => (
+                      <p key={question}>{question}</p>
+                    ))}
+                  </div>
                 ) : n.projectName ? (
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {n.projectName}
+                  </p>
+                ) : null}
+                {news[i].description ? (
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    Scope: {news[i].description}
                   </p>
                 ) : null}
                 <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
@@ -439,6 +472,23 @@ export function ProposalCard({
                         )
                       }
                       className="h-7 w-full text-xs"
+                    />
+                    <textarea
+                      value={news[i].description ?? ""}
+                      maxLength={5000}
+                      rows={2}
+                      onChange={(e) =>
+                        setNews((s) =>
+                          s.map((x, j) =>
+                            j === i
+                              ? { ...x, description: e.target.value || null }
+                              : x,
+                          ),
+                        )
+                      }
+                      placeholder="Scope or description"
+                      className="min-h-14 w-full resize-y rounded-md border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
+                      aria-label="Scope or description"
                     />
                     <Select
                       value={news[i].status}

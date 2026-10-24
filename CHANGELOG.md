@@ -15,11 +15,11 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
-## 2026-10-25T02:42:03+05:30 — Capture task commitments in the execution agent
+## 2026-10-25T02:45:34+05:30 — Gate new work on accountable planning context
 
-- Changed: Extended the journal interpretation and review flow to carry explicit target dates and effort estimates for new tasks and existing-task scope changes. The resolver drops metadata no-ops, the proposal card lets a person edit both fields, and the transactional apply path persists them through normal task activity history. Updated the prompt and integration coverage.
-- Why: A usable execution agent must record not only that work exists, but the commitment that lets it detect scope drift and sprint risk later.
-- Validation: `npm run typecheck`, `npm run lint`, `npm test` (89/89), `npm run test:integration` (43/43), and `git diff --check` passed.
+- Changed: Extended the Phase 10 conversation path so new work carries editable scope plus explicit owner, effort estimate, and target-date questions. New tasks with missing planning context remain unselectable until the author replies; existing-task scope changes persist through the normal activity history. Added focused unit and integration coverage.
+- Why: A usable execution agent must make accountability and commitments visible before work enters the task record, while preserving the conversational review flow.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (90/90), `npm run test:integration` (44/44), and `git diff --check` passed.
 - Limitations: This is a Phase 10 milestone, not completion of Phase 10. Authentication, external channel adapters, and automated follow-ups remain unfinished.
 
 ## 2026-10-25T02:34:13+05:30 — Append the revised execution-agent roadmap

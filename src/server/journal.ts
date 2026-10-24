@@ -188,6 +188,7 @@ export async function interpretEntry(
           .select({
             id: tasks.id,
             title: tasks.title,
+            description: tasks.description,
             status: tasks.status,
             priority: tasks.priority,
             assigneeName: users.name,
@@ -333,6 +334,7 @@ export async function interpretEntry(
             tasks: taskRows.map((task) => ({
               id: task.id,
               title: task.title,
+              description: task.description,
               status: task.status as TaskStatus,
               priority: task.priority,
               assigneeId: task.assigneeId,
@@ -377,6 +379,7 @@ export async function interpretEntry(
       tasks: taskRows.map((t) => ({
         id: t.id,
         title: t.title,
+        description: t.description,
         status: t.status,
         priority: t.priority,
         assigneeId: t.assigneeId,
@@ -436,6 +439,7 @@ const selectionSchema = z.object({
       status: z.enum(["todo", "in_progress", "blocked", "done", "cancelled"]).nullable(),
       priority: z.enum(TASK_PRIORITIES).nullable(),
       assigneeId: z.uuid().nullable(),
+      description: z.string().trim().max(5000).nullable().default(null),
       dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
       estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
@@ -447,6 +451,7 @@ const selectionSchema = z.object({
       status: z.enum(["todo", "in_progress", "blocked"]),
       priority: z.enum(TASK_PRIORITIES),
       assigneeId: z.uuid().nullable(),
+      description: z.string().trim().max(5000).nullable().default(null),
       dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
       estimateHours: z.number().int().min(0).max(1000).nullable().default(null),
     }),
@@ -501,7 +506,7 @@ export async function applyJournalEntry(
       if (base.needsClarification || !base.projectId) {
         throw new AppError(
           "VALIDATION",
-          `New task "${base.title}": its project is unclear — answer the clarification question first`,
+          `New task "${base.title}": answer the clarification question${base.clarificationQuestions.length === 1 ? "" : "s"} first`,
         );
       }
       return { sel, base: base as typeof base & { projectId: string } };
@@ -549,6 +554,7 @@ export async function applyJournalEntry(
         status: TaskStatus | null;
         priority: TaskPriority | null;
         assigneeId: string | null;
+        description: string | null;
         dueDate: string | null;
         estimateHours: number | null;
         blockerDescription: string | null;
@@ -562,6 +568,7 @@ export async function applyJournalEntry(
         status: sel.status,
         priority: sel.priority,
         assigneeId: sel.assigneeId,
+        description: sel.description,
         dueDate: sel.dueDate,
         estimateHours: sel.estimateHours,
         blockerDescription: null,
@@ -582,6 +589,7 @@ export async function applyJournalEntry(
           status: "blocked",
           priority: null,
           assigneeId: null,
+          description: null,
           dueDate: null,
           estimateHours: null,
           blockerDescription: base.description,
@@ -613,10 +621,10 @@ export async function applyJournalEntry(
           taskId,
           () => ({
             title: b.title,
-            description: b.description,
             status: update.status ?? b.status,
             priority: update.priority ?? b.priority,
             assigneeId: update.assigneeId ?? b.assigneeId,
+            description: update.description ?? b.description,
             dueDate: update.dueDate ?? b.dueDate,
             estimateHours: update.estimateHours ?? b.estimateHours,
           }),
@@ -693,7 +701,7 @@ export async function applyJournalEntry(
           base.projectId,
           {
             title: sel.title,
-            description: base.description,
+            description: sel.description ?? base.description,
             status: sel.status,
             priority: sel.priority,
             assigneeId: sel.assigneeId,

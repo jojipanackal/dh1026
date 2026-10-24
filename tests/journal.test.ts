@@ -37,9 +37,9 @@ const newTask = {
   description: null,
   status: "todo" as const,
   priority: "low" as const,
-  assigneeId: null,
-  dueDate: null,
-  estimateHours: null,
+  assigneeId: MEMBER,
+  dueDate: "2026-11-05",
+  estimateHours: 4,
   reason: "r",
   confidence: "high" as const,
 };
@@ -306,6 +306,31 @@ describe("resolveInterpretation", () => {
     expect(r.issues).toContain(
       "Set an assignee to unassigned because the task's project is unclear",
     );
+  });
+
+  it("asks for owner, estimate, and target date before new work is ready", () => {
+    const r = resolveInterpretation(
+      {
+        ...base,
+        newTasks: [
+          {
+            ...newTask,
+            title: "Unplanned work",
+            assigneeId: null,
+            dueDate: null,
+            estimateHours: null,
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(r.newTasks[0].needsClarification).toBe(true);
+    expect(r.newTasks[0].clarificationQuestions).toEqual([
+      'How many hours should I plan for "Unplanned work"?',
+      'What target date should I use for "Unplanned work"?',
+      'Who owns "Unplanned work"?',
+    ]);
+    expect(defaultSelection(r).newTasks).toEqual([]);
   });
 
   it("nulls unknown blocker taskIds", () => {

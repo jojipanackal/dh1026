@@ -84,8 +84,10 @@ workflow before adding external chat adapters.
   recorded for project/member/task changes; an execution agent at
   `/journal` that answers trusted task and status questions with teammate
   evidence, interprets work updates into reviewable task changes, records
-  dependencies such as "waiting on B", captures explicit target dates and
-  effort estimates for new work and scope changes, and applies approved
+  dependencies such as "waiting on B", captures editable scope, ownership,
+  target dates, and effort estimates for new work and scope changes, and
+  keeps incomplete new work in clarification until those commitments are
+  answered before applying approved
   changes in one transaction; web messages carry channel provenance and the
   server exposes a normalized ingress boundary for future Slack/Google Chat
   adapters; Overview
