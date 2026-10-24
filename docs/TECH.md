@@ -39,7 +39,7 @@ Keep the application in a single codebase with clearly separated responsibilitie
 ### Presentation Layer
 Responsible for:
 - Project dashboard.
-- Natural-language journal interface.
+- Conversational execution agent (web first, channel adapters later).
 - Task and project views.
 - Team workload visualization.
 - Blocker and follow-up views.
@@ -53,6 +53,7 @@ Responsible for:
 - Updating project state.
 - Calculating workload indicators.
 - Scheduling or triggering follow-ups.
+- Ingesting normalized messages from web, Slack, and Google Chat adapters.
 - Recording project history.
 
 ### AI Layer
@@ -62,6 +63,7 @@ Responsible for:
 - Resolving references to existing project entities using application-provided context.
 - Generating contextual follow-up questions.
 - Answering project-history questions using retrieved records.
+- Routing read-only questions to trusted query tools before using write-proposal interpretation.
 
 AI must not bypass application validation or directly modify the database outside controlled application operations.
 
@@ -80,16 +82,17 @@ PostgreSQL is the source of truth for:
 
 A journal submission should follow this general flow:
 
-1. Receive the user's natural-language update.
+1. Receive a normalized message with author, channel, conversation, and external id metadata.
 2. Validate the request and confirm the user has access to the relevant project.
-3. Retrieve relevant project context, such as existing tasks and recent activity.
-4. Ask the AI to interpret the update into a structured result.
-5. Validate the result against a schema using Zod.
-6. Resolve references to existing records and detect possible ambiguities or duplicate tasks.
-7. Apply permitted changes through application services, requesting confirmation where required.
-8. Store the original journal entry and record the resulting changes.
-9. Refresh the relevant project views and workload indicators.
-10. Return a concise explanation of what changed and what requires attention.
+3. Retrieve relevant project context, such as existing tasks, dependencies, and recent team evidence.
+4. Route read-only questions to deterministic query tools where possible.
+5. For work updates, ask the AI to interpret the message into a structured result.
+6. Validate the result against a schema using Zod.
+7. Resolve references to existing records and detect possible ambiguities or duplicate tasks.
+8. Apply permitted changes through application services, requesting confirmation where required.
+9. Store the original message with channel provenance and record the resulting changes/dependencies.
+10. Refresh the relevant project views and workload indicators.
+11. Return a concise explanation of what changed and what requires attention in the originating channel.
 
 AI output is a proposal until it passes validation and any required approval.
 
@@ -127,12 +130,14 @@ Likely core entities include:
 - `projects`
 - `project_memberships`
 - `journal_entries`
+- `task_dependencies`
 - `tasks`
 - `task_dependencies`
 - `blockers`
 - `follow_ups`
 - `technical_decisions`
 - `activity_events`
+- `agent channel metadata and conversation keys`
 - `capacity_records`
 
 This is a starting point, not a mandatory final schema. Combine or separate entities based on the agreed product behavior.

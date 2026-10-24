@@ -9,6 +9,13 @@ export type TaskAnswerItem = {
   priority: string;
   dueDate: string | null;
   assigneeName: string | null;
+  lastUpdate: TaskEvidence | null;
+};
+
+export type TaskEvidence = {
+  authorName: string;
+  body: string;
+  createdAt: string;
 };
 
 export type TaskAnswer = {
@@ -18,7 +25,10 @@ export type TaskAnswer = {
   tasks: TaskAnswerItem[];
 };
 
-type TaskRecord = TaskAnswerItem & { assigneeId: string | null };
+type TaskRecord = Omit<TaskAnswerItem, "lastUpdate"> & {
+  assigneeId: string | null;
+  lastUpdate?: TaskEvidence | null;
+};
 
 type AnswerContext = {
   authorId: string;
@@ -37,7 +47,7 @@ const priorityRank: Record<string, number> = {
 function mentionsTaskQuestion(body: string): boolean {
   const text = body.toLowerCase();
   const asksForInformation = /\b(what|which|show|list|give|tell|help|prioriti[sz]e)\b/.test(text);
-  const mentionsTasks = /\b(tasks?|work|to[- ]?dos?|assigned|priorit(?:y|ise|ize))\b/.test(text);
+  const mentionsTasks = /\b(tasks?|work|to[- ]?dos?|assigned|priorit(?:y|ise|ize)|status|progress|update|waiting)\b/.test(text);
   return asksForInformation && mentionsTasks;
 }
 
@@ -62,10 +72,15 @@ export function answerTaskQuestion(
 
   const text = body.toLowerCase();
   const target = findTarget(body, context);
+  const namedTask = [...context.tasks]
+    .sort((a, b) => b.title.length - a.title.length)
+    .find((task) => text.includes(task.title.toLowerCase()));
   const openTasks = context.tasks.filter(
     (task) => task.status !== "done" && task.status !== "cancelled",
   );
-  const assigneeTasks = target
+  const assigneeTasks = namedTask
+    ? [namedTask]
+    : target
     ? openTasks.filter((task) => task.assigneeId === target.id)
     : openTasks;
   const matchingTasks = /\bblocked|blockers?\b/.test(text)
@@ -83,7 +98,9 @@ export function answerTaskQuestion(
     .slice(0, 12);
 
   const targetName = target?.name ?? "the team";
-  const summary = /\bblocked|blockers?\b/.test(text)
+  const summary = namedTask
+    ? `${namedTask.title} is shown with its latest recorded status and evidence.`
+    : /\bblocked|blockers?\b/.test(text)
     ? matchingTasks.length > 0
       ? `Here are the blocked tasks${target ? ` assigned to ${target.name}` : ""}.`
       : `There are no blocked tasks${target ? ` assigned to ${target.name}` : ""}.`
@@ -108,6 +125,7 @@ export function answerTaskQuestion(
       priority: task.priority,
       dueDate: task.dueDate,
       assigneeName: task.assigneeName,
+      lastUpdate: task.lastUpdate ?? null,
     })),
   };
 }

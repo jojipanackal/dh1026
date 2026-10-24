@@ -13,6 +13,30 @@ One entry per completed phase from [PHASES.md](PHASES.md), newest first. Report 
 - Next phase:
 ```
 
+## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
+
+- Implemented:
+  - Reframed `/journal` as the web surface for the execution agent and renamed the primary navigation item to Agent.
+  - Added channel provenance to `journal_entries` (`web`, `slack`, `google_chat`), conversation keys, external message ids, and an idempotent `receiveAgentMessage` ingress for future channel adapters.
+  - Added `task_dependencies` records so applied blockers preserve the blocked task, waiting-on text, matched team member, source journal entry, and open/resolved lifecycle.
+  - Project overviews now show who or what blocked work is waiting on.
+  - Status questions can use the latest ready/applied team journal evidence, including author and timestamp, while normal work updates continue through the review-before-apply proposal flow.
+- Files and areas changed: `src/db/schema.ts`, `drizzle/0004_*.sql`, `src/lib/agent/channels.ts`, `src/server/agent.ts`, `src/server/journal.ts`, `src/server/overview.ts`, `src/lib/journal/answers.ts`, `src/lib/journal/resolve.ts`, `src/app/journal/**`, `src/app/projects/[projectId]/overview-view.tsx`, `tests/integration/journal.test.ts`, `tests/journal-answers.test.ts`, `README.md`, `docs/PRD.md`, `docs/TECH.md`, `docs/PHASES.md`.
+- Checks run and results:
+  - `npm run db:generate` created migration `0004_glamorous_jubilee.sql`.
+  - `npm run db:migrate` applied the migration successfully to the configured development database.
+  - `npm run typecheck`, `npm run lint`, `npm test` (89/89), and `npm run test:integration` (43/43) pass.
+  - `/journal` returned HTTP 200 from the running dev server and rendered the Agent fallback state without a selected user.
+- Decisions affecting later phases:
+  - Web, Slack, and Google Chat share one normalized message boundary; channel adapters must not duplicate task/dependency logic.
+  - Team evidence is readable only through project membership, while the personal conversation thread remains author-scoped.
+  - A dependency is explicit when reported; lack of an update remains stale evidence, not proof that a person is idle.
+- Remaining limitations:
+  - Slack and Google Chat OAuth/webhook adapters are not connected yet.
+  - Follow-up delivery and quiet-hour policies are not automated yet.
+  - Current status evidence is based on interpreted journal entries; full-text search and richer history retrieval remain future work.
+- Next phase: Phase 6 — Contextual Follow-Ups.
+
 ## Phase 4 — Project Progress and Blockers (2026-10-25T00:45+05:30)
 
 - Implemented:

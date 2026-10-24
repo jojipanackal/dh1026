@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { activityEvents, journalEntries, tasks } from "@/db/schema";
+import { activityEvents, journalEntries, taskDependencies, tasks } from "@/db/schema";
 import type { AiInterpretation } from "@/lib/journal/interpretation-schema";
 async function expectAppError(promise: Promise<unknown>, code: string) {
   try {
@@ -149,12 +149,95 @@ describe("journal", () => {
     expect(interpretation.answer?.tasks.map((item) => item.id)).toEqual([task.id]);
   });
 
+  it("answers task status questions with the latest teammate evidence", async () => {
+    const { owner, project } = await fixture();
+    const teammate = await insertUser("B", "b@example.com");
+    await addProjectMember(owner.id, project.id, { userId: teammate.id, role: "member" });
+    const task = await createTask(owner.id, project.id, {
+      title: "Checkout API",
+      description: null,
+      priority: "high",
+      assigneeId: teammate.id,
+      dueDate: null,
+      estimateHours: null,
+    });
+    await submitJournalEntry(
+      teammate.id,
+      { body: "I am testing Checkout API on staging", submissionKey: key() },
+      interp({
+        ...empty,
+        taskUpdates: [
+          {
+            taskId: task.id,
+            status: "in_progress",
+            priority: null,
+            assigneeId: null,
+            reason: "testing on staging",
+            confidence: "high",
+          },
+        ],
+      }),
+    );
+
+    const entry = await submitJournalEntry(
+      owner.id,
+      { body: "What is the status of Checkout API?", submissionKey: key() },
+      {
+        getConfig: () => ({
+          ok: false as const,
+          error: "AI is not configured: set OPENAI_API_KEY in .env.local",
+        }),
+        interpret: async () => {
+          throw new Error("The provider should not be called for status questions");
+        },
+      },
+    );
+    const [storedEntry] = await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.id, entry.id));
+    const interpretation = storedEntry.interpretation as {
+      answer?: { tasks: { id: string; lastUpdate: { authorName: string; body: string } | null }[] };
+    };
+    expect(interpretation.answer?.tasks[0]?.id).toBe(task.id);
+    expect(interpretation.answer?.tasks[0]?.lastUpdate).toMatchObject({
+      authorName: "B",
+      body: "I am testing Checkout API on staging",
+    });
+  });
+
   it("same submissionKey twice gives one entry", async () => {
     const { owner } = await fixture();
     const k = key();
     const a = await submitJournalEntry(owner.id, { body: "b", submissionKey: k }, interp(empty));
     const b = await submitJournalEntry(owner.id, { body: "b", submissionKey: k }, interp(empty));
     expect(b.id).toBe(a.id);
+    expect(await db.select().from(journalEntries)).toHaveLength(1);
+  });
+
+  it("stores channel provenance and deduplicates external messages", async () => {
+    const { owner } = await fixture();
+    const externalMessageId = "slack-message-123";
+    const input = { body: "I started the API work", submissionKey: key() };
+    const first = await submitJournalEntry(owner.id, input, interp(empty), {
+      channel: "slack",
+      conversationKey: "slack:project-channel",
+      externalMessageId,
+    });
+    const second = await submitJournalEntry(
+      owner.id,
+      { body: "duplicate delivery", submissionKey: key() },
+      interp(empty),
+      {
+        channel: "slack",
+        conversationKey: "slack:project-channel",
+        externalMessageId,
+      },
+    );
+
+    expect(second.id).toBe(first.id);
+    expect(first.channel).toBe("slack");
+    expect(first.conversationKey).toBe("slack:project-channel");
     expect(await db.select().from(journalEntries)).toHaveLength(1);
   });
 
@@ -392,6 +475,12 @@ describe("journal", () => {
     });
     const [row] = await db.select().from(tasks).where(eq(tasks.id, t.id));
     expect(row.status).toBe("blocked");
+    const dependencies = await db
+      .select()
+      .from(taskDependencies)
+      .where(eq(taskDependencies.blockedTaskId, t.id));
+    expect(dependencies).toHaveLength(1);
+    expect(dependencies[0]?.description).toBe("waiting on vendor");
   });
 
   it("dismiss sets dismissed", async () => {

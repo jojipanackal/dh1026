@@ -4,9 +4,9 @@
 
 **Product:** Jeera
 
-**Vision:** An AI-powered platform that helps software teams run projects through natural-language updates, automated task management, workload visibility, proactive follow-ups, and persistent project knowledge.
+**Vision:** An execution agent that helps software teams run projects through natural-language conversations wherever work happens. Jeera turns updates into tasks, dependencies, evidence, follow-ups, and a trustworthy view of sprint movement.
 
-Jeera aims to reduce the administrative burden of project management while helping teams understand project progress, identify blockers, distribute work effectively, and preserve the reasoning behind technical decisions.
+The web app is one conversation surface and control plane. Slack, Google Chat, and future channels can feed the same agent runtime. Jeera aims to reduce the administrative burden of project management while helping teams understand who is waiting on whom, what changed, and what needs attention next.
 
 ## 2. Problem Statement
 
@@ -16,6 +16,7 @@ This creates several problems:
 - Developers spend time updating project-management tools instead of doing their work.
 - Project status becomes outdated or fragmented.
 - Blockers and dependencies are discovered too late.
+- A person can be blocked by a teammate without that dependency becoming visible to leads.
 - Workload imbalances and individual overload are difficult to identify.
 - Technical decisions and their rationale are lost across conversations and documentation.
 - Managers lack a reliable view of progress, capacity, and risks.
@@ -44,15 +45,18 @@ The initial product should focus on software development teams.
 
 ## 5. Core Functional Requirements
 
-### 5.1 Natural-Language Journal
+### 5.1 Conversational Execution Agent
 
-Users must be able to submit free-form updates describing:
+Users must be able to talk to Jeera in a daily conversation and submit free-form messages describing:
 - Work completed.
 - Work in progress.
 - Planned work.
 - Blockers and dependencies.
 - Discoveries and technical decisions.
 - Changes in priorities or estimates.
+- New work they were asked to do.
+- Scope changes during an active task.
+- Questions about a teammate, task, dependency, or project.
 
 The system should interpret these updates and identify relevant project information.
 
@@ -62,6 +66,8 @@ The system should interpret these updates and identify relevant project informat
 - Ask for clarification when an update is ambiguous or important information is missing.
 - Allow users to review or correct AI-generated interpretations.
 - Preserve the original journal entry for historical reference.
+- Answer read-only questions from trusted task records and dated evidence.
+- Keep the same agent state whether a message arrives from the web app or a connected chat channel.
 
 ### 5.2 Task and Project Tracking
 
@@ -128,7 +134,20 @@ The platform should reduce the need for manual status chasing.
 
 Follow-up timing, notification channels, and escalation policies should remain configurable or be kept simple for the initial MVP.
 
-### 5.6 Project Knowledge and Technical Decisions
+### 5.6 Multi-Channel Conversation
+
+The agent must have one normalized message model with multiple possible interfaces.
+
+**Expected behavior:**
+- Treat the web app as the first-class conversation and review surface.
+- Record the source channel, conversation, external message id, author, and timestamp for every message.
+- Deduplicate webhook retries from external channels.
+- Reply in the originating channel by default while keeping the state visible in the web app.
+- Enforce project membership and channel authorization before exposing team evidence.
+
+Slack and Google Chat delivery are adapter work; the core agent must not duplicate its task or dependency logic per channel.
+
+### 5.7 Project Knowledge and Technical Decisions
 
 The platform must preserve useful project context over time.
 
@@ -142,7 +161,7 @@ The platform must preserve useful project context over time.
 
 The system must not fabricate historical facts or present an inferred explanation as a confirmed decision.
 
-### 5.7 Project Overview
+### 5.8 Project Overview
 
 The platform should provide a central view of project execution.
 
@@ -179,18 +198,20 @@ The MVP should demonstrate one coherent end-to-end project workflow.
 
 ### Must have
 1. Basic project and team setup.
-2. Natural-language journal submission.
+2. A web conversation with one execution agent.
 3. AI interpretation of updates into tasks and project changes.
 4. Task tracking with status and ownership.
-5. A project overview showing progress and blockers.
-6. Team workload visibility and basic imbalance indicators.
-7. Contextual follow-ups for missing updates or blockers.
-8. Persistent project history and searchable technical knowledge.
+5. Explicit dependency records showing who or what a task is waiting on.
+6. A project overview showing progress, blockers, and stale work.
+7. Grounded status answers with the latest team evidence and timestamp.
+8. Team workload visibility and basic imbalance indicators.
+9. Contextual follow-ups for missing updates or blockers.
+10. Persistent project history and searchable technical knowledge.
 
 ### Defer until the core workflow works
 - Complex resource forecasting.
 - Advanced analytics and reporting.
-- Extensive third-party integrations.
+- Production Slack and Google Chat integrations.
 - Sophisticated notification and escalation systems.
 - Multi-agent orchestration.
 - Complex organizational permission hierarchies.
@@ -228,6 +249,7 @@ The central success measure is whether the platform reduces manual coordination 
 ## 10. Key Product Principles
 
 - Natural language should be the easiest way to update a project.
+- The agent is the product; web and chat platforms are interfaces to it.
 - The platform should help run projects, not merely display task boards.
 - Workload insights must be explainable and grounded in available evidence.
 - Missing updates must not be treated as proof of inactivity.
@@ -246,3 +268,4 @@ The following details can be finalized during implementation planning:
 - Authentication and access-control model.
 - Deployment and integrations.
 - Detailed UI layout and interaction patterns.
+- External channel authentication and webhook contracts.

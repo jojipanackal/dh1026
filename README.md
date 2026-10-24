@@ -76,9 +76,12 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
   status moves; task create/edit forms with lifecycle validation (todo,
   in_progress, blocked, done, cancelled) and per-field change history;
   `completed_at` set on done and cleared on reopen; activity events
-  recorded for project/member/task changes; a chatbot-style journal at
-  `/journal` that answers trusted task-list questions and interprets work
-  updates into reviewable task changes applied in one transaction; Overview
+  recorded for project/member/task changes; an execution agent at
+  `/journal` that answers trusted task and status questions with teammate
+  evidence, interprets work updates into reviewable task changes, records
+  dependencies such as "waiting on B", and applies approved changes in one
+  transaction; web messages carry channel provenance and the server exposes a
+  normalized ingress boundary for future Slack/Google Chat adapters; Overview
   page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
   (`users`, `projects`, `project_memberships`, `tasks`,
@@ -89,8 +92,11 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 - Known limitations: Team and Knowledge pages are honest placeholders —
   those features land in later phases (see
   [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
-  switcher only). Manually blocked tasks have no reason field yet, so the
-  overview can only show "no reason recorded" for them. Under Next.js
+  switcher only). Slack and Google Chat are represented by the normalized
+  channel boundary but external OAuth/webhook adapters are not connected yet.
+  Automatic follow-up delivery is not enabled yet. Manually blocked tasks
+  have no reason field yet, so the overview can only show "no reason
+  recorded" for them. Under Next.js
   cacheComponents, a not-found page rendered from request-time checks
   (e.g. a non-member opening a project URL) streams with a 200 status — a
   platform limitation, not a data leak.

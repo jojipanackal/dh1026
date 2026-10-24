@@ -43,6 +43,7 @@ export type ResolvedBlocker = AiBlocker & {
   taskTitle: string | null;
   // The linked task's project; null when the blocker is not linked.
   projectId: string | null;
+  waitingOnUserId: string | null;
 };
 
 export type Resolved = {
@@ -69,6 +70,7 @@ type Ctx = {
   }[];
   // Member user ids, keyed by project id.
   membersByProject: Record<string, string[]>;
+  memberNamesByProject?: Record<string, { id: string; name: string }[]>;
 };
 
 function normalizeTitle(title: string): string {
@@ -196,11 +198,23 @@ export function resolveInterpretation(
 
   const blockers: ResolvedBlocker[] = raw.blockers.map((b) => {
     const task = b.taskId ? taskById.get(b.taskId) : undefined;
+    const members = task
+      ? ctx.memberNamesByProject?.[task.projectId] ?? []
+      : [];
+    const waitingOn = b.waitingOn?.toLowerCase();
+    const waitingOnUserId = waitingOn
+      ? members.find(
+          (member) =>
+            member.name.toLowerCase() === waitingOn ||
+            member.name.toLowerCase().includes(waitingOn),
+        )?.id ?? null
+      : null;
     return {
       ...b,
       taskId: task?.id ?? null,
       taskTitle: task?.title ?? null,
       projectId: task?.projectId ?? null,
+      waitingOnUserId,
     };
   });
 

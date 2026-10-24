@@ -22,10 +22,10 @@ export default async function JournalPage() {
   if (!user) {
     return (
       <>
-        <PageHeader title="Journal" />
+        <PageHeader title="Agent" />
         <EmptyState
           title="No demo user selected"
-          message="Pick a demo user in the sidebar to write a journal entry."
+          message="Pick a demo user in the sidebar to talk to the execution agent."
         />
       </>
     );
@@ -35,7 +35,7 @@ export default async function JournalPage() {
   if (projectRows.length === 0) {
     return (
       <>
-        <PageHeader title="Journal" />
+        <PageHeader title="Agent" />
         <EmptyState
           title="No projects yet"
           message="Create a project first, then come back to journal."
@@ -48,6 +48,7 @@ export default async function JournalPage() {
   const entries: ThreadEntry[] = thread.map((e) => ({
     id: e.id,
     body: e.body,
+    channel: e.channel,
     status: e.status,
     interpretation: e.interpretation as Resolved | null,
     interpretationError: e.interpretationError,

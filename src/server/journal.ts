@@ -6,14 +6,16 @@ import { z } from "zod";
 import { db } from "@/db";
 import {
   activityEvents,
+  type ConversationChannel,
   journalEntries,
   projectMemberships,
   projects,
+  taskDependencies,
   tasks,
   users,
 } from "@/db/schema";
 import { getAiConfig } from "@/lib/env";
-import { answerTaskQuestion } from "@/lib/journal/answers";
+import { answerTaskQuestion, type TaskEvidence } from "@/lib/journal/answers";
 import { isUuid } from "@/lib/ids";
 import { resolveInterpretation, type Resolved } from "@/lib/journal/resolve";
 import type { JournalPromptContext } from "@/lib/journal/prompt";
@@ -33,12 +35,36 @@ type InterpretDeps = {
   getConfig?: typeof getAiConfig;
 };
 
+type SubmitJournalOptions = {
+  channel?: ConversationChannel;
+  conversationKey?: string;
+  externalMessageId?: string;
+};
+
 export async function submitJournalEntry(
   userId: string,
   input: z.input<typeof submitSchema>,
   deps: InterpretDeps = {},
+  options: SubmitJournalOptions = {},
 ) {
   const parsed = submitSchema.parse(input);
+  const channel = options.channel ?? "web";
+  const conversationKey = options.conversationKey ?? channel;
+
+  if (options.externalMessageId) {
+    const [existingExternal] = await db
+      .select()
+      .from(journalEntries)
+      .where(
+        and(
+          eq(journalEntries.channel, channel),
+          eq(journalEntries.externalMessageId, options.externalMessageId),
+        ),
+      )
+      .limit(1);
+    if (existingExternal) return existingExternal;
+  }
+
   // Idempotent insert: retrying the same submission key returns the entry.
   const [entry] = await db
     .insert(journalEntries)
@@ -47,14 +73,16 @@ export async function submitJournalEntry(
       authorId: userId,
       body: parsed.body,
       submissionKey: parsed.submissionKey,
+      channel,
+      conversationKey,
+      externalMessageId: options.externalMessageId ?? null,
     })
     .onConflictDoNothing({
       target: [journalEntries.authorId, journalEntries.submissionKey],
     })
     .returning();
   if (entry) {
-    await interpretEntry(userId, entry.id, deps);
-    return entry;
+    return (await interpretEntry(userId, entry.id, deps)) ?? entry;
   }
   const [existing] = await db
     .select()
@@ -180,6 +208,53 @@ export async function interpretEntry(
           )
           .orderBy(desc(tasks.updatedAt))
           .limit(150);
+
+  // Status questions need team evidence, not only the current author's
+  // private thread. A journal message is associated with a task through the
+  // resolved interpretation, while the original body remains the evidence.
+  const memberIds = [
+    ...new Set(Object.values(membersByProject).flat().map((member) => member.id)),
+  ];
+  const evidenceRows =
+    memberIds.length === 0
+      ? []
+      : await db
+          .select({
+            body: journalEntries.body,
+            interpretation: journalEntries.interpretation,
+            authorName: users.name,
+            createdAt: journalEntries.createdAt,
+          })
+          .from(journalEntries)
+          .innerJoin(users, eq(users.id, journalEntries.authorId))
+          .where(
+            and(
+              inArray(journalEntries.authorId, memberIds),
+              inArray(journalEntries.status, ["ready", "applied"]),
+            ),
+          )
+          .orderBy(desc(journalEntries.createdAt))
+          .limit(200);
+  const evidenceByTask = new Map<string, TaskEvidence>();
+  for (const row of evidenceRows) {
+    const interpretation = row.interpretation as {
+      taskUpdates?: { taskId?: string }[];
+      blockers?: { taskId?: string }[];
+    } | null;
+    const taskIds = [
+      ...(interpretation?.taskUpdates ?? []).map((item) => item.taskId),
+      ...(interpretation?.blockers ?? []).map((item) => item.taskId),
+    ];
+    for (const taskId of taskIds) {
+      if (taskId && !evidenceByTask.has(taskId)) {
+        evidenceByTask.set(taskId, {
+          authorName: row.authorName,
+          body: row.body,
+          createdAt: row.createdAt.toISOString(),
+        });
+      }
+    }
+  }
   // Up to 6 earlier entries by this author, oldest first, so the model can
   // resolve references like "yes, assign it to Priya".
   const recentRows = await db
@@ -233,6 +308,7 @@ export async function interpretEntry(
       dueDate: task.dueDate,
       assigneeId: task.assigneeId,
       assigneeName: task.assigneeName,
+      lastUpdate: evidenceByTask.get(task.id) ?? null,
     })),
     membersByProject,
   });
@@ -267,6 +343,7 @@ export async function interpretEntry(
                 members.map((member) => member.id),
               ]),
             ),
+            memberNamesByProject: membersByProject,
           },
           taskAnswer,
         ),
@@ -308,6 +385,7 @@ export async function interpretEntry(
           members.map((m) => m.id),
         ]),
       ),
+      memberNamesByProject: membersByProject,
     });
     const [updated] = await db
       .update(journalEntries)
@@ -463,6 +541,8 @@ export async function applyJournalEntry(
         priority: TaskPriority | null;
         assigneeId: string | null;
         blockerDescription: string | null;
+        waitingOn: string | null;
+        blockingUserId: string | null;
         label: string;
       }
     >();
@@ -472,6 +552,8 @@ export async function applyJournalEntry(
         priority: sel.priority,
         assigneeId: sel.assigneeId,
         blockerDescription: null,
+        waitingOn: null,
+        blockingUserId: null,
         label: base.taskTitle,
       });
     }
@@ -480,12 +562,16 @@ export async function applyJournalEntry(
       if (existing) {
         existing.status = "blocked";
         existing.blockerDescription = base.description;
+        existing.waitingOn = base.waitingOn;
+        existing.blockingUserId = base.waitingOnUserId;
       } else {
         byTask.set(base.taskId!, {
           status: "blocked",
           priority: null,
           assigneeId: null,
           blockerDescription: base.description,
+          waitingOn: base.waitingOn,
+          blockingUserId: base.waitingOnUserId,
           label: base.taskTitle ?? "task",
         });
       }
@@ -537,25 +623,43 @@ export async function applyJournalEntry(
           if (events.length === 0) {
             // The task was already blocked (or the update was otherwise a
             // no-op): still record the blocker as its own journal event.
+            const blockerChanges = {
+              blockedReason: { from: null, to: update.blockerDescription },
+              ...(update.waitingOn
+                ? { waitingOn: { from: null, to: update.waitingOn } }
+                : {}),
+            };
             await tx.insert(activityEvents).values({
               projectId: b.projectId,
               taskId,
               actorId: userId,
               type: "task.updated",
-              changes: {
-                blockedReason: { from: null, to: update.blockerDescription },
-              },
+              changes: blockerChanges,
               source: "journal",
               journalEntryId: entry.id,
             });
           } else {
+            const blockerChanges = {
+              blockedReason: { from: null, to: update.blockerDescription },
+              ...(update.waitingOn
+                ? { waitingOn: { from: null, to: update.waitingOn } }
+                : {}),
+            };
             await tx
               .update(activityEvents)
               .set({
-                changes: sql`${activityEvents.changes} || ${JSON.stringify({ blockedReason: { from: null, to: update.blockerDescription } })}::jsonb`,
+                changes: sql`${activityEvents.changes} || ${JSON.stringify(blockerChanges)}::jsonb`,
               })
               .where(eq(activityEvents.id, events[0].id));
           }
+          await tx.insert(taskDependencies).values({
+            blockedTaskId: taskId,
+            blockingUserId: update.blockingUserId,
+            description: update.blockerDescription,
+            waitingOn: update.waitingOn,
+            sourceJournalEntryId: entry.id,
+            createdBy: userId,
+          });
         }
         void updated;
       } catch (error) {

@@ -7,6 +7,7 @@ import {
   activityEvents,
   journalEntries,
   projectMemberships,
+  taskDependencies,
   tasks,
   users,
 } from "@/db/schema";
@@ -45,6 +46,9 @@ export type OverviewBlockedItem = OverviewTaskItem & {
   blockedAt: Date;
   source: string;
   journalEntryId: string | null;
+  waitingOn: string | null;
+  blockingUserName: string | null;
+  dependencyCreatedAt: Date | null;
 };
 
 export type PendingBlocker = {
@@ -141,6 +145,34 @@ export async function getProjectOverview(
 
   const blockedRows = taskRows.filter((t) => t.status === "blocked");
 
+  const dependencyRows = blockedRows.length
+    ? await db
+        .select({
+          blockedTaskId: taskDependencies.blockedTaskId,
+          waitingOn: taskDependencies.waitingOn,
+          blockingUserName: users.name,
+          createdAt: taskDependencies.createdAt,
+        })
+        .from(taskDependencies)
+        .leftJoin(users, eq(users.id, taskDependencies.blockingUserId))
+        .where(
+          and(
+            eq(taskDependencies.status, "open"),
+            inArray(
+              taskDependencies.blockedTaskId,
+              blockedRows.map((t) => t.id),
+            ),
+          ),
+        )
+        .orderBy(desc(taskDependencies.createdAt))
+    : [];
+  const dependencyByTask = new Map<string, (typeof dependencyRows)[number]>();
+  for (const dependency of dependencyRows) {
+    if (!dependencyByTask.has(dependency.blockedTaskId)) {
+      dependencyByTask.set(dependency.blockedTaskId, dependency);
+    }
+  }
+
   // Latest history for the currently blocked tasks, so each block can show
   // who marked it and any reported reason.
   const eventsByTask = new Map<string, ActivityEventLike[]>();
@@ -208,6 +240,9 @@ export async function getProjectOverview(
         blockedAt: info?.blockedAt ?? t.updatedAt,
         source: info?.source ?? "manual",
         journalEntryId: info?.journalEntryId ?? null,
+        waitingOn: dependencyByTask.get(t.id)?.waitingOn ?? null,
+        blockingUserName: dependencyByTask.get(t.id)?.blockingUserName ?? null,
+        dependencyCreatedAt: dependencyByTask.get(t.id)?.createdAt ?? null,
       });
       if (diff !== null && diff < 0) {
         overdue.push({ ...item(t), daysOverdue: -diff });

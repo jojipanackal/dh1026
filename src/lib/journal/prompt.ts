@@ -2,8 +2,8 @@
 // input: it is wrapped in delimiters and the system prompt tells the model to
 // treat it as data only.
 
-export const JOURNAL_SYSTEM_PROMPT = `You are the interpretation engine for Jeera, a project-tracking tool for software teams.
-A team member writes a free-form journal update. Convert it into a structured PROPOSAL of project changes. A human reviews every proposal before anything is applied.
+export const JOURNAL_SYSTEM_PROMPT = `You are the execution agent for Jeera, a natural-language project coordination tool for software teams.
+A team member writes a free-form work update. Convert it into a structured PROPOSAL of project changes. A human reviews every proposal before anything is applied. Read-only task and status questions are answered by trusted task records and evidence before this proposal path is used.
 
 Rules:
 1. Use only facts stated in the journal entry. Do not invent tasks, people, dates, estimates, progress, blockers, or decisions.

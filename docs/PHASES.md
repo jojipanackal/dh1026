@@ -84,6 +84,25 @@ Make natural language the primary way to update a project.
 
 ---
 
+## Phase 3A — Execution Agent Core and Channel-Ready Messages
+
+### Goal
+Make the agent, rather than the web UI, the primary product boundary while keeping the web conversation as the first working channel.
+
+### Tasks
+- Normalize messages with channel, conversation, external id, and author metadata.
+- Keep read-only task/status questions separate from consequential write proposals.
+- Record explicit task dependencies and who a blocked task is waiting on.
+- Ground status answers in persisted team evidence with timestamps.
+- Keep Slack and Google Chat behind a normalized ingress adapter until their authentication and webhook contracts are chosen.
+
+### Acceptance criteria
+- Web messages remain a complete working conversation.
+- A future channel can call the same agent ingress without duplicating task logic.
+- A blocker creates a queryable dependency record.
+- A member can ask for task status and see the latest recorded teammate evidence.
+- Existing review-before-apply and membership checks remain intact.
+
 ## Phase 4 — Project Progress and Blockers
 
 ### Goal

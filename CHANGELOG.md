@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:25:36+05:30 — Reframe Journal as a channel-ready execution agent
+
+- Changed: Added channel provenance and external-message deduplication to `journal_entries`, a normalized `receiveAgentMessage` ingress for web/Slack/Google Chat adapters, and a `task_dependencies` table. Applied blockers now record who or what the task is waiting on; project overviews show that dependency. Status questions can use the latest teammate journal evidence with author and timestamp. Reframed the UI/nav/docs from Journal to Agent while keeping `/journal` stable.
+- Why: Jeera's core product is the agent that understands execution state across conversations—not a web task board or private journal. This milestone makes the web channel first-class while keeping future chat channels on the same domain model.
+- Validation: `npm run db:generate`, `npm run db:migrate`, `npm run typecheck`, `npm run lint`, `npm test` (89/89), `npm run test:integration` (43/43), `git diff --check`, and an HTTP 200 check of `/journal` passed.
+- Limitations: Slack/Google Chat adapters and automatic follow-up delivery are not connected yet; no production build was run while the dev server was active.
+
 ## 2026-10-25T02:03:00+05:30 — Split task questions from journal proposals
 
 - Changed: Added a deterministic read-only task-query path in `src/lib/journal/answers.ts` and `src/server/journal.ts`, so questions such as “Which tasks assigned to George should be prioritized for today?” return George's open tasks ordered by priority and due date instead of producing a clarification proposal. Added `TaskAnswer` data to resolved journal interpretations and a linked task-search card in `src/app/journal/journal-chat.tsx`. Refreshed the journal header, empty state, message bubbles, composer, and quick prompts; task context now includes due dates.

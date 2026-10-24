@@ -149,6 +149,14 @@ export function OverviewView({
                       No reason recorded.
                     </p>
                   )}
+                  {t.waitingOn || t.blockingUserName ? (
+                    <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+                      Waiting on {t.blockingUserName ?? t.waitingOn}
+                      {t.waitingOn && t.blockingUserName && t.waitingOn !== t.blockingUserName
+                        ? ` — ${t.waitingOn}`
+                        : ""}
+                    </p>
+                  ) : null}
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {t.assigneeName ?? "Unassigned"} · marked blocked by{" "}
                     {t.blockedByName} · {formatDateTime(t.blockedAt)}

@@ -23,12 +23,14 @@ import {
 import { AppliedCard, ProposalCard } from "@/app/journal/proposal-card";
 import { Button } from "@/components/ui/button";
 import { dayKeyIst, formatDateTime, formatRelativeDay } from "@/lib/format";
+import { channelLabel } from "@/lib/agent/channels";
 import type { Resolved } from "@/lib/journal/resolve";
 import { cn } from "@/lib/utils";
 
 export type ThreadEntry = {
   id: string;
   body: string;
+  channel: string;
   status: string;
   interpretation: Resolved | null;
   interpretationError: string | null;
@@ -100,6 +102,14 @@ function TaskAnswerCard({ answer }: { answer: NonNullable<Resolved["answer"]> })
                     </>
                   ) : null}
                 </span>
+                {task.lastUpdate ? (
+                  <span className="mt-2 block line-clamp-2 text-xs text-muted-foreground/80">
+                    <span className="font-medium text-muted-foreground">
+                      {task.lastUpdate.authorName} · {formatDateTime(new Date(task.lastUpdate.createdAt))}
+                    </span>{" "}
+                    {task.lastUpdate.body}
+                  </span>
+                ) : null}
               </span>
               <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
@@ -140,6 +150,8 @@ function AssistantMessage({
           <span className="font-medium text-foreground">Jeera</span>
           <span>·</span>
           <span>{entry.model === "task-query" ? "Task search" : "Work journal"}</span>
+          <span>·</span>
+          <span>{channelLabel(entry.channel as Parameters<typeof channelLabel>[0])}</span>
         </div>
 
         {entry.status === "pending" ? (
@@ -316,13 +328,13 @@ export function JournalChat({
             </span>
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-brand">
-                Work journal
+                Execution agent
               </p>
               <h1 className="mt-1 text-xl font-semibold tracking-tight">
                 Chat with Jeera
               </h1>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Ask about your work, or write an update for Jeera to turn into a reviewable change.
+                Tell Jeera what changed, ask what is happening, or let it keep the team moving.
               </p>
             </div>
           </div>
@@ -337,9 +349,9 @@ export function JournalChat({
               <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand/12 text-brand">
                 <Bot className="size-6" />
               </div>
-              <h2 className="mt-4 text-base font-medium">What would you like to know?</h2>
+              <h2 className="mt-4 text-base font-medium">What should Jeera keep track of?</h2>
               <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                Ask a read-only question or tell Jeera what changed. Proposed task updates always wait for your approval.
+                Ask about work, record a dependency, or describe a scope change. Consequential task updates always wait for your approval.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 {["What are my tasks for today?", "Show blocked work", "I finished the registration flow"].map((prompt) => (
