@@ -14,6 +14,12 @@ Coding, verification, documentation, and commit rules are in [AGENTS.md](../AGEN
 - Do not make the project depend on development-only tools such as MCP servers.
 - Record each finished phase in [PROGRESS.md](PROGRESS.md) using the protocol at the end of this file.
 
+The original foundation phases are historical implementation phases. Phases 1–4
+and 3A have already been completed in this repository. The current product
+roadmap is appended as Phases 10–13 below so the new execution-agent direction
+does not erase the build record or pretend the unfinished legacy phases are
+complete.
+
 ---
 
 ## Phase 1 — Foundation and Application Shell
@@ -234,6 +240,105 @@ Present a coherent, credible product experience.
 - Project history can show why a technical decision was made.
 
 ---
+
+---
+
+## Current Execution-Agent Roadmap
+
+The following phases are the active roadmap for the revised product. They are
+numbered after the existing phases intentionally: the earlier phases are the
+foundation already built, while these phases complete the usable execution-agent
+workflow.
+
+## Phase 10 — Web-First Execution Agent
+
+### Goal
+
+Make the web conversation a complete, dependable daily work surface for one
+team, with the agent handling task capture, updates, questions, and review.
+
+### Tasks
+
+- Keep one daily conversation per person while preserving task and project context.
+- Let a person describe newly assigned work and receive a task proposal with owner, scope, priority, estimate, and target-date questions.
+- Support natural-language start, progress, completion, and scope-change updates.
+- Keep read-only answers separate from write proposals.
+- Make every consequential change reviewable before application.
+- Replace demo-only identity with an explicit authenticated team boundary before external rollout.
+
+### Acceptance criteria
+
+- A developer can start the day, create work, update it, and ask status questions without leaving the conversation.
+- Task creation and updates preserve the original message and a reviewable change history.
+- Scope changes can update the current estimate or split work without erasing the original commitment.
+- No task mutation occurs without the configured approval rule.
+- The web channel is usable without Slack or Google Chat being connected.
+
+## Phase 11 — Task and Dependency Graph
+
+### Goal
+
+Represent the execution relationships that ordinary task boards miss.
+
+### Tasks
+
+- Model “A is waiting on B” as an explicit dependency with source evidence.
+- Support dependencies on a task, person, team, or external system.
+- Show dependency direction, age, current state, and the next expected action.
+- Resolve or update dependencies when the blocking work changes.
+- Surface dependency chains in task detail, project overview, and agent answers.
+
+### Acceptance criteria
+
+- A blocked task explains who or what it is waiting on.
+- Leads can see dependency chains without reading every conversation.
+- Dependency records link back to the original message and author.
+- A dependency can become stale without being falsely marked resolved.
+- Access checks prevent users from seeing evidence outside their projects.
+
+## Phase 12 — Evidence-Backed Status and Sprint Movement
+
+### Goal
+
+Answer “what is happening?” from current records and help the team distinguish
+real movement from stale activity.
+
+### Tasks
+
+- Answer task, person, project, and dependency status questions.
+- Show the latest evidence, author, timestamp, and confidence/freshness.
+- Distinguish reported facts, applied task state, and agent inference.
+- Track sprint movement through meaningful transitions, scope changes, dependency resolution, and review handoffs.
+- Explain why a task or sprint is at risk.
+
+### Acceptance criteria
+
+- “What is B doing on Checkout?” returns the latest grounded evidence when available.
+- “What is blocked?” identifies dependency owners and evidence age.
+- Silence is shown as stale or unknown, never as proof that someone is idle.
+- Sprint risk explanations link to concrete tasks, dependencies, or missing evidence.
+
+## Phase 13 — Stale Work and Contextual Follow-Ups
+
+### Goal
+
+Turn stale execution state into targeted, respectful follow-ups.
+
+### Tasks
+
+- Define follow-up triggers for stale dependencies, missing estimates, and unchanged in-progress work.
+- Ask the smallest useful question and include the relevant task/dependency context.
+- Deliver follow-ups through the configured channel, starting with the web channel.
+- Record delivery, response, dismissal, and resolution history.
+- Add working hours, quiet hours, deduplication, and escalation rules.
+
+### Acceptance criteria
+
+- A stale dependency produces one actionable follow-up rather than repeated reminders.
+- A natural reply updates the relevant task or dependency through the normal review rules.
+- Users can dismiss or defer a follow-up.
+- Follow-ups respect channel, project membership, and quiet-hour configuration.
+- Failed delivery is visible and recoverable.
 
 ## Completion Criteria
 

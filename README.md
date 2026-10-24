@@ -31,6 +31,11 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 - **Working demo:** TODO — link or local demo instructions.
 - **Technology stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · next-themes · Drizzle ORM · PostgreSQL · Zod · Vitest
 
+The active roadmap is now the execution-agent sequence in
+[PHASES.md](docs/PHASES.md) Phases 10–13. The earlier phases document the
+foundation already built; current work completes the usable web-first agent
+workflow before adding external chat adapters.
+
 ### Run the project
 
 1. Prerequisites and versions: Node.js 22+, npm 10+, PostgreSQL 14+ running locally.

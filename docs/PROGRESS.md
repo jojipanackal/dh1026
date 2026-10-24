@@ -13,6 +13,15 @@ One entry per completed phase from [PHASES.md](PHASES.md), newest first. Report 
 - Next phase:
 ```
 
+## Revised roadmap note (2026-10-25T02:30+05:30)
+
+The original foundation work through Phase 4 and the channel-ready Phase 3A
+is complete and recorded below. The former Phases 5–9 remain as historical
+planning context, but they are no longer the active sequence. The current
+execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
+web-first agent, task/dependency graph, evidence-backed status and sprint
+movement, then stale-work follow-ups.
+
 ## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
 
 - Implemented:
@@ -35,7 +44,7 @@ One entry per completed phase from [PHASES.md](PHASES.md), newest first. Report 
   - Slack and Google Chat OAuth/webhook adapters are not connected yet.
   - Follow-up delivery and quiet-hour policies are not automated yet.
   - Current status evidence is based on interpreted journal entries; full-text search and richer history retrieval remain future work.
-- Next phase: Phase 6 — Contextual Follow-Ups.
+- Next phase: Phase 10 — Web-First Execution Agent.
 
 ## Phase 4 — Project Progress and Blockers (2026-10-25T00:45+05:30)
 

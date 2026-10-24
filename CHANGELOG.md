@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:34:13+05:30 — Append the revised execution-agent roadmap
+
+- Changed: Updated `docs/PHASES.md`, `docs/PROGRESS.md`, and `README.md` to preserve the completed foundation phases while adding the active execution-agent roadmap as Phases 10–13: web-first agent, task/dependency graph, evidence-backed status and sprint movement, and stale-work follow-ups.
+- Why: The product direction moved from a journal/task-board app to a usable conversational execution tool. The roadmap must distinguish completed historical work from the new unfinished workflow.
+- Validation: Reviewed phase ordering and cross-links; `git diff --check` passed.
+- Limitations: This milestone changes planning documentation only; Phase 10 implementation work remains incomplete.
+
 ## 2026-10-25T02:25:36+05:30 — Reframe Journal as a channel-ready execution agent
 
 - Changed: Added channel provenance and external-message deduplication to `journal_entries`, a normalized `receiveAgentMessage` ingress for web/Slack/Google Chat adapters, and a `task_dependencies` table. Applied blockers now record who or what the task is waiting on; project overviews show that dependency. Status questions can use the latest teammate journal evidence with author and timestamp. Reframed the UI/nav/docs from Journal to Agent while keeping `/journal` stable.
