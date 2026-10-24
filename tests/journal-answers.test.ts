@@ -91,6 +91,31 @@ describe("answerTaskQuestion", () => {
     expect(answer?.tasks.map((task) => task.id)).toEqual(["task-blocked"]);
   });
 
+  it("keeps an explicit waiting-on dependency with a blocked task answer", () => {
+    const answer = answerTaskQuestion("Show blocked work", {
+      ...context,
+      tasks: [
+        {
+          ...context.tasks[0],
+          id: "task-blocked",
+          title: "Waiting on staging",
+          status: "blocked" as const,
+          dependency: {
+            description: "Waiting for staging verification",
+            waitingOn: "staging",
+            blockingUserName: "Priya",
+            createdAt: "2026-10-25T01:30:00.000Z",
+          },
+        },
+      ],
+    });
+
+    expect(answer?.tasks[0]?.dependency).toMatchObject({
+      waitingOn: "staging",
+      blockingUserName: "Priya",
+    });
+  });
+
   it("uses the named teammate's evidence when a task has multiple updates", () => {
     const answer = answerTaskQuestion("What is Priya doing on Fix the payment callback?", {
       ...context,

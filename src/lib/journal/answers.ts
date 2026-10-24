@@ -10,6 +10,14 @@ export type TaskAnswerItem = {
   dueDate: string | null;
   assigneeName: string | null;
   lastUpdate: TaskEvidence | null;
+  dependency: TaskDependencyEvidence | null;
+};
+
+export type TaskDependencyEvidence = {
+  description: string;
+  waitingOn: string | null;
+  blockingUserName: string | null;
+  createdAt: string;
 };
 
 export type TaskEvidence = {
@@ -26,10 +34,11 @@ export type TaskAnswer = {
   tasks: TaskAnswerItem[];
 };
 
-type TaskRecord = Omit<TaskAnswerItem, "lastUpdate"> & {
+type TaskRecord = Omit<TaskAnswerItem, "lastUpdate" | "dependency"> & {
   assigneeId: string | null;
   lastUpdate?: TaskEvidence | null;
   evidence?: TaskEvidence[];
+  dependency?: TaskDependencyEvidence | null;
 };
 
 type AnswerContext = {
@@ -62,7 +71,10 @@ function findTarget(body: string, context: AnswerContext) {
   const members = Object.values(context.membersByProject)
     .flat()
     .sort((a, b) => b.name.length - a.name.length);
-  const match = members.find((member) => text.includes(member.name.toLowerCase()));
+  const match = members.find((member) => {
+    const escapedName = member.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escapedName}\\b`).test(text);
+  });
   return match ? { id: match.id, name: match.name } : null;
 }
 
@@ -132,6 +144,7 @@ export function answerTaskQuestion(
         task.lastUpdate ??
         task.evidence?.[0] ??
         null,
+      dependency: task.dependency ?? null,
     })),
   };
 }

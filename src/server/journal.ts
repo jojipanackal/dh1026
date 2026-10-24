@@ -15,7 +15,11 @@ import {
   users,
 } from "@/db/schema";
 import { getAiConfig } from "@/lib/env";
-import { answerTaskQuestion, type TaskEvidence } from "@/lib/journal/answers";
+import {
+  answerTaskQuestion,
+  type TaskDependencyEvidence,
+  type TaskEvidence,
+} from "@/lib/journal/answers";
 import { isUuid } from "@/lib/ids";
 import { resolveInterpretation, type Resolved } from "@/lib/journal/resolve";
 import type { JournalPromptContext } from "@/lib/journal/prompt";
@@ -259,6 +263,40 @@ export async function interpretEntry(
       evidenceByTask.set(taskId, evidence);
     }
   }
+  const dependencyRows =
+    taskRows.length === 0
+      ? []
+      : await db
+          .select({
+            blockedTaskId: taskDependencies.blockedTaskId,
+            description: taskDependencies.description,
+            waitingOn: taskDependencies.waitingOn,
+            blockingUserName: users.name,
+            createdAt: taskDependencies.createdAt,
+          })
+          .from(taskDependencies)
+          .leftJoin(users, eq(users.id, taskDependencies.blockingUserId))
+          .where(
+            and(
+              eq(taskDependencies.status, "open"),
+              inArray(
+                taskDependencies.blockedTaskId,
+                taskRows.map((task) => task.id),
+              ),
+            ),
+          )
+          .orderBy(desc(taskDependencies.createdAt));
+  const dependencyByTask = new Map<string, TaskDependencyEvidence>();
+  for (const dependency of dependencyRows) {
+    if (!dependencyByTask.has(dependency.blockedTaskId)) {
+      dependencyByTask.set(dependency.blockedTaskId, {
+        description: dependency.description,
+        waitingOn: dependency.waitingOn,
+        blockingUserName: dependency.blockingUserName,
+        createdAt: dependency.createdAt.toISOString(),
+      });
+    }
+  }
   // Up to 6 earlier entries by this author, oldest first, so the model can
   // resolve references like "yes, assign it to Priya".
   const recentRows = await db
@@ -313,6 +351,7 @@ export async function interpretEntry(
       assigneeId: task.assigneeId,
       assigneeName: task.assigneeName,
       evidence: evidenceByTask.get(task.id) ?? [],
+      dependency: dependencyByTask.get(task.id) ?? null,
     })),
     membersByProject,
   });

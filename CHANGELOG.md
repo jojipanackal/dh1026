@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T02:48:03+05:30 — Surface waiting-on dependencies in agent answers
+
+- Changed: Task/status answers now include the newest open dependency for each blocked task, including the waiting-on person or text and dependency age. Added an integration test through the real journal query path and fixed single-letter teammate names being falsely matched inside ordinary words.
+- Why: “What is blocked?” must expose the execution relationship, not just a blocked status, so leads can see why work cannot move.
+- Validation: `npm test` (92/92), `npm run test:integration` (45/45), `npm run typecheck`, `npm run lint`, and `git diff --check` passed.
+- Limitations: Dependency answers currently show the first open dependency per task; dependency chains and resolution actions remain in the next graph phase.
+
 ## 2026-10-25T02:46:52+05:30 — Ground status answers in the named teammate
 
 - Changed: Preserved multiple journal evidence records per task, including author ids, and made task answers select the named teammate's latest update for questions such as “What is Priya doing on Checkout?”. Expanded the read-only question classifier and added a regression test.

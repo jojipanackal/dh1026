@@ -48,6 +48,19 @@ movement, then stale-work follow-ups.
 - Remaining limitations: The evidence window is bounded to recent interpreted entries, and project/dependency history still needs richer retrieval.
 - Next phase: Continue Phase 12 with dependency-aware and project-level read-only answers.
 
+## Phase 11 milestone — Dependency-aware task answers (2026-10-25T02:48:03+05:30)
+
+- Implemented:
+  - Read-only task answers now include the newest open dependency for blocked work, including waiting-on text, matched blocking user, description, and creation timestamp.
+  - The web answer card surfaces “Waiting on … since …” next to the blocked task.
+  - The query path is covered through the database-backed journal integration test, including the no-provider path.
+  - Teammate matching uses word boundaries so short names cannot match inside words such as “blocked”.
+- Files and areas changed: `src/lib/journal/answers.ts`, `src/server/journal.ts`, `src/app/journal/journal-chat.tsx`, `tests/journal-answers.test.ts`, `tests/integration/journal.test.ts`.
+- Checks run and results: `npm test` (92/92), `npm run test:integration` (45/45), `npm run typecheck`, `npm run lint`, and `git diff --check` pass.
+- Decisions affecting later phases: The answer surface reads explicit open dependency rows and does not infer a dependency from a blocked status alone. Only the newest open dependency is shown until the full graph view exists.
+- Remaining limitations: Dependency chains, task-to-task blockers, resolution actions, and project-level “at risk” answers remain unfinished.
+- Next phase: Continue Phase 11 with dependency chains and explicit resolution/update actions.
+
 ## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
 
 - Implemented:

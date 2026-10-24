@@ -209,6 +209,53 @@ describe("journal", () => {
     });
   });
 
+  it("answers blocked-work questions with the explicit waiting-on dependency", async () => {
+    const { owner, project } = await fixture();
+    const teammate = await insertUser("B", "b@example.com");
+    await addProjectMember(owner.id, project.id, { userId: teammate.id, role: "member" });
+    const task = await createTask(owner.id, project.id, {
+      title: "Release to production",
+      description: null,
+      status: "blocked",
+      priority: "high",
+      assigneeId: owner.id,
+      dueDate: null,
+      estimateHours: 4,
+    });
+    await db.insert(taskDependencies).values({
+      blockedTaskId: task.id,
+      blockingUserId: teammate.id,
+      description: "Waiting for staging verification",
+      waitingOn: "staging verification",
+      createdBy: owner.id,
+    });
+
+    const entry = await submitJournalEntry(
+      owner.id,
+      { body: "Show blocked work", submissionKey: key() },
+      {
+        getConfig: () => ({
+          ok: false as const,
+          error: "AI is not configured: set OPENAI_API_KEY in .env.local",
+        }),
+        interpret: async () => {
+          throw new Error("The provider should not be called for blocked-work questions");
+        },
+      },
+    );
+    const [storedEntry] = await db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.id, entry.id));
+    const interpretation = storedEntry.interpretation as {
+      answer?: { tasks: { dependency: { waitingOn: string; blockingUserName: string } | null }[] };
+    };
+    expect(interpretation.answer?.tasks[0]?.dependency).toMatchObject({
+      waitingOn: "staging verification",
+      blockingUserName: "B",
+    });
+  });
+
   it("same submissionKey twice gives one entry", async () => {
     const { owner } = await fixture();
     const k = key();

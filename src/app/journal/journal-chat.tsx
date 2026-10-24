@@ -110,6 +110,14 @@ function TaskAnswerCard({ answer }: { answer: NonNullable<Resolved["answer"]> })
                     {task.lastUpdate.body}
                   </span>
                 ) : null}
+                {task.dependency ? (
+                  <span className="mt-2 block text-xs text-amber-600 dark:text-amber-400">
+                    Waiting on {task.dependency.blockingUserName ?? task.dependency.waitingOn ?? "an external dependency"}
+                    {task.dependency.createdAt
+                      ? ` · since ${formatDateTime(new Date(task.dependency.createdAt))}`
+                      : ""}
+                  </span>
+                ) : null}
               </span>
               <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </Link>
