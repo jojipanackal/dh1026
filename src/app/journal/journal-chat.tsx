@@ -42,6 +42,12 @@ type AgentMessage = Omit<ServerAgentMessage, "createdAt"> & {
   createdAt: string;
 };
 
+const SUGGESTED_PROMPTS = [
+  "What are my tasks for today?",
+  "What is blocked?",
+  "What is George doing on the signup form?",
+] as const;
+
 function TypingDots() {
   return (
     <span className="inline-flex gap-1" aria-label="Interpreting">
@@ -465,6 +471,19 @@ export function JournalChat({
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
               Tell Jeera what changed, ask what is happening, or let it keep the team moving.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">Try</span>
+              {SUGGESTED_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => setText(prompt)}
+                  className="rounded-full border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-foreground"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
           </div>
           <span className="hidden rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
             Enter to send · Shift + Enter for a new line
@@ -479,7 +498,7 @@ export function JournalChat({
                 Ask about work, record a dependency, or describe a scope change. Consequential task updates always wait for your approval.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {["What are my tasks for today?", "Show blocked work", "I finished the registration flow"].map((prompt) => (
+                {SUGGESTED_PROMPTS.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:53:07+05:30 — Polish the demo entry points
+
+- Changed: Added persistent Agent prompt chips for the seeded task questions and corrected Tasks counts/due styling so cancelled work is not presented as open or overdue.
+- Why: A live demo should reveal the intended conversation paths immediately, while the task queue should communicate execution state without misleading terminal work.
+- Validation: `npm run typecheck`, `npm run lint`, and `git diff --check` passed.
+- Limitations: Visual screenshot review remains unavailable because no browser surface is exposed in this environment.
+
 ## 2026-10-25T03:51:42+05:30 — Add the cross-project Tasks workspace and demo conversation
 
 - Changed: Added the primary **Tasks** tab with a database-backed execution queue, All work/My work scopes, search and project/status/priority/assignee filters, summary counts, dependency context, direct task links, and global task creation. Expanded the demo seed with grounded Joji task questions and answer cards for the launch chain.

@@ -22,6 +22,15 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Demo polish milestone — Guided Agent entry points (2026-10-25T03:53:07+05:30)
+
+- Implemented: Added always-visible prompt chips for the seeded Agent workflows and corrected Tasks open/overdue counts so cancelled work remains terminal.
+- Files and areas changed: `src/app/journal/journal-chat.tsx`, `src/app/tasks/page.tsx`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: Typecheck, lint, and diff check pass.
+- Decisions affecting later phases: Prompt chips populate the composer but never auto-submit or bypass the normal Agent review path.
+- Remaining limitations: No browser screenshot review was available in this environment.
+- Next phase: Browser review and final demo rehearsal when a browser surface is available.
+
 ## Tasks workspace milestone — Cross-project execution queue (2026-10-25T03:51:42+05:30)
 
 - Implemented:

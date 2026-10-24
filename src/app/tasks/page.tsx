@@ -116,7 +116,9 @@ export default async function TasksPage({
     search,
   });
   const today = todayIst();
-  const openTasks = tasks.filter((task) => task.status !== "done");
+  const openTasks = tasks.filter(
+    (task) => task.status !== "done" && task.status !== "cancelled",
+  );
   const blockedTasks = tasks.filter((task) => task.status === "blocked");
   const inProgressTasks = tasks.filter((task) => task.status === "in_progress");
   const dueTasks = tasks.filter(
@@ -289,7 +291,10 @@ function TaskTable({ tasks }: { tasks: Awaited<ReturnType<typeof listTasksForUse
         </thead>
         <tbody>
           {tasks.map((task) => {
-            const overdue = isOverdue(task.dueDate, new Date()) && task.status !== "done";
+            const overdue =
+              isOverdue(task.dueDate, new Date()) &&
+              task.status !== "done" &&
+              task.status !== "cancelled";
             return (
               <tr key={task.id} className="group border-b last:border-0 hover:bg-muted/20">
                 <td className="max-w-[28rem] px-5 py-3">
