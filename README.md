@@ -110,18 +110,23 @@ workflow before adding external chat adapters.
   Integrations page shows connector configuration and planned GitHub/Slack/
   Google Chat adapters. Jeera is installable as a PWA from a supporting
   browser's install control and includes a static-asset service worker plus an
-  offline fallback screen.
+  offline fallback screen. The Agent also runs a five-minute demo follow-up
+  sweep over active work and writes deduplicated check-ins to each assignee's
+  conversation.
 - Known limitations: Knowledge remains an honest placeholder — that feature
   lands in a later phase (see [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
   switcher only). Slack and Google Chat are represented by the normalized
   channel boundary but external OAuth/webhook adapters are not connected yet.
-  Automatic follow-up delivery is not enabled yet, and the morning briefing
-  currently triggers on opening the web Agent thread rather than from a
-  scheduler or Slack/Google Chat. Telegram is wired for a single configured
+  The five-minute follow-up sweep is demo-enabled while the web Agent page is
+  open; durable automatic delivery is not enabled yet, and the morning
+  briefing currently triggers on opening the web Agent thread rather than from
+  a scheduler or Slack/Google Chat. Telegram is wired for a single configured
   demo identity, but per-person Telegram account linking and Telegram review
   buttons are not implemented yet. The PWA does not support offline task
   reads/writes, push notifications, background sync, or offline mutation
-  queues yet. Manually blocked tasks
+  queues yet. Follow-ups currently use the open Agent page as their heartbeat;
+  a production deployment needs durable scheduling, quiet hours, and delivery
+  policy. Manually blocked tasks
   have no reason field yet, so the overview can only show "no reason
   recorded" for them. Under Next.js
   cacheComponents, a not-found page rendered from request-time checks

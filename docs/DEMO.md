@@ -2,8 +2,8 @@
 
 This runbook creates a realistic team-delivery scenario for the execution
 agent. It is intentionally fake data and is safe to run repeatedly: it creates
-or refreshes the dedicated `Kochi Metro App — Execution Demo` project without
-deleting other projects.
+or refreshes the dedicated `Landing Page Launch — Execution Demo` project
+without deleting other projects.
 
 ## Prepare the demo
 
@@ -21,40 +21,37 @@ The seed creates these project members:
 
 | Person | Demo role |
 | --- | --- |
-| Joji | Project owner; implementing the QR scanner |
-| George | Working on the ticket validation API |
-| Vaishakh | Testing the payment flow on staging |
-| Jaice | Preparing the launch checklist |
+| Joji | Project owner; building the landing page and publishing the launch |
+| George | Adding the signup form and launch analytics |
+| Vaishakh | Testing the landing page on staging |
+| Jaice | Writing and handing off the launch copy |
 
 ## Demo story
 
-The project contains six tasks:
+The project contains six simple tasks with a connected dependency chain:
 
-- Joji's **Wire up QR ticket scanner** is blocked, explicitly waiting on
-  George's validation contract.
-- George's **Finalize ticket validation API** is in progress and has evidence
-  that he was testing on staging 30 minutes ago.
-- Vaishakh's **Verify staging payment flow** is in progress with a recorded
-  sandbox timeout.
-- Jaice owns the launch checklist.
-- Joji owns the offline station-map cache.
-- **Choose QR over NFC for beta** is done with completion details.
+- Jaice's **Write the landing page copy** is done with completion details.
+- Joji is building the **landing page**.
+- George's **Add the signup form** waits on Joji's landing page.
+- Vaishakh's **QA the landing page on staging** waits on George's signup form.
+- Joji's **Publish the launch** waits on Vaishakh's QA sign-off.
+- George owns **Set up basic launch analytics**.
 
 Try these messages as Joji:
 
 ```text
-What is George doing on Finalize ticket validation API?
+What is George doing on the signup form?
 ```
 
-Expected result: Jeera answers from George's recorded evidence and shows when
-it was last updated.
+Expected result: Jeera answers from George's recorded evidence and shows that
+the signup form is waiting on Joji.
 
 ```text
 What is blocked?
 ```
 
-Expected result: Jeera shows the QR scanner and explains that it is waiting on
-George.
+Expected result: Jeera shows the signup form, staging QA, and publishing as a
+connected chain of work waiting on Joji, George, and Vaishakh respectively.
 
 ```text
 Which tasks assigned to George should be prioritized for today?
@@ -63,19 +60,36 @@ Which tasks assigned to George should be prioritized for today?
 Expected result: Jeera returns George's open work ordered by priority and due
 date.
 
-Then open the project **Overview** and use **Resolve & resume** on the QR
-scanner dependency. The task moves from Blocked to In progress and both the
+Open the project **Overview** and use **Resolve & resume** on one dependency in
+the chain. The selected task moves from Blocked to In progress and both the
 dependency resolution and task transition are recorded in activity history.
 
 Finally, return to Agent and submit:
 
 ```text
-The QR scanner is done. I verified scanning, invalid-ticket handling, and the
-handoff to the validation API.
+The landing page is ready. I verified the responsive layout, the signup form
+handoff, and the staging deployment.
 ```
 
 Review the proposal, select the task update, and apply it. The completion note
 appears on the task and in its history.
+
+## Five-minute team check-ins
+
+When the Agent page opens, Jeera runs a team follow-up sweep immediately. While
+the page remains open, the browser triggers another sweep every five minutes.
+The sweep checks active work for every member of the selected user's projects.
+If the assigned person has no recent evidence, Jeera writes a deduplicated
+check-in to that person's Agent conversation:
+
+```text
+Checking in, George: “Add the signup form” has had no update for about 40 minutes. It is still waiting on Joji. What changed, what is blocked, or is it ready to close?
+```
+
+Switch the demo identity to George or Vaishakh to show their check-in in their
+own conversation. This is a demo heartbeat, not a production scheduler; a
+real deployment should run the same `runTeamFollowUpSweep` service from a
+durable cron/queue and add quiet hours before contacting people.
 
 ## Connect Telegram for the demo
 
@@ -126,9 +140,10 @@ Bot API webhook documentation](https://core.telegram.org/bots/api#setwebhook).
 
 ## Resetting the story
 
-`npm run db:seed:demo` is additive and does not delete data. It restores the
-known demo task fields and recreates missing dependency/evidence records. Use a
-separate local database if you want a completely clean demo environment:
+`npm run db:seed:demo` resets only the dedicated demo project and its seeded
+tasks, evidence, activity, and agent messages. It does not delete other
+projects or users. Use a separate local database if you want a completely
+clean demo environment:
 
 ```bash
 createdb jeera_demo

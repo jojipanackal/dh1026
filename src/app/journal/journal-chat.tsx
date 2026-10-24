@@ -196,6 +196,43 @@ function AgentBriefingCard({ message }: { message: AgentMessage }) {
   );
 }
 
+function AgentFollowUpCard({ message }: { message: AgentMessage }) {
+  if (message.payload.kind !== "follow_up") return null;
+  const followUp = message.payload;
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">Jeera</span>
+        <span>·</span>
+        <span>Team check-in</span>
+        <span>·</span>
+        <span>{channelLabel(message.channel)}</span>
+      </div>
+      <div className="overflow-hidden rounded-2xl rounded-tl-md border bg-card shadow-sm">
+        <p className="px-4 pt-3 text-sm">{message.body}</p>
+        <Link
+          href={`/projects/${followUp.projectId}/tasks/${followUp.taskId}`}
+          className="flex items-center gap-2 border-t px-4 py-2.5 text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+        >
+          <span className="min-w-0 flex-1 truncate">
+            {followUp.projectName} · {followUp.taskTitle}
+          </span>
+          <span>Open task</span>
+          <ArrowUpRight className="size-3.5 shrink-0" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function AgentMessageCard({ message }: { message: AgentMessage }) {
+  return message.payload.kind === "morning_briefing" ? (
+    <AgentBriefingCard message={message} />
+  ) : (
+    <AgentFollowUpCard message={message} />
+  );
+}
+
 function AssistantMessage({
   entry,
   membersByProject,
@@ -365,6 +402,17 @@ export function JournalChat({
     );
   }, [entries.length, optimistic.length]);
 
+  // The demo heartbeat checks every teammate's active work while someone has
+  // the Agent open. The server deduplicates each five-minute bucket.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void fetch("/api/agent/follow-ups", { method: "POST" }).then((response) => {
+        if (response.ok) router.refresh();
+      });
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [router]);
+
   function send() {
     const body = text.trim();
     if (!body) return;
@@ -456,7 +504,7 @@ export function JournalChat({
                 </div>
               )}
               {item.kind === "agent" ? (
-                <AgentBriefingCard message={item.message} />
+                <AgentMessageCard message={item.message} />
               ) : (
                 <div
                   id={`entry-${item.entry.id}`}

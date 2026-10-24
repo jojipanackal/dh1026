@@ -13,7 +13,11 @@ import {
   listMemberProjects,
   listTaskProjectMap,
 } from "@/server/journal";
-import { ensureMorningBriefing, listAgentMessages } from "@/server/agent-messages";
+import {
+  ensureMorningBriefing,
+  listAgentMessages,
+  runTeamFollowUpSweep,
+} from "@/server/agent-messages";
 
 export const instant = false;
 
@@ -46,6 +50,7 @@ export default async function JournalPage() {
   }
 
   await ensureMorningBriefing(user.id);
+  await runTeamFollowUpSweep(user.id);
   const [thread, agentMessages] = await Promise.all([
     listJournalThread(user.id),
     listAgentMessages(user.id),

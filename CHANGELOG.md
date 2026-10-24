@@ -15,19 +15,19 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:39:04+05:30 — Add five-minute demo follow-ups and simplify the demo story
+
+- Changed: Reset the dedicated demo project to a simple landing-page launch with six connected tasks and a three-step dependency chain. Added `runTeamFollowUpSweep`, a follow-up API route compatible with the project's Next.js cache-components mode, five-minute browser heartbeat, stale-evidence check-ins for every teammate in the selected user's projects, and follow-up message rendering in Agent conversations.
+- Why: The demo should make Jeera's core promise obvious: a small team can see who is waiting on whom, and Jeera actively checks for movement instead of only answering when asked.
+- Validation: `npm run db:seed:demo` created the landing-page demo with 6 tasks and 3 dependencies; `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (49/49), and `git diff --check` passed. Live HTTP checks returned 200 for `/journal` and `/projects`; the follow-up route returned its expected 401 without a selected demo-user cookie.
+- Limitations: The five-minute heartbeat runs while a web Agent page is open. Production needs a durable scheduler/queue, quiet hours, per-channel delivery policy, and a maximum follow-up policy to avoid nagging.
+
 ## 2026-10-25T03:38:47+05:30 — Add color and depth to the app shell
 
 - Changed: Refreshed `src/app/globals.css` with cool indigo/teal semantic tokens, richer dark surfaces, soft background glows, selection styling, and a subtle animated brand mark. Updated the shared shell and page header in `src/components/app-shell/app-shell.tsx` and `src/components/app-shell/page-header.tsx` with the new brand treatment and clearer hierarchy.
 - Why: The interface was visually flat even though the product has a dark dev-console direction; the shared tokens and shell were the smallest focused change that could improve every route consistently.
 - Validation: `npm run lint`, `npm run typecheck`, `git diff --check`, and live HTTP 200 checks for `/`, `/journal`, `/projects`, `/team`, and `/integrations` passed. Browser screenshot review was unavailable because no browser surface was exposed in this session.
 - Limitations: The design pass changes shared color tokens and spacing, so pages with dense data may still need individual polish after a visual browser review.
-
-## 2026-10-25T03:39:04+05:30 — Add five-minute demo follow-ups and simplify the demo story
-
-- Changed: Reset the dedicated demo project to a simple landing-page launch with six connected tasks and a three-step dependency chain. Added `runTeamFollowUpSweep`, a follow-up API route, five-minute browser heartbeat, stale-evidence check-ins for every teammate in the selected user's projects, and follow-up message rendering in Agent conversations.
-- Why: The demo should make Jeera's core promise obvious: a small team can see who is waiting on whom, and Jeera actively checks for movement instead of only answering when asked.
-- Validation: `npm run db:seed:demo` created the landing-page demo with 6 tasks and 3 dependencies; HTTP smoke check showed follow-ups for stale active work. `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (49/49), and `git diff --check` passed.
-- Limitations: The five-minute heartbeat runs while a web Agent page is open. Production needs a durable scheduler/queue, quiet hours, per-channel delivery policy, and a maximum follow-up policy to avoid nagging.
 
 ## 2026-10-25T03:28:39+05:30 — Add installable PWA baseline
 

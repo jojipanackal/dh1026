@@ -5,6 +5,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   agentMessages,
+  journalEntries,
   projectMemberships,
   projects,
   taskDependencies,
@@ -14,6 +15,8 @@ import {
 } from "@/db/schema";
 import type {
   AgentMessagePayload,
+  BriefingDependency,
+  FollowUpPayload,
   MorningBriefingPayload,
   MorningBriefingTask,
 } from "@/lib/agent/messages";
@@ -184,6 +187,172 @@ export async function ensureMorningBriefing(userId: string, now = new Date()) {
     )
     .limit(1);
   return existing ? toAgentMessage(existing) : null;
+}
+
+const FOLLOW_UP_INTERVAL_MINUTES = 5;
+
+type FollowUpTask = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  title: string;
+  status: "in_progress" | "blocked";
+  assigneeId: string;
+  updatedAt: Date;
+};
+
+function minutesSince(date: Date, now: Date) {
+  return Math.max(1, Math.floor((now.getTime() - date.getTime()) / 60_000));
+}
+
+function ageLabel(minutes: number) {
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours} hour${hours === 1 ? "" : "s"}`;
+}
+
+/**
+ * Demo-friendly follow-up sweep. It scans active work for every member of the
+ * selected user's projects, but writes messages only to the assigned person.
+ * A five-minute bucket makes repeated browser/cron triggers idempotent.
+ */
+export async function runTeamFollowUpSweep(userId: string, now = new Date()) {
+  const projectRows = await db
+    .select({ id: projects.id })
+    .from(projectMemberships)
+    .innerJoin(projects, eq(projects.id, projectMemberships.projectId))
+    .where(eq(projectMemberships.userId, userId));
+  const projectIds = projectRows.map((project) => project.id);
+  if (projectIds.length === 0) return { created: 0 };
+
+  const memberRows = await db
+    .select({ userId: projectMemberships.userId, name: users.name })
+    .from(projectMemberships)
+    .innerJoin(users, eq(users.id, projectMemberships.userId))
+    .where(inArray(projectMemberships.projectId, projectIds));
+  const memberNames = new Map(memberRows.map((member) => [member.userId, member.name]));
+  const memberIds = [...memberNames.keys()];
+
+  const tasksForFollowUp: FollowUpTask[] = await db
+    .select({
+      id: tasks.id,
+      projectId: tasks.projectId,
+      projectName: projects.name,
+      title: tasks.title,
+      status: tasks.status,
+      assigneeId: tasks.assigneeId,
+      updatedAt: tasks.updatedAt,
+    })
+    .from(tasks)
+    .innerJoin(projects, eq(projects.id, tasks.projectId))
+    .where(
+      and(
+        inArray(tasks.projectId, projectIds),
+        inArray(tasks.assigneeId, memberIds),
+        sql`${tasks.status} in ('in_progress', 'blocked')`,
+      ),
+    ) as FollowUpTask[];
+  if (tasksForFollowUp.length === 0) return { created: 0 };
+
+  const evidenceRows = await db
+    .select({
+      authorId: journalEntries.authorId,
+      interpretation: journalEntries.interpretation,
+      createdAt: journalEntries.createdAt,
+    })
+    .from(journalEntries)
+    .where(
+      and(
+        inArray(journalEntries.authorId, memberIds),
+        inArray(journalEntries.status, ["ready", "applied"]),
+      ),
+    )
+    .orderBy(desc(journalEntries.createdAt))
+    .limit(300);
+  const lastEvidence = new Map<string, Date>();
+  for (const row of evidenceRows) {
+    const interpretation = row.interpretation as {
+      taskUpdates?: { taskId?: string }[];
+      blockers?: { taskId?: string }[];
+    } | null;
+    const taskIds = [
+      ...(interpretation?.taskUpdates ?? []).map((item) => item.taskId),
+      ...(interpretation?.blockers ?? []).map((item) => item.taskId),
+    ];
+    for (const taskId of new Set(taskIds.filter((id): id is string => Boolean(id)))) {
+      const key = `${row.authorId}:${taskId}`;
+      if (!lastEvidence.has(key)) lastEvidence.set(key, row.createdAt);
+    }
+  }
+
+  const taskIds = tasksForFollowUp.map((task) => task.id);
+  const dependencyRows = await db
+    .select({
+      blockedTaskId: taskDependencies.blockedTaskId,
+      waitingOn: taskDependencies.waitingOn,
+      blockingUserName: users.name,
+    })
+    .from(taskDependencies)
+    .leftJoin(users, eq(users.id, taskDependencies.blockingUserId))
+    .where(
+      and(
+        eq(taskDependencies.status, "open"),
+        inArray(taskDependencies.blockedTaskId, taskIds),
+      ),
+    )
+    .orderBy(desc(taskDependencies.createdAt));
+  const dependencyByTask = new Map<string, BriefingDependency>();
+  for (const dependency of dependencyRows) {
+    if (!dependencyByTask.has(dependency.blockedTaskId)) {
+      dependencyByTask.set(dependency.blockedTaskId, {
+        waitingOn: dependency.waitingOn,
+        blockingUserName: dependency.blockingUserName,
+      });
+    }
+  }
+
+  const bucket = Math.floor(now.getTime() / (FOLLOW_UP_INTERVAL_MINUTES * 60_000));
+  let created = 0;
+  for (const task of tasksForFollowUp) {
+    const evidenceAt = lastEvidence.get(`${task.assigneeId}:${task.id}`) ?? task.updatedAt;
+    const minutes = minutesSince(evidenceAt, now);
+    if (minutes < FOLLOW_UP_INTERVAL_MINUTES) continue;
+    const recipientName = memberNames.get(task.assigneeId) ?? "there";
+    const dependency = dependencyByTask.get(task.id) ?? null;
+    const dependencyText = dependency
+      ? ` It is still waiting on ${dependency.blockingUserName ?? dependency.waitingOn ?? "a dependency"}.`
+      : "";
+    const body = `Checking in, ${recipientName}: “${task.title}” has had no update for about ${ageLabel(minutes)}.${dependencyText} What changed, what is blocked, or is it ready to close?`;
+    const payload: FollowUpPayload = {
+      kind: "follow_up",
+      taskId: task.id,
+      projectId: task.projectId,
+      projectName: task.projectName,
+      taskTitle: task.title,
+      recipientName,
+      status: task.status,
+      lastUpdatedAt: evidenceAt.toISOString(),
+      minutesSinceUpdate: minutes,
+      dependency,
+    };
+    const result = await db
+      .insert(agentMessages)
+      .values({
+        userId: task.assigneeId,
+        channel: "web",
+        conversationKey: "web",
+        type: "follow_up",
+        dedupeKey: `follow-up:${task.assigneeId}:${task.id}:${bucket}`,
+        body,
+        payload,
+      })
+      .onConflictDoNothing({
+        target: [agentMessages.userId, agentMessages.dedupeKey],
+      })
+      .returning({ id: agentMessages.id });
+    if (result.length > 0) created++;
+  }
+  return { created };
 }
 
 export async function listAgentMessages(userId: string) {

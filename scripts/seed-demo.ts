@@ -1,9 +1,10 @@
 import { loadEnvConfig } from "@next/env";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import {
+  agentMessages,
   activityEvents,
   journalEntries,
   projectMemberships,
@@ -15,7 +16,8 @@ import {
 
 loadEnvConfig(process.cwd());
 
-const DEMO_PROJECT_NAME = "Kochi Metro App — Execution Demo";
+const DEMO_PROJECT_NAME = "Landing Page Launch — Execution Demo";
+const LEGACY_DEMO_PROJECT_NAME = "Kochi Metro App — Execution Demo";
 
 const DEMO_USERS = [
   { name: "Joji", email: "joji@example.com" },
@@ -52,85 +54,116 @@ type DemoTask = {
 
 const DEMO_TASKS: DemoTask[] = [
   {
-    title: "Wire up QR ticket scanner",
-    description: "Connect the mobile scanner to the ticket validation API.",
-    status: "blocked",
-    priority: "urgent",
-    assigneeEmail: "joji@example.com",
-    dueDate: istDate(1),
-    estimateHours: 6,
-  },
-  {
-    title: "Finalize ticket validation API",
-    description: "Finish the validation contract and verify the endpoint on staging.",
-    status: "in_progress",
-    priority: "high",
-    assigneeEmail: "george@example.com",
-    dueDate: istDate(),
-    estimateHours: 4,
-  },
-  {
-    title: "Verify staging payment flow",
-    description: "Run the payment smoke test and report any sandbox gateway failures.",
-    status: "in_progress",
-    priority: "high",
-    assigneeEmail: "vaishakh@example.com",
-    dueDate: istDate(),
-    estimateHours: 3,
-  },
-  {
-    title: "Prepare launch checklist",
-    description: "Collect release checks, owners, rollback steps, and support contacts.",
-    status: "todo",
-    priority: "medium",
-    assigneeEmail: "jaice@example.com",
-    dueDate: istDate(3),
-    estimateHours: 3,
-  },
-  {
-    title: "Add offline station map cache",
-    description: "Cache the station map so the app remains useful in low-connectivity areas.",
-    status: "todo",
-    priority: "medium",
-    assigneeEmail: "joji@example.com",
-    dueDate: istDate(5),
-    estimateHours: 8,
-  },
-  {
-    title: "Choose QR over NFC for beta",
-    description: "Record the beta transport decision and communicate it to the team.",
+    title: "Write the landing page copy",
+    description: "Write the headline, value proposition, and launch call to action.",
     status: "done",
     priority: "high",
     assigneeEmail: "jaice@example.com",
     dueDate: istDate(-1),
+    estimateHours: 2,
+    completionDetails: "Headline and call to action approved by the team and added to the launch doc.",
+  },
+  {
+    title: "Build the landing page",
+    description: "Build the single-page launch site with the approved copy.",
+    status: "in_progress",
+    priority: "urgent",
+    assigneeEmail: "joji@example.com",
+    dueDate: istDate(),
+    estimateHours: 6,
+  },
+  {
+    title: "Add the signup form",
+    description: "Add the email signup form and connect it to the launch list.",
+    status: "blocked",
+    priority: "high",
+    assigneeEmail: "george@example.com",
+    dueDate: istDate(1),
+    estimateHours: 3,
+  },
+  {
+    title: "QA the landing page on staging",
+    description: "Check the page on mobile and desktop, then report launch blockers.",
+    status: "blocked",
+    priority: "high",
+    assigneeEmail: "vaishakh@example.com",
+    dueDate: istDate(2),
+    estimateHours: 2,
+  },
+  {
+    title: "Publish the launch",
+    description: "Publish the landing page after QA signs off and announce the launch.",
+    status: "blocked",
+    priority: "urgent",
+    assigneeEmail: "joji@example.com",
+    dueDate: istDate(3),
     estimateHours: 1,
-    completionDetails: "Compared device support and rollout risk; QR is the beta path and the decision was shared with the team.",
+  },
+  {
+    title: "Set up basic launch analytics",
+    description: "Add page views and signup conversion tracking before launch.",
+    status: "todo",
+    priority: "medium",
+    assigneeEmail: "george@example.com",
+    dueDate: istDate(2),
+    estimateHours: 2,
   },
 ];
 
 const EVIDENCE = [
   {
-    email: "george@example.com",
-    body: "I am testing the ticket validation API on staging. I will hand it back to Joji after the smoke tests.",
-    taskTitle: "Finalize ticket validation API",
+    email: "jaice@example.com",
+    body: "The landing page copy is done and approved. I handed the final headline and call to action to Joji.",
+    taskTitle: "Write the landing page copy",
     key: "4e8d2c5e-44d0-4e7e-9c5b-000000000001",
-    minutesAgo: 30,
-  },
-  {
-    email: "vaishakh@example.com",
-    body: "The payment flow is still in progress. I found a sandbox gateway timeout and am checking the retry path.",
-    taskTitle: "Verify staging payment flow",
-    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000002",
-    minutesAgo: 90,
+    minutesAgo: 20,
   },
   {
     email: "joji@example.com",
-    body: "I am waiting on George's validation contract before I can finish the QR scanner integration.",
-    taskTitle: "Wire up QR ticket scanner",
+    body: "I am building the landing page with the approved copy. The page shell is in progress.",
+    taskTitle: "Build the landing page",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000002",
+    minutesAgo: 30,
+  },
+  {
+    email: "george@example.com",
+    body: "I am waiting on Joji's landing page before I can add the signup form.",
+    taskTitle: "Add the signup form",
     key: "4e8d2c5e-44d0-4e7e-9c5b-000000000003",
-    minutesAgo: 45,
+    minutesAgo: 40,
+  },
+  {
+    email: "vaishakh@example.com",
+    body: "I am ready to QA the landing page, but I am waiting for the signup form to land on staging.",
+    taskTitle: "QA the landing page on staging",
+    key: "4e8d2c5e-44d0-4e7e-9c5b-000000000004",
+    minutesAgo: 55,
   },
 ];
+
+const DEMO_DEPENDENCIES = [
+  {
+    blockedTaskTitle: "Add the signup form",
+    blockingTaskTitle: "Build the landing page",
+    blockingEmail: "joji@example.com",
+    waitingOn: "Joji",
+    description: "The signup form needs the landing page shell before it can be connected.",
+  },
+  {
+    blockedTaskTitle: "QA the landing page on staging",
+    blockingTaskTitle: "Add the signup form",
+    blockingEmail: "george@example.com",
+    waitingOn: "George",
+    description: "QA needs the signup form on staging before the test pass can start.",
+  },
+  {
+    blockedTaskTitle: "Publish the launch",
+    blockingTaskTitle: "QA the landing page on staging",
+    blockingEmail: "vaishakh@example.com",
+    waitingOn: "Vaishakh",
+    description: "Publishing waits for staging QA sign-off.",
+  },
+] as const;
 
 async function findOrCreateUser(
   db: ReturnType<typeof drizzle>,
@@ -273,12 +306,12 @@ async function main() {
       .from(projects)
       .where(
         and(
-          eq(projects.name, DEMO_PROJECT_NAME),
+          inArray(projects.name, [DEMO_PROJECT_NAME, LEGACY_DEMO_PROJECT_NAME]),
           eq(projects.createdBy, owner.id),
         ),
       )
       .limit(1);
-    const project =
+    let project =
       existingProject ??
       (
         await db
@@ -286,11 +319,37 @@ async function main() {
           .values({
             name: DEMO_PROJECT_NAME,
             description:
-              "A realistic team delivery demo: QR ticketing, staging verification, dependencies, and accountable daily work.",
+              "A simple landing-page launch demo with connected work, handoffs, and a visible dependency chain.",
             createdBy: owner.id,
           })
           .returning()
       )[0];
+    if (existingProject) {
+      [project] = await db
+        .update(projects)
+        .set({
+          name: DEMO_PROJECT_NAME,
+          description:
+            "A simple landing-page launch demo with connected work, handoffs, and a visible dependency chain.",
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, project.id))
+        .returning();
+      await db.delete(activityEvents).where(eq(activityEvents.projectId, project.id));
+      await db.delete(tasks).where(eq(tasks.projectId, project.id));
+      const demoUserIds = [...demoUsers.values()].map((user) => user.id);
+      await db
+        .delete(journalEntries)
+        .where(
+          and(
+            eq(journalEntries.model, "demo-seed"),
+            inArray(journalEntries.authorId, demoUserIds),
+          ),
+        );
+      await db
+        .delete(agentMessages)
+        .where(inArray(agentMessages.userId, demoUserIds));
+    }
     if (!existingProject) {
       await db.insert(projectMemberships).values({
         projectId: project.id,
@@ -339,24 +398,16 @@ async function main() {
       taskByTitle.set(task.title, task);
     }
 
-    const blockedTask = taskByTitle.get("Wire up QR ticket scanner")!;
-    const george = demoUsers.get("george@example.com")!;
-    const [dependency] = await db
-      .select()
-      .from(taskDependencies)
-      .where(
-        and(
-          eq(taskDependencies.blockedTaskId, blockedTask.id),
-          eq(taskDependencies.status, "open"),
-        ),
-      )
-      .limit(1);
-    if (!dependency) {
+    for (const spec of DEMO_DEPENDENCIES) {
+      const blockedTask = taskByTitle.get(spec.blockedTaskTitle)!;
+      const blockingTask = taskByTitle.get(spec.blockingTaskTitle)!;
+      const blockingUser = demoUsers.get(spec.blockingEmail)!;
       await db.insert(taskDependencies).values({
         blockedTaskId: blockedTask.id,
-        blockingUserId: george.id,
-        description: "The QR scanner needs the validation contract before integration can be finished.",
-        waitingOn: "George",
+        blockingTaskId: blockingTask.id,
+        blockingUserId: blockingUser.id,
+        description: spec.description,
+        waitingOn: spec.waitingOn,
         createdBy: owner.id,
       });
     }
@@ -378,7 +429,7 @@ async function main() {
     console.log(`Demo ready: ${project.name}`);
     console.log(`Project id: ${project.id}`);
     console.log(`Members: ${[...demoUsers.values()].map((user) => user.name).join(", ")}`);
-    console.log(`Tasks: ${DEMO_TASKS.length}; open dependency: waiting on George`);
+    console.log(`Tasks: ${DEMO_TASKS.length}; open dependency chain: ${DEMO_DEPENDENCIES.length}`);
   } finally {
     await pool.end();
   }

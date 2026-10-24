@@ -22,6 +22,18 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Demo automation milestone — Five-minute team check-ins (2026-10-25T03:39:04+05:30)
+
+- Implemented:
+  - Simplified the dedicated demo to a landing-page launch with six tasks and a copy → page → signup → QA → publish dependency chain.
+  - Added a stale-work sweep that checks active tasks assigned to every member of the selected user's projects and creates a follow-up in the assignee's Agent conversation.
+  - Added five-minute browser heartbeat, follow-up cards with task links, five-minute bucket deduplication, and integration coverage.
+- Files and areas changed: `scripts/seed-demo.ts`, `src/lib/agent/messages.ts`, `src/server/agent-messages.ts`, `src/app/api/agent/follow-ups/route.ts`, `src/app/journal/page.tsx`, `src/app/journal/journal-chat.tsx`, `tests/integration/agent-messages.test.ts`, `docs/DEMO.md`, and project records.
+- Checks run and results: Demo seed created 6 tasks and 3 dependencies; HTTP smoke check showed stale follow-ups. `npm run typecheck`, `npm run lint`, `npm test` (95/95), `npm run test:integration` (49/49), and `git diff --check` pass.
+- Decisions affecting later phases: Follow-ups are based on explicit task evidence or task update time, assigned to the task owner, and deduplicated per five-minute bucket. The open browser is only a demo trigger; production delivery must move to durable scheduling with quiet hours and escalation rules.
+- Remaining limitations: No production scheduler, push/Telegram follow-up delivery, quiet hours, acknowledgement tracking, or maximum-nag policy yet.
+- Next phase: Connect durable follow-up scheduling and Telegram delivery after the demo policy is accepted.
+
 ## PWA milestone — Installable mobile Agent shell (2026-10-25T03:28:39+05:30)
 
 - Implemented:

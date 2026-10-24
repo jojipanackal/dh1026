@@ -25,4 +25,17 @@ export type MorningBriefingPayload = {
   tasks: MorningBriefingTask[];
 };
 
-export type AgentMessagePayload = MorningBriefingPayload;
+export type FollowUpPayload = {
+  kind: "follow_up";
+  taskId: string;
+  projectId: string;
+  projectName: string;
+  taskTitle: string;
+  recipientName: string;
+  status: "in_progress" | "blocked";
+  lastUpdatedAt: string;
+  minutesSinceUpdate: number;
+  dependency: BriefingDependency | null;
+};
+
+export type AgentMessagePayload = MorningBriefingPayload | FollowUpPayload;
