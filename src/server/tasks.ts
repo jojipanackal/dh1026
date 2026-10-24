@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -17,7 +17,11 @@ import {
   TASK_STATUS_LABELS,
   type TaskStatus,
 } from "@/lib/tasks/lifecycle";
-import type { CreateTaskInput, UpdateTaskInput } from "@/lib/tasks/validation";
+import type {
+  CreateTaskInput,
+  TaskPriority,
+  UpdateTaskInput,
+} from "@/lib/tasks/validation";
 import { isUuid } from "@/lib/ids";
 import { AppError } from "@/server/errors";
 import { getMembership } from "@/server/projects";
@@ -29,7 +33,11 @@ const TASK_SORT_ORDER = sql`case ${tasks.status}
 const PRIORITY_ORDER = sql`case ${tasks.priority}
   when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 else 3 end`;
 
-export type TaskListFilter = { status?: TaskStatus };
+export type TaskListFilter = {
+  status?: TaskStatus;
+  assigneeId?: string | null; // null = explicitly unassigned
+  priority?: TaskPriority;
+};
 
 export async function listTasks(
   projectId: string,
@@ -45,6 +53,14 @@ export async function listTasks(
   }
   const conditions = [eq(tasks.projectId, projectId)];
   if (filter.status) conditions.push(eq(tasks.status, filter.status));
+  if (filter.assigneeId !== undefined) {
+    conditions.push(
+      filter.assigneeId === null
+        ? isNull(tasks.assigneeId)
+        : eq(tasks.assigneeId, filter.assigneeId),
+    );
+  }
+  if (filter.priority) conditions.push(eq(tasks.priority, filter.priority));
   return db
     .select({
       id: tasks.id,
@@ -110,7 +126,7 @@ async function assertAssigneeIsMember(
 export async function createTask(
   userId: string,
   projectId: string,
-  input: CreateTaskInput,
+  input: Omit<CreateTaskInput, "status"> & { status?: CreateTaskInput["status"] },
 ) {
   if (!isUuid(projectId)) {
     throw new AppError("NOT_FOUND", "Project not found");
@@ -135,6 +151,7 @@ export async function createTask(
       .values({
         projectId,
         title: input.title,
+        status: input.status ?? "todo",
         description: input.description ?? null,
         priority: input.priority,
         assigneeId: input.assigneeId ?? null,
@@ -172,40 +189,86 @@ const EDITABLE_FIELDS = [
   "estimateHours",
 ] as const;
 
-export async function updateTask(userId: string, input: UpdateTaskInput) {
-  return db.transaction(async (tx) => {
-    const [before] = await tx
-      .select()
-      .from(tasks)
-      .where(eq(tasks.id, input.taskId))
-      .limit(1)
-      .for("update");
-    if (!before) {
-      throw new AppError("NOT_FOUND", "Task not found");
-    }
-    const [membership] = await tx
-      .select()
-      .from(projectMemberships)
-      .where(
-        and(
-          eq(projectMemberships.projectId, before.projectId),
-          eq(projectMemberships.userId, userId),
-        ),
-      )
-      .limit(1);
-    if (!membership) {
-      throw new AppError("NOT_FOUND", "Task not found");
-    }
-    if (!canTransition(before.status, input.status)) {
-      throw new AppError(
-        "VALIDATION",
-        `Cannot move a task from ${TASK_STATUS_LABELS[before.status].toLowerCase()} to ${TASK_STATUS_LABELS[input.status].toLowerCase()}; reopen it to To do first`,
-      );
-    }
-    await assertAssigneeIsMember(tx, before.projectId, input.assigneeId);
+type EditableTaskFields = {
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assigneeId: string | null;
+  dueDate: string | null;
+  estimateHours: number | null;
+};
 
-    const now = new Date();
-    const after = {
+// Shared core for updateTask/moveTask: lock the row, verify membership,
+// validate the transition, apply the diff and record one activity event.
+// Must be called inside db.transaction.
+async function applyTaskUpdate(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  userId: string,
+  taskId: string,
+  buildAfter: (before: typeof tasks.$inferSelect) => EditableTaskFields,
+) {
+  const [before] = await tx
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1)
+    .for("update");
+  if (!before) {
+    throw new AppError("NOT_FOUND", "Task not found");
+  }
+  const after = buildAfter(before);
+  const [membership] = await tx
+    .select()
+    .from(projectMemberships)
+    .where(
+      and(
+        eq(projectMemberships.projectId, before.projectId),
+        eq(projectMemberships.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!membership) {
+    throw new AppError("NOT_FOUND", "Task not found");
+  }
+  if (!canTransition(before.status, after.status)) {
+    throw new AppError(
+      "VALIDATION",
+      `Cannot move a task from ${TASK_STATUS_LABELS[before.status].toLowerCase()} to ${TASK_STATUS_LABELS[after.status].toLowerCase()}; reopen it to To do first`,
+    );
+  }
+  await assertAssigneeIsMember(tx, before.projectId, after.assigneeId);
+
+  const changes = diffTask(before, after, EDITABLE_FIELDS) as ActivityChanges;
+  if (Object.keys(changes).length === 0) {
+    return before;
+  }
+  const now = new Date();
+  const completedAt = completedAtFor(
+    before.status,
+    after.status,
+    before.completedAt,
+    now,
+  );
+  const [updated] = await tx
+    .update(tasks)
+    .set({ ...after, completedAt, updatedAt: now })
+    .where(eq(tasks.id, taskId))
+    .returning();
+  await tx.insert(activityEvents).values({
+    projectId: before.projectId,
+    taskId: before.id,
+    actorId: userId,
+    type: "task.updated",
+    changes,
+    source: "manual",
+  });
+  return updated;
+}
+
+export async function updateTask(userId: string, input: UpdateTaskInput) {
+  return db.transaction((tx) =>
+    applyTaskUpdate(tx, userId, input.taskId, () => ({
       title: input.title,
       description: input.description ?? null,
       status: input.status,
@@ -213,32 +276,29 @@ export async function updateTask(userId: string, input: UpdateTaskInput) {
       assigneeId: input.assigneeId ?? null,
       dueDate: input.dueDate ?? null,
       estimateHours: input.estimateHours ?? null,
-    };
-    const changes = diffTask(before, after, EDITABLE_FIELDS) as ActivityChanges;
-    if (Object.keys(changes).length === 0) {
-      return before;
-    }
-    const completedAt = completedAtFor(
-      before.status,
-      after.status,
-      before.completedAt,
-      now,
-    );
-    const [updated] = await tx
-      .update(tasks)
-      .set({ ...after, completedAt, updatedAt: now })
-      .where(eq(tasks.id, input.taskId))
-      .returning();
-    await tx.insert(activityEvents).values({
-      projectId: before.projectId,
-      taskId: before.id,
-      actorId: userId,
-      type: "task.updated",
-      changes,
-      source: "manual",
-    });
-    return updated;
-  });
+    })),
+  );
+}
+
+export async function moveTask(
+  userId: string,
+  taskId: string,
+  status: TaskStatus,
+) {
+  if (!isUuid(taskId)) {
+    throw new AppError("NOT_FOUND", "Task not found");
+  }
+  return db.transaction((tx) =>
+    applyTaskUpdate(tx, userId, taskId, (before) => ({
+      title: before.title,
+      description: before.description,
+      status,
+      priority: before.priority,
+      assigneeId: before.assigneeId,
+      dueDate: before.dueDate,
+      estimateHours: before.estimateHours,
+    })),
+  );
 }
 
 export async function listActivity(

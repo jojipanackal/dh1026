@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { AppShell } from "@/components/app-shell/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full bg-background text-foreground">
         <ThemeProvider>
           <AppShell>{children}</AppShell>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

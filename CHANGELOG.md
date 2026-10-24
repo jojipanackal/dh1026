@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-24T23:59:39+05:30 — ClickUp-style board view for projects
+
+- Changed: The project page has a views bar (Board, List, Activity, Members via `?view=`). The board has status columns with counts, quick-add "+" on To do, In progress and Blocked, and a collapsible Cancelled column. Drag-and-drop (`@dnd-kit/core` 6.3.1) updates the screen immediately and reverts if the server rejects the move; a toast (`sonner` 2.0.8) reports the result. Cards show priority, due date (red when overdue), estimate and assignee avatar. Assignee and priority filters (`?assignee=`, `?priority=`) are applied on the server. A "+ New task" dialog and a member avatar stack are in the header. New `moveTask` service shares one locked update path with `updateTask`. `createTaskInput` accepts a starting status (todo, in_progress or blocked). New helpers `isOverdue` and `parseTaskFilters`.
+- Why: User asked for a ClickUp-style board/kanban view and better UI/UX on projects.
+- Validation: lint and typecheck pass. 55/55 unit tests and 16/16 integration tests pass. In Playwright, a To do → In progress drag updated the database, and a Done → Blocked drag showed an error toast and the card reverted. No horizontal scroll at 1440px or 390px. Fixed a hydration mismatch from dnd-kit's generated ids (now a stable `useId` on `DndContext`). `npm run build` was not re-run because the dev server was running.
+- Limitations: Order within a column is not saved; cards sort by priority, then creation time. Dragging between columns only changes status.
+
 ## 2026-10-24T23:45:11+05:30 — New project button and dialog
 
 - Changed: `/projects` now has a "+ New project" outline button in the page header that opens a shadcn Dialog with the create form (`src/app/projects/new-project-dialog.tsx`, `src/components/ui/dialog.tsx`); the table is full width; `createProjectAction` returns `success` so the dialog closes and resets.

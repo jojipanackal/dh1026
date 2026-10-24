@@ -10,7 +10,7 @@ import {
   getProjectForMember,
   listProjectsForUser,
 } from "@/server/projects";
-import { createTask, getTaskForMember, listTasks, updateTask } from "@/server/tasks";
+import { createTask, getTaskForMember, listTasks, moveTask, updateTask } from "@/server/tasks";
 import { ensureTestDb, insertUser, truncateAll } from "./helpers";
 
 beforeEach(async () => {
@@ -313,5 +313,101 @@ describe("tasks", () => {
       }),
       "NOT_FOUND",
     );
+  });
+});
+
+describe("moveTask", () => {
+  const base = {
+    title: "T",
+    description: null,
+    priority: "medium" as const,
+    assigneeId: null,
+    dueDate: null,
+    estimateHours: null,
+  };
+
+  it("moves a task and records a single status-diff event", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const task = await createTask(owner.id, project.id, base);
+    await moveTask(owner.id, task.id, "in_progress");
+    const [row] = await db.select().from(tasks).where(eq(tasks.id, task.id));
+    expect(row.status).toBe("in_progress");
+    const events = await db
+      .select()
+      .from(activityEvents)
+      .where(eq(activityEvents.taskId, task.id));
+    const update = events.find((e) => e.type === "task.updated");
+    expect(update?.changes).toEqual({
+      status: { from: "todo", to: "in_progress" },
+    });
+  });
+
+  it("rejects done -> blocked and leaves the row unchanged", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const task = await createTask(owner.id, project.id, base);
+    await moveTask(owner.id, task.id, "done");
+    await expectAppError(moveTask(owner.id, task.id, "blocked"), "VALIDATION");
+    const [row] = await db.select().from(tasks).where(eq(tasks.id, task.id));
+    expect(row.status).toBe("done");
+  });
+
+  it("gives NOT_FOUND for a non-member", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const outsider = await insertUser("Out", "out@example.com");
+    const task = await createTask(owner.id, project.id, base);
+    await expectAppError(
+      moveTask(outsider.id, task.id, "in_progress"),
+      "NOT_FOUND",
+    );
+  });
+
+  it("moving to the same status creates no event", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const task = await createTask(owner.id, project.id, base);
+    await moveTask(owner.id, task.id, "todo");
+    const events = await db
+      .select()
+      .from(activityEvents)
+      .where(eq(activityEvents.taskId, task.id));
+    expect(events.filter((e) => e.type === "task.updated")).toHaveLength(0);
+  });
+
+  it("createTask accepts a starting status and listTasks filters work", async () => {
+    const { owner, project } = await makeProjectWithOwner();
+    const member = await insertUser("M", "m@example.com");
+    await addProjectMember(owner.id, project.id, {
+      userId: member.id,
+      role: "member",
+    });
+    const t1 = await createTask(owner.id, project.id, {
+      ...base,
+      title: "blocked one",
+      status: "blocked",
+      assigneeId: member.id,
+      priority: "urgent",
+    });
+    expect(t1.status).toBe("blocked");
+    await createTask(owner.id, project.id, { ...base, title: "todo one" });
+    await createTask(owner.id, project.id, {
+      ...base,
+      title: "unassigned high",
+      priority: "urgent",
+    });
+
+    expect(
+      (await listTasks(project.id, owner.id, { assigneeId: member.id })).map(
+        (t) => t.title,
+      ),
+    ).toEqual(["blocked one"]);
+    expect(
+      (await listTasks(project.id, owner.id, { assigneeId: null })).map(
+        (t) => t.title,
+      ),
+    ).toEqual(["unassigned high", "todo one"]);
+    expect(
+      (await listTasks(project.id, owner.id, { priority: "urgent" })).map(
+        (t) => t.title,
+      ),
+    ).toEqual(["blocked one", "unassigned high"]);
   });
 });

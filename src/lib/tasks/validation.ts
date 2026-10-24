@@ -4,6 +4,7 @@ import { TASK_STATUSES } from "./lifecycle";
 
 export const PROJECT_ROLES = ["owner", "member"] as const;
 export const TASK_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 const emptyToUndefined = (value: unknown) =>
   value === "" || value === null ? undefined : value;
@@ -53,8 +54,11 @@ export const createProjectInput = z.object({
 });
 export type CreateProjectInput = z.infer<typeof createProjectInput>;
 
+const CREATABLE_STATUSES = ["todo", "in_progress", "blocked"] as const;
+
 export const createTaskInput = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
+  status: z.enum(CREATABLE_STATUSES).default("todo"),
   description: optionalText(5000),
   priority: z.enum(TASK_PRIORITIES).default("medium"),
   assigneeId: optionalUuid,

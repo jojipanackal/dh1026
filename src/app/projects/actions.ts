@@ -15,7 +15,7 @@ import {
   addProjectMember,
   createProject,
 } from "@/server/projects";
-import { createTask, updateTask } from "@/server/tasks";
+import { createTask, moveTask, updateTask } from "@/server/tasks";
 
 export type FormState = {
   error?: string;
@@ -105,6 +105,67 @@ export async function updateTaskAction(
     return {};
   } catch (error) {
     return toFormState(error);
+  }
+}
+
+const moveTaskSchema = z.object({
+  taskId: z.uuid(),
+  status: z.enum(["todo", "in_progress", "blocked", "done", "cancelled"]),
+});
+
+export async function moveTaskAction(
+  projectId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const user = await requireCurrentUser();
+    const input = moveTaskSchema.parse({
+      taskId: text(formData, "taskId"),
+      status: text(formData, "status"),
+    });
+    await moveTask(user.id, input.taskId, input.status);
+    revalidatePath(`/projects/${projectId}`);
+    return { success: true };
+  } catch (error) {
+    return toFormState(error);
+  }
+}
+
+const quickAddSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200),
+  status: z.enum(["todo", "in_progress", "blocked"]),
+});
+
+export async function quickAddTaskAction(
+  projectId: string,
+  title: string,
+  status: "todo" | "in_progress" | "blocked",
+): Promise<{ error?: string }> {
+  try {
+    const user = await requireCurrentUser();
+    const input = quickAddSchema.parse({ title, status });
+    await createTask(user.id, projectId, {
+      title: input.title,
+      status: input.status,
+      priority: "medium",
+      assigneeId: null,
+      dueDate: null,
+      estimateHours: null,
+      description: null,
+    });
+    revalidatePath(`/projects/${projectId}`);
+    return {};
+  } catch (error) {
+    if (error instanceof AppError || error instanceof z.ZodError) {
+      return {
+        error:
+          error instanceof AppError
+            ? error.message
+            : (error.issues[0]?.message ?? "Invalid task"),
+      };
+    }
+    throw error;
   }
 }
 
