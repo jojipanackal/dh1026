@@ -16,6 +16,7 @@ import {
   createProject,
 } from "@/server/projects";
 import { createTask, moveTask, updateTask } from "@/server/tasks";
+import { resolveTaskDependency } from "@/server/dependencies";
 
 export type FormState = {
   error?: string;
@@ -126,6 +127,21 @@ export async function moveTaskAction(
     });
     await moveTask(user.id, input.taskId, input.status);
     revalidatePath(`/projects/${projectId}`);
+    return { success: true };
+  } catch (error) {
+    return toFormState(error);
+  }
+}
+
+export async function resolveDependencyAction(
+  projectId: string,
+  dependencyId: string,
+): Promise<FormState> {
+  try {
+    const user = await requireCurrentUser();
+    await resolveTaskDependency(user.id, projectId, dependencyId);
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath("/journal");
     return { success: true };
   } catch (error) {
     return toFormState(error);

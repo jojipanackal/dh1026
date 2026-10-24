@@ -39,6 +39,7 @@ export type OverviewTaskItem = {
 };
 
 export type OverviewBlockedItem = OverviewTaskItem & {
+  dependencyId: string | null;
   reason: string | null;
   reasonActorName: string | null;
   reasonJournalEntryId: string | null;
@@ -148,6 +149,7 @@ export async function getProjectOverview(
   const dependencyRows = blockedRows.length
     ? await db
         .select({
+          id: taskDependencies.id,
           blockedTaskId: taskDependencies.blockedTaskId,
           waitingOn: taskDependencies.waitingOn,
           blockingUserName: users.name,
@@ -236,6 +238,7 @@ export async function getProjectOverview(
         reason: info?.reason ?? null,
         reasonActorName: info?.reasonActorName ?? null,
         reasonJournalEntryId: info?.reasonJournalEntryId ?? null,
+        dependencyId: dependencyByTask.get(t.id)?.id ?? null,
         blockedByName: info?.blockedByName ?? "Unknown",
         blockedAt: info?.blockedAt ?? t.updatedAt,
         source: info?.source ?? "manual",

@@ -87,10 +87,10 @@ workflow before adding external chat adapters.
   dependencies such as "waiting on B", captures editable scope, ownership,
   target dates, and effort estimates for new work and scope changes, and
   keeps incomplete new work in clarification until those commitments are
-  answered before applying approved
-  changes in one transaction; web messages carry channel provenance and the
-  server exposes a normalized ingress boundary for future Slack/Google Chat
-  adapters; Overview
+  answered before applying approved changes; blocked work can be explicitly
+  resolved and resumed from the project overview; web messages carry channel
+  provenance and the server exposes a normalized ingress boundary for future
+  Slack/Google Chat adapters; Overview
   page with a live database health card;
   `GET /api/health` endpoint; PostgreSQL via Drizzle ORM with migrations
   (`users`, `projects`, `project_memberships`, `tasks`,

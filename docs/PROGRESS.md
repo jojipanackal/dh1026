@@ -61,6 +61,18 @@ movement, then stale-work follow-ups.
 - Remaining limitations: Dependency chains, task-to-task blockers, resolution actions, and project-level “at risk” answers remain unfinished.
 - Next phase: Continue Phase 11 with dependency chains and explicit resolution/update actions.
 
+## Phase 11 milestone — Resolve dependencies and resume work (2026-10-25T02:49:13+05:30)
+
+- Implemented:
+  - Project overview blocked-work items now expose a membership-checked “Resolve & resume” action for open dependencies.
+  - Resolving a dependency closes it and moves the blocked task back to `in_progress` in one transaction.
+  - The dependency resolution and task transition each produce auditable manual activity events.
+- Files and areas changed: `src/server/dependencies.ts`, `src/app/projects/actions.ts`, `src/app/projects/[projectId]/resolve-dependency-button.tsx`, `src/app/projects/[projectId]/overview-view.tsx`, `src/server/overview.ts`, `tests/integration/journal.test.ts`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (92/92), `npm run test:integration` (45/45), and `git diff --check` pass.
+- Decisions affecting later phases: Resolution is an explicit user action for now; the agent does not infer that a dependency is resolved merely because a person posted an update.
+- Remaining limitations: Dependency chains, automatic resolution from completion evidence, and cross-channel follow-up decisions remain unfinished.
+- Next phase: Continue the task-runner loop with proactive daily briefings and completion details.
+
 ## Phase 3A — Execution Agent Core and Channel-Ready Messages (2026-10-25T02:25+05:30)
 
 - Implemented:

@@ -4,6 +4,7 @@ import { ActivityChanges } from "@/components/activity-changes";
 import { PriorityBadge, StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { ResolveDependencyButton } from "@/app/projects/[projectId]/resolve-dependency-button";
 import { STALLED_AFTER_DAYS } from "@/lib/overview";
 import { TASK_STATUS_LABELS, type TaskStatus } from "@/lib/tasks/lifecycle";
 import type { ProjectOverview } from "@/server/overview";
@@ -156,6 +157,12 @@ export function OverviewView({
                         ? ` — ${t.waitingOn}`
                         : ""}
                     </p>
+                  ) : null}
+                  {t.dependencyId ? (
+                    <ResolveDependencyButton
+                      projectId={projectId}
+                      dependencyId={t.dependencyId}
+                    />
                   ) : null}
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {t.assigneeName ?? "Unassigned"} · marked blocked by{" "}

@@ -26,6 +26,7 @@ import {
   submitJournalEntry,
 } from "@/server/journal";
 import { createTask, moveTask } from "@/server/tasks";
+import { resolveTaskDependency } from "@/server/dependencies";
 import { AppError } from "@/server/errors";
 
 const CONFIG = { ok: true as const, apiKey: "test", model: "mock-model" };
@@ -347,6 +348,19 @@ describe("journal", () => {
     expect(blockedEvent?.changes).toMatchObject({
       blockedReason: { from: null, to: "waiting on vendor" },
     });
+
+    const [dependency] = await db
+      .select()
+      .from(taskDependencies)
+      .where(eq(taskDependencies.blockedTaskId, t.id));
+    await resolveTaskDependency(owner.id, project.id, dependency.id);
+    const [resumed] = await db.select().from(tasks).where(eq(tasks.id, t.id));
+    expect(resumed.status).toBe("in_progress");
+    const [resolvedDependency] = await db
+      .select()
+      .from(taskDependencies)
+      .where(eq(taskDependencies.id, dependency.id));
+    expect(resolvedDependency.status).toBe("resolved");
   });
 
   it("apply spans projects: new task in A, task update in B", async () => {
