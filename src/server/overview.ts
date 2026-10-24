@@ -6,6 +6,7 @@ import { db } from "@/db";
 import {
   activityEvents,
   journalEntries,
+  projectMemberships,
   tasks,
   users,
 } from "@/db/schema";
@@ -102,21 +103,29 @@ export async function getProjectOverview(
       .from(tasks)
       .leftJoin(users, eq(users.id, tasks.assigneeId))
       .where(eq(tasks.projectId, projectId)),
+    // Journal entries are project-agnostic now; a "ready" entry surfaces
+    // here when its author belongs to this project, and each blocker is
+    // then filtered to this project below.
     db
       .select({
         id: journalEntries.id,
+        // Still set on entries written before the journal became
+        // project-agnostic; used as a fallback scope below.
+        projectId: journalEntries.projectId,
         interpretation: journalEntries.interpretation,
         createdAt: journalEntries.createdAt,
         authorName: users.name,
       })
       .from(journalEntries)
       .innerJoin(users, eq(users.id, journalEntries.authorId))
-      .where(
+      .innerJoin(
+        projectMemberships,
         and(
-          eq(journalEntries.projectId, projectId),
-          eq(journalEntries.status, "ready"),
+          eq(projectMemberships.projectId, projectId),
+          eq(projectMemberships.userId, journalEntries.authorId),
         ),
       )
+      .where(eq(journalEntries.status, "ready"))
       .orderBy(desc(journalEntries.createdAt))
       .limit(30),
   ]);
@@ -242,8 +251,16 @@ export async function getProjectOverview(
   // yet — reported, but not yet part of project state.
   const pendingBlockers: PendingBlocker[] = [];
   for (const entry of readyEntries) {
+    // Entries written before the journal became project-agnostic keep their
+    // stored project scope.
+    if (entry.projectId && entry.projectId !== projectId) continue;
     const interp = entry.interpretation as Resolved | null;
     for (const b of interp?.blockers ?? []) {
+      // A blocker linked to a task belongs to that task's project; an
+      // unlinked blocker (no project) is shown for every project the author
+      // belongs to, matching the old per-project scoping as closely as the
+      // project-agnostic journal allows.
+      if (b.projectId && b.projectId !== projectId) continue;
       pendingBlockers.push({
         entryId: entry.id,
         authorName: entry.authorName,

@@ -158,7 +158,7 @@ export function OverviewView({
                   </p>
                   {t.journalEntryId || t.reasonJournalEntryId ? (
                     <Link
-                      href={`/journal/${t.reasonJournalEntryId ?? t.journalEntryId}`}
+                      href={`/journal#entry-${t.reasonJournalEntryId ?? t.journalEntryId}`}
                       className="mt-0.5 inline-block text-xs text-brand underline-offset-2 hover:underline"
                     >
                       via journal
@@ -217,7 +217,7 @@ export function OverviewView({
                     {overview.pendingBlockers.map((b, i) => (
                       <li key={`${b.entryId}-${i}`} className="text-sm">
                         <Link
-                          href={`/journal/${b.entryId}`}
+                          href={`/journal#entry-${b.entryId}`}
                           className="text-brand underline-offset-2 hover:underline"
                         >
                           {b.authorName} reported
@@ -352,7 +352,7 @@ export function OverviewView({
                     <span className="font-medium">{event.actorName}</span>
                     {event.source === "journal" && event.journalEntryId ? (
                       <Link
-                        href={`/journal/${event.journalEntryId}`}
+                        href={`/journal#entry-${event.journalEntryId}`}
                         className="text-xs text-brand underline-offset-2 hover:underline"
                       >
                         via journal

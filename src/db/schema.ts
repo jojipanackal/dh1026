@@ -136,9 +136,11 @@ export const journalEntries = pgTable(
   "journal_entries",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
+    // Nullable: entries belong to the author, not a project. Each proposed
+    // item resolves its own project during interpretation.
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
     authorId: uuid("author_id")
       .notNull()
       .references(() => users.id),

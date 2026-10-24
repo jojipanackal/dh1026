@@ -30,7 +30,6 @@ export async function submitJournalAction(
   try {
     const user = await requireCurrentUser();
     const entry = await submitJournalEntry(user.id, {
-      projectId: String(formData.get("projectId") ?? ""),
       body: String(formData.get("body") ?? ""),
       submissionKey: String(formData.get("submissionKey") ?? ""),
     });
@@ -47,7 +46,7 @@ export async function interpretJournalAction(
   try {
     const user = await requireCurrentUser();
     await interpretEntry(user.id, entryId);
-    revalidatePath(`/journal/${entryId}`);
+    revalidatePath("/journal");
     return {};
   } catch (error) {
     return toState(error);
@@ -61,7 +60,7 @@ export async function applyJournalAction(
   try {
     const user = await requireCurrentUser();
     await applyJournalEntry(user.id, entryId, selection);
-    revalidatePath(`/journal/${entryId}`);
+    revalidatePath("/journal");
     return {};
   } catch (error) {
     return toState(error);
@@ -74,7 +73,7 @@ export async function dismissJournalAction(
   try {
     const user = await requireCurrentUser();
     await dismissJournalEntry(user.id, entryId);
-    revalidatePath(`/journal/${entryId}`);
+    revalidatePath("/journal");
     return {};
   } catch (error) {
     return toState(error);

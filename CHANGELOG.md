@@ -15,6 +15,20 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T01:26:40+05:30 — Project-agnostic journal chat
+
+- Changed: `/journal` is now one project-free chat per user — no project picker, header or labels. Journal entries are author-scoped (`journal_entries.project_id` nullable, migration `0003`); interpretation resolves the project per proposed item across all of the user's member projects (prompt now lists PROJECTS, per-project MEMBERS, and tasks tagged with `project=`); new tasks carry `projectId` (null → clarification question, unselectable in review); apply checks membership per item. Sidebar Conversations group removed; proposal card shows each item's project subtly.
+- Why: User decision — the developer just talks to the agent; the agent figures out the project and asks when ambiguous.
+- Validation: typecheck, lint, 85/85 unit and 40/40 integration tests pass; real OpenAI smoke entry resolved "Still blocked on lanyards" to the right project automatically. Screenshots reviewed.
+- Limitations: A new task with an unclear project stays unselectable until clarified in a reply.
+
+## 2026-10-25T01:23:57+05:30 — Make the sidebar user popup visible
+
+- Changed: Replaced the sidebar footer's Radix Select trigger with an explicit account-style popup in `src/components/app-shell/user-switcher-client.tsx`; clicking the name now opens the user list above the control, with outside-click and Escape dismissal and a checkmark for the active user.
+- Why: User feedback — the name control rendered, but its popup was not visibly opening.
+- Validation: `npm run lint` and `npm run typecheck` pass.
+- Limitations: The popup was verified through the rendered component structure and static checks; browser automation was not used.
+
 ## 2026-10-25T01:06:59+05:30 — Journal as a plain daily conversation
 
 - Changed: Removed the inner scroll container and fixed-height wrapper from `/journal` — the thread now scrolls with the page like a normal document, with a `sticky bottom-0` composer (no separate scrollbar). Header is a plain, unpinned project name. Entries are grouped by IST day with "Today"/"Yesterday"/date separators — each day starts a fresh conversation.

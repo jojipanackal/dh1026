@@ -104,7 +104,6 @@ describe("getProjectOverview", () => {
     const entry = await submitJournalEntry(
       owner.id,
       {
-        projectId: project.id,
         body: "Lanyards are stuck waiting on Rahul",
         submissionKey: key(),
       },
@@ -224,7 +223,6 @@ describe("getProjectOverview", () => {
     await submitJournalEntry(
       owner.id,
       {
-        projectId: project.id,
         body: "Vendor not responding",
         submissionKey: key(),
       },

@@ -22,6 +22,7 @@ import {
   applyJournalEntry,
   dismissJournalEntry,
   getJournalEntryForMember,
+  listJournalThread,
   submitJournalEntry,
 } from "@/server/journal";
 import { createTask, moveTask } from "@/server/tasks";
@@ -56,7 +57,7 @@ afterEach(async () => {
 });
 
 describe("journal", () => {
-  it("submit -> ready with resolved interpretation stored", async () => {
+  it("submit stores a project-less entry -> ready with resolved interpretation", async () => {
     const { owner, project } = await fixture();
     const t = await createTask(owner.id, project.id, {
       title: "Task A", description: null, priority: "medium",
@@ -70,21 +71,23 @@ describe("journal", () => {
     };
     const entry = await submitJournalEntry(
       owner.id,
-      { projectId: project.id, body: "working on it", submissionKey: key() },
+      { body: "working on it", submissionKey: key() },
       interp(raw),
     );
     const [row] = await db.select().from(journalEntries).where(eq(journalEntries.id, entry.id));
     expect(row.status).toBe("ready");
-    const interp2 = row.interpretation as { taskUpdates: { taskTitle: string }[] };
+    expect(row.projectId).toBeNull();
+    const interp2 = row.interpretation as { taskUpdates: { taskTitle: string; projectId: string }[] };
     expect(interp2.taskUpdates[0].taskTitle).toBe("Task A");
+    expect(interp2.taskUpdates[0].projectId).toBe(project.id);
     expect(row.model).toBe("mock-model");
   });
 
   it("invalid AI output -> failed with safe message, nothing changed", async () => {
-    const { owner, project } = await fixture();
+    const { owner } = await fixture();
     const entry = await submitJournalEntry(
       owner.id,
-      { projectId: project.id, body: "b", submissionKey: key() },
+      { body: "b", submissionKey: key() },
       {
         getConfig: () => CONFIG,
         interpret: async () => {
@@ -100,10 +103,10 @@ describe("journal", () => {
   });
 
   it("no API key -> failed with config message", async () => {
-    const { owner, project } = await fixture();
+    const { owner } = await fixture();
     const entry = await submitJournalEntry(
       owner.id,
-      { projectId: project.id, body: "b", submissionKey: key() },
+      { body: "b", submissionKey: key() },
       { getConfig: () => ({ ok: false as const, error: "AI is not configured: set OPENAI_API_KEY in .env.local" }) },
     );
     const [row] = await db.select().from(journalEntries).where(eq(journalEntries.id, entry.id));
@@ -112,12 +115,22 @@ describe("journal", () => {
   });
 
   it("same submissionKey twice gives one entry", async () => {
-    const { owner, project } = await fixture();
+    const { owner } = await fixture();
     const k = key();
-    const a = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: k }, interp(empty));
-    const b = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: k }, interp(empty));
+    const a = await submitJournalEntry(owner.id, { body: "b", submissionKey: k }, interp(empty));
+    const b = await submitJournalEntry(owner.id, { body: "b", submissionKey: k }, interp(empty));
     expect(b.id).toBe(a.id);
     expect(await db.select().from(journalEntries)).toHaveLength(1);
+  });
+
+  it("the thread lists every entry by the author, oldest first", async () => {
+    const { owner } = await fixture();
+    const other = await insertUser("Other", "other@example.com");
+    await submitJournalEntry(owner.id, { body: "first", submissionKey: key() }, interp(empty));
+    await submitJournalEntry(other.id, { body: "not mine", submissionKey: key() }, interp(empty));
+    await submitJournalEntry(owner.id, { body: "second", submissionKey: key() }, interp(empty));
+    const thread = await listJournalThread(owner.id);
+    expect(thread.map((e) => e.body)).toEqual(["first", "second"]);
   });
 
   it("apply: updates task, creates task, events are journal-sourced", async () => {
@@ -134,11 +147,11 @@ describe("journal", () => {
         { taskId: t.id, status: "in_progress", priority: null, assigneeId: member.id, reason: "r", confidence: "high" },
       ],
       newTasks: [
-        { title: "New thing", description: null, status: "todo", priority: "high", assigneeId: null, reason: "r", confidence: "high" },
+        { projectId: project.id, title: "New thing", description: null, status: "todo", priority: "high", assigneeId: null, reason: "r", confidence: "high" },
       ],
       blockers: [{ taskId: t.id, description: "waiting on vendor", waitingOn: "vendor" }],
     };
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(raw));
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     // blocker forces status blocked; keep the update selection too (merged)
     await applyJournalEntry(owner.id, entry.id, {
       taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: member.id }],
@@ -162,9 +175,95 @@ describe("journal", () => {
     });
   });
 
-  it("apply twice -> CONFLICT", async () => {
+  it("apply spans projects: new task in A, task update in B", async () => {
+    const { owner, project: projectA } = await fixture();
+    const projectB = await createProject(owner.id, { name: "P2" });
+    const tB = await createTask(owner.id, projectB.id, {
+      title: "Task B", description: null, priority: "medium",
+      assigneeId: null, dueDate: null, estimateHours: null,
+    });
+    const raw: AiInterpretation = {
+      ...empty,
+      taskUpdates: [
+        { taskId: tB.id, status: "in_progress", priority: null, assigneeId: null, reason: "r", confidence: "high" },
+      ],
+      newTasks: [
+        { projectId: projectA.id, title: "For project A", description: null, status: "todo", priority: "high", assigneeId: null, reason: "r", confidence: "high" },
+      ],
+    };
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
+    await applyJournalEntry(owner.id, entry.id, {
+      taskUpdates: [{ index: 0, status: "in_progress", priority: null, assigneeId: null }],
+      newTasks: [{ index: 0, title: "For project A", status: "todo", priority: "high", assigneeId: null }],
+      blockers: [],
+    });
+    const [updatedB] = await db.select().from(tasks).where(eq(tasks.id, tB.id));
+    expect(updatedB.status).toBe("in_progress");
+    const [created] = await db.select().from(tasks).where(eq(tasks.title, "For project A"));
+    expect(created.projectId).toBe(projectA.id);
+    // Events landed in each item's own project.
+    const eventsA = await db
+      .select()
+      .from(activityEvents)
+      .where(eq(activityEvents.projectId, projectA.id));
+    const eventsB = await db
+      .select()
+      .from(activityEvents)
+      .where(eq(activityEvents.projectId, projectB.id));
+    const journalA = eventsA.filter((e) => e.journalEntryId === entry.id);
+    const journalB = eventsB.filter((e) => e.journalEntryId === entry.id);
+    expect(journalA.map((e) => e.type)).toEqual(["task.created"]);
+    expect(journalB.map((e) => e.type)).toEqual(["task.updated"]);
+  });
+
+  it("new task with null projectId auto-assigns the author's single project", async () => {
     const { owner, project } = await fixture();
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(empty));
+    const raw: AiInterpretation = {
+      ...empty,
+      newTasks: [
+        { projectId: null, title: "Implicit", description: null, status: "todo", priority: "low", assigneeId: null, reason: "r", confidence: "high" },
+      ],
+    };
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
+    await applyJournalEntry(owner.id, entry.id, {
+      taskUpdates: [],
+      newTasks: [{ index: 0, title: "Implicit", status: "todo", priority: "low", assigneeId: null }],
+      blockers: [],
+    });
+    const [created] = await db.select().from(tasks).where(eq(tasks.title, "Implicit"));
+    expect(created.projectId).toBe(project.id);
+  });
+
+  it("new task needing clarification cannot be applied", async () => {
+    const { owner } = await fixture();
+    await createProject(owner.id, { name: "P2" }); // now two member projects
+    const raw: AiInterpretation = {
+      ...empty,
+      newTasks: [
+        { projectId: null, title: "Ambiguous", description: null, status: "todo", priority: "low", assigneeId: null, reason: "r", confidence: "high" },
+      ],
+    };
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
+    const [row] = await db.select().from(journalEntries).where(eq(journalEntries.id, entry.id));
+    const resolved = row.interpretation as { newTasks: { needsClarification: boolean }[] };
+    expect(resolved.newTasks[0].needsClarification).toBe(true);
+    try {
+      await applyJournalEntry(owner.id, entry.id, {
+        taskUpdates: [],
+        newTasks: [{ index: 0, title: "Ambiguous", status: "todo", priority: "low", assigneeId: null }],
+        blockers: [],
+      });
+      expect.unreachable("expected VALIDATION");
+    } catch (error) {
+      expect(error).toBeInstanceOf(AppError);
+      expect((error as AppError).code).toBe("VALIDATION");
+      expect((error as AppError).message).toContain("Ambiguous");
+    }
+  });
+
+  it("apply twice -> CONFLICT", async () => {
+    const { owner } = await fixture();
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(empty));
     const sel = { taskUpdates: [], newTasks: [], blockers: [] };
     await applyJournalEntry(owner.id, entry.id, sel);
     await expectAppError(applyJournalEntry(owner.id, entry.id, sel), "CONFLICT");
@@ -179,9 +278,9 @@ describe("journal", () => {
     const raw: AiInterpretation = {
       ...empty,
       taskUpdates: [{ taskId: t.id, status: "in_progress", priority: null, assigneeId: null, reason: "r", confidence: "high" }],
-      newTasks: [{ title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, reason: "r", confidence: "high" }],
+      newTasks: [{ projectId: project.id, title: "Also new", description: null, status: "todo", priority: "medium", assigneeId: null, reason: "r", confidence: "high" }],
     };
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(raw));
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(raw));
     await moveTask(owner.id, t.id, "done"); // race: now the stored transition is invalid
     await expectAppError(
       applyJournalEntry(owner.id, entry.id, {
@@ -198,20 +297,28 @@ describe("journal", () => {
     expect(entryRow.status).toBe("ready");
   });
 
-  it("non-member cannot get or apply", async () => {
+  it("non-authors cannot get or apply, even project members", async () => {
     const { owner, project } = await fixture();
+    const teammate = await insertUser("T", "t@example.com");
+    await addProjectMember(owner.id, project.id, { userId: teammate.id, role: "member" });
     const outsider = await insertUser("X", "x@example.com");
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(empty));
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(empty));
+    await expectAppError(getJournalEntryForMember(entry.id, teammate.id), "NOT_FOUND");
     await expectAppError(getJournalEntryForMember(entry.id, outsider.id), "NOT_FOUND");
+    await expectAppError(
+      applyJournalEntry(teammate.id, entry.id, { taskUpdates: [], newTasks: [], blockers: [] }),
+      "NOT_FOUND",
+    );
     await expectAppError(
       applyJournalEntry(outsider.id, entry.id, { taskUpdates: [], newTasks: [], blockers: [] }),
       "NOT_FOUND",
     );
+    await expectAppError(dismissJournalEntry(teammate.id, entry.id), "NOT_FOUND");
   });
 
   it("selection index out of range -> VALIDATION", async () => {
-    const { owner, project } = await fixture();
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(empty));
+    const { owner } = await fixture();
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(empty));
     await expectAppError(
       applyJournalEntry(owner.id, entry.id, {
         taskUpdates: [{ index: 5, status: "done", priority: null, assigneeId: null }],
@@ -234,7 +341,7 @@ describe("journal", () => {
     };
     const entry = await submitJournalEntry(
       owner.id,
-      { projectId: project.id, body: "b", submissionKey: key() },
+      { body: "b", submissionKey: key() },
       interp(raw),
     );
     await applyJournalEntry(owner.id, entry.id, {
@@ -253,8 +360,8 @@ describe("journal", () => {
   });
 
   it("dismiss sets dismissed", async () => {
-    const { owner, project } = await fixture();
-    const entry = await submitJournalEntry(owner.id, { projectId: project.id, body: "b", submissionKey: key() }, interp(empty));
+    const { owner } = await fixture();
+    const entry = await submitJournalEntry(owner.id, { body: "b", submissionKey: key() }, interp(empty));
     const updated = await dismissJournalEntry(owner.id, entry.id);
     expect(updated.status).toBe("dismissed");
   });

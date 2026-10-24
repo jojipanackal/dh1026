@@ -25,6 +25,10 @@ export const aiTaskUpdate = z.object({
 });
 
 export const aiNewTask = z.object({
+  projectId: z
+    .string()
+    .nullable()
+    .describe("Id of a project from the PROJECTS list this task belongs to, or null when unclear"),
   title: z.string().describe("Concise task title, max 200 characters"),
   description: z.string().nullable(),
   status: z.enum(NEW_TASK_STATUSES),

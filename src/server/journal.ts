@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -20,11 +20,9 @@ import type { TaskStatus } from "@/lib/tasks/lifecycle";
 import { TASK_PRIORITIES, type TaskPriority } from "@/lib/tasks/validation";
 import { interpretJournal } from "@/server/ai/interpret";
 import { AppError } from "@/server/errors";
-import { getMembership } from "@/server/projects";
 import { applyTaskUpdate, createTask } from "@/server/tasks";
 
 const submitSchema = z.object({
-  projectId: z.uuid(),
   body: z.string().trim().min(1, "Write something first").max(5000),
   submissionKey: z.uuid(),
 });
@@ -40,15 +38,11 @@ export async function submitJournalEntry(
   deps: InterpretDeps = {},
 ) {
   const parsed = submitSchema.parse(input);
-  const membership = await getMembership(parsed.projectId, userId);
-  if (!membership) {
-    throw new AppError("NOT_FOUND", "Project not found");
-  }
   // Idempotent insert: retrying the same submission key returns the entry.
   const [entry] = await db
     .insert(journalEntries)
     .values({
-      projectId: parsed.projectId,
+      projectId: null,
       authorId: userId,
       body: parsed.body,
       submissionKey: parsed.submissionKey,
@@ -92,6 +86,41 @@ async function getEntry(entryId: string) {
   return entry ?? null;
 }
 
+// Every project the user belongs to, with each project's members. Shared by
+// the interpretation context and the journal page's assignee pickers.
+async function listMemberProjects(userId: string) {
+  const projectRows = await db
+    .select({ id: projects.id, name: projects.name })
+    .from(projectMemberships)
+    .innerJoin(projects, eq(projects.id, projectMemberships.projectId))
+    .where(eq(projectMemberships.userId, userId))
+    .orderBy(projects.createdAt);
+  const membersByProject: Record<string, { id: string; name: string }[]> = {};
+  for (const p of projectRows) membersByProject[p.id] = [];
+  if (projectRows.length > 0) {
+    const memberRows = await db
+      .select({
+        projectId: projectMemberships.projectId,
+        id: users.id,
+        name: users.name,
+      })
+      .from(projectMemberships)
+      .innerJoin(users, eq(users.id, projectMemberships.userId))
+      .where(
+        inArray(
+          projectMemberships.projectId,
+          projectRows.map((p) => p.id),
+        ),
+      );
+    for (const m of memberRows) {
+      membersByProject[m.projectId].push({ id: m.id, name: m.name });
+    }
+  }
+  return { projectRows, membersByProject };
+}
+
+export { listMemberProjects };
+
 export async function interpretEntry(
   userId: string,
   entryId: string,
@@ -101,11 +130,7 @@ export async function interpretEntry(
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
   const entry = await getEntry(entryId);
-  if (!entry) {
-    throw new AppError("NOT_FOUND", "Journal entry not found");
-  }
-  const membership = await getMembership(entry.projectId, userId);
-  if (!membership) {
+  if (!entry || entry.authorId !== userId) {
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
   if (entry.status !== "pending" && entry.status !== "failed") {
@@ -128,35 +153,39 @@ export async function interpretEntry(
     return fail(config.error);
   }
 
-  const [project] = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, entry.projectId));
   const [author] = await db
     .select()
     .from(users)
     .where(eq(users.id, entry.authorId));
-  const memberRows = await db
-    .select({ id: users.id, name: users.name })
-    .from(projectMemberships)
-    .innerJoin(users, eq(users.id, projectMemberships.userId))
-    .where(eq(projectMemberships.projectId, entry.projectId));
-  const taskRows = await db
-    .select({
-      id: tasks.id,
-      title: tasks.title,
-      status: tasks.status,
-      priority: tasks.priority,
-      assigneeName: users.name,
-      assigneeId: tasks.assigneeId,
-    })
-    .from(tasks)
-    .leftJoin(users, eq(users.id, tasks.assigneeId))
-    .where(and(eq(tasks.projectId, entry.projectId), sql`${tasks.status} <> 'cancelled'`))
-    .orderBy(desc(tasks.updatedAt))
-    .limit(150);
-  // Up to 6 earlier entries by this author in the same project, oldest
-  // first, so the model can resolve references like "yes, assign it to Priya".
+  const { projectRows, membersByProject } = await listMemberProjects(userId);
+  const projectIds = projectRows.map((p) => p.id);
+  const taskRows =
+    projectIds.length === 0
+      ? []
+      : await db
+          .select({
+            id: tasks.id,
+            title: tasks.title,
+            status: tasks.status,
+            priority: tasks.priority,
+            assigneeName: users.name,
+            assigneeId: tasks.assigneeId,
+            projectId: tasks.projectId,
+            projectName: projects.name,
+          })
+          .from(tasks)
+          .innerJoin(projects, eq(projects.id, tasks.projectId))
+          .leftJoin(users, eq(users.id, tasks.assigneeId))
+          .where(
+            and(
+              inArray(tasks.projectId, projectIds),
+              sql`${tasks.status} <> 'cancelled'`,
+            ),
+          )
+          .orderBy(desc(tasks.updatedAt))
+          .limit(150);
+  // Up to 6 earlier entries by this author, oldest first, so the model can
+  // resolve references like "yes, assign it to Priya".
   const recentRows = await db
     .select({
       body: journalEntries.body,
@@ -165,7 +194,6 @@ export async function interpretEntry(
     .from(journalEntries)
     .where(
       and(
-        eq(journalEntries.projectId, entry.projectId),
         eq(journalEntries.authorId, entry.authorId),
         sql`${journalEntries.createdAt} < ${entry.createdAt}`,
         // Dismissed entries were rejected by the author; feeding them back
@@ -178,11 +206,11 @@ export async function interpretEntry(
   recentRows.reverse();
 
   const context: JournalPromptContext = {
-    projectName: project.name,
+    projects: projectRows,
     authorName: author.name,
     today: todayIst(),
-    members: memberRows,
     tasks: taskRows,
+    membersByProject,
     recent: recentRows.map((r) => {
       const interp = r.interpretation as {
         summary?: string;
@@ -204,14 +232,21 @@ export async function interpretEntry(
       { model: openai(config.model) },
     );
     const resolved = resolveInterpretation(raw, {
+      projects: projectRows,
       tasks: taskRows.map((t) => ({
         id: t.id,
         title: t.title,
         status: t.status,
         priority: t.priority,
         assigneeId: t.assigneeId,
+        projectId: t.projectId,
       })),
-      memberIds: memberRows.map((m) => m.id),
+      membersByProject: Object.fromEntries(
+        Object.entries(membersByProject).map(([projectId, members]) => [
+          projectId,
+          members.map((m) => m.id),
+        ]),
+      ),
     });
     const [updated] = await db
       .update(journalEntries)
@@ -234,53 +269,20 @@ export async function interpretEntry(
   }
 }
 
+// Entries are the author's private thread; only the author can read them.
 export async function getJournalEntryForMember(entryId: string, userId: string) {
   if (!isUuid(entryId)) {
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
   const entry = await getEntry(entryId);
-  if (!entry) {
+  if (!entry || entry.authorId !== userId) {
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
-  const membership = await getMembership(entry.projectId, userId);
-  if (!membership) {
-    throw new AppError("NOT_FOUND", "Journal entry not found");
-  }
-  const [project] = await db.select({ name: projects.name }).from(projects).where(eq(projects.id, entry.projectId));
-  const [author] = await db.select({ name: users.name }).from(users).where(eq(users.id, entry.authorId));
-  return { entry, projectName: project.name, authorName: author.name };
-}
-
-export async function listJournalEntries(
-  userId: string,
-  options: { projectId?: string; limit?: number } = {},
-) {
-  const conditions = [
-    sql`${projectMemberships.userId} = ${userId}`,
-  ];
-  if (options.projectId) {
-    if (!isUuid(options.projectId)) return [];
-    conditions.push(eq(journalEntries.projectId, options.projectId));
-  }
-  return db
-    .select({
-      id: journalEntries.id,
-      body: journalEntries.body,
-      status: journalEntries.status,
-      createdAt: journalEntries.createdAt,
-      projectName: projects.name,
-      authorName: users.name,
-    })
-    .from(journalEntries)
-    .innerJoin(projects, eq(projects.id, journalEntries.projectId))
-    .innerJoin(users, eq(users.id, journalEntries.authorId))
-    .innerJoin(
-      projectMemberships,
-      eq(projectMemberships.projectId, journalEntries.projectId),
-    )
-    .where(and(...conditions))
-    .orderBy(desc(journalEntries.createdAt))
-    .limit(options.limit ?? 20);
+  const [author] = await db
+    .select({ name: users.name })
+    .from(users)
+    .where(eq(users.id, entry.authorId));
+  return { entry, authorName: author.name };
 }
 
 const selectionSchema = z.object({
@@ -321,7 +323,7 @@ export async function applyJournalEntry(
       .where(eq(journalEntries.id, entryId))
       .limit(1)
       .for("update");
-    if (!entry) {
+    if (!entry || entry.authorId !== userId) {
       throw new AppError("NOT_FOUND", "Journal entry not found");
     }
     if (entry.status === "applied") {
@@ -329,19 +331,6 @@ export async function applyJournalEntry(
     }
     if (entry.status !== "ready") {
       throw new AppError("VALIDATION", "This entry is not ready to apply");
-    }
-    const [membership] = await tx
-      .select()
-      .from(projectMemberships)
-      .where(
-        and(
-          eq(projectMemberships.projectId, entry.projectId),
-          eq(projectMemberships.userId, userId),
-        ),
-      )
-      .limit(1);
-    if (!membership) {
-      throw new AppError("NOT_FOUND", "Journal entry not found");
     }
     const resolved = entry.interpretation as Resolved | null;
     if (!resolved) {
@@ -361,7 +350,13 @@ export async function applyJournalEntry(
       if (!base) {
         throw new AppError("VALIDATION", `Unknown new task ${item("new task", sel.index)}`);
       }
-      return { sel, base };
+      if (base.needsClarification || !base.projectId) {
+        throw new AppError(
+          "VALIDATION",
+          `New task "${base.title}": its project is unclear — answer the clarification question first`,
+        );
+      }
+      return { sel, base: base as typeof base & { projectId: string } };
     });
     const blockerSels = selection.blockers.map((sel) => {
       const base = resolved.blockers[sel.index];
@@ -373,6 +368,30 @@ export async function applyJournalEntry(
       }
       return { sel, base };
     });
+
+    // Items can target different projects; membership is checked per item
+    // against the project the item actually lands in.
+    const memberOf = new Set<string>();
+    const checkMember = async (projectId: string, label: string) => {
+      if (memberOf.has(projectId)) return;
+      const [membership] = await tx
+        .select({ projectId: projectMemberships.projectId })
+        .from(projectMemberships)
+        .where(
+          and(
+            eq(projectMemberships.projectId, projectId),
+            eq(projectMemberships.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!membership) {
+        throw new AppError(
+          "VALIDATION",
+          `${label}: you are not a member of that project`,
+        );
+      }
+      memberOf.add(projectId);
+    };
 
     // Merge "block this task" selections into the per-task updates so each
     // task is written at most once.
@@ -425,6 +444,7 @@ export async function applyJournalEntry(
           throw new AppError("VALIDATION", `Task "${update.label}" no longer exists`);
         }
         const b = before[0];
+        await checkMember(b.projectId, `Task "${update.label}"`);
         const updated = await applyTaskUpdate(
           tx,
           userId,
@@ -457,7 +477,7 @@ export async function applyJournalEntry(
             // The task was already blocked (or the update was otherwise a
             // no-op): still record the blocker as its own journal event.
             await tx.insert(activityEvents).values({
-              projectId: entry.projectId,
+              projectId: b.projectId,
               taskId,
               actorId: userId,
               type: "task.updated",
@@ -487,9 +507,10 @@ export async function applyJournalEntry(
 
     for (const { sel, base } of newTaskSels) {
       try {
+        await checkMember(base.projectId, `New task "${sel.title}"`);
         const created = await createTask(
           userId,
-          entry.projectId,
+          base.projectId,
           {
             title: sel.title,
             description: base.description,
@@ -528,11 +549,7 @@ export async function dismissJournalEntry(userId: string, entryId: string) {
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
   const entry = await getEntry(entryId);
-  if (!entry) {
-    throw new AppError("NOT_FOUND", "Journal entry not found");
-  }
-  const membership = await getMembership(entry.projectId, userId);
-  if (!membership) {
+  if (!entry || entry.authorId !== userId) {
     throw new AppError("NOT_FOUND", "Journal entry not found");
   }
   if (entry.status !== "ready" && entry.status !== "failed") {
@@ -546,59 +563,24 @@ export async function dismissJournalEntry(userId: string, entryId: string) {
   return updated;
 }
 
-// The private chat thread: this author's entries in one project, oldest first.
-export async function listJournalThread(
-  userId: string,
-  projectId: string,
-  limit = 50,
-) {
-  if (!isUuid(projectId)) return [];
-  const membership = await getMembership(projectId, userId);
-  if (!membership) return [];
-  return db
+// The private chat thread: all of this author's entries, oldest first.
+export async function listJournalThread(userId: string, limit = 50) {
+  const rows = await db
     .select()
     .from(journalEntries)
-    .where(
-      and(
-        eq(journalEntries.projectId, projectId),
-        eq(journalEntries.authorId, userId),
-      ),
-    )
-    .orderBy(journalEntries.createdAt)
-    .limit(limit);
-}
-
-// Latest entry per project, used to pick the journal's default project
-// (own entries only).
-export async function listLatestEntryPerProject(userId: string) {
-  const rows = await db
-    .select({
-      projectId: journalEntries.projectId,
-      body: journalEntries.body,
-      createdAt: journalEntries.createdAt,
-    })
-    .from(journalEntries)
     .where(eq(journalEntries.authorId, userId))
-    .orderBy(desc(journalEntries.createdAt));
-  const latest = new Map<string, { body: string; createdAt: Date }>();
-  for (const r of rows) {
-    if (!latest.has(r.projectId)) {
-      latest.set(r.projectId, { body: r.body, createdAt: r.createdAt });
-    }
-  }
-  return latest;
+    .orderBy(desc(journalEntries.createdAt))
+    .limit(limit);
+  return rows.reverse();
 }
 
-// The journal page's implicit selection when no projectId param is given:
-// most recently journaled project, else the first project.
-export function pickDefaultProjectId(
-  projectIds: string[],
-  latest: Map<string, { createdAt: Date }>,
-): string | undefined {
-  return (
-    projectIds
-      .map((id) => ({ id, at: latest.get(id)?.createdAt }))
-      .filter((p) => p.at)
-      .sort((a, b) => (a.at! < b.at! ? 1 : -1))[0]?.id ?? projectIds[0]
-  );
+// Project id per task id, used to link applied journal changes back to
+// their tasks (tasks from several projects can appear in one entry).
+export async function listTaskProjectMap(taskIds: string[]) {
+  if (taskIds.length === 0) return {};
+  const rows = await db
+    .select({ id: tasks.id, projectId: tasks.projectId })
+    .from(tasks)
+    .where(inArray(tasks.id, taskIds));
+  return Object.fromEntries(rows.map((r) => [r.id, r.projectId]));
 }

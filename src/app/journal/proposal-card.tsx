@@ -68,14 +68,14 @@ function MemberSelect({
 
 export function ProposalCard({
   entryId,
-  projectId,
   resolved,
-  members,
+  membersByProject,
 }: {
   entryId: string;
-  projectId: string;
   resolved: Resolved;
-  members: MemberOption[];
+  // Member options for each item's own project; items in one proposal can
+  // belong to different projects.
+  membersByProject: Record<string, MemberOption[]>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -91,7 +91,11 @@ export function ProposalCard({
   );
   const [news, setNews] = useState(() =>
     resolved.newTasks.map((n) => ({
-      checked: n.confidence !== "low" && !n.possibleDuplicateOf,
+      checked:
+        n.confidence !== "low" &&
+        !n.possibleDuplicateOf &&
+        !n.needsClarification &&
+        n.projectId !== null,
       title: n.title,
       status: n.status as "todo" | "in_progress" | "blocked",
       priority: n.priority,
@@ -161,8 +165,13 @@ export function ProposalCard({
     );
   }
 
+  const allMembers = new Map(
+    Object.values(membersByProject)
+      .flat()
+      .map((m) => [m.id, m.name] as const),
+  );
   const memberName = (id: string | null) =>
-    id ? (members.find((m) => m.id === id)?.name ?? "Unassigned") : "Unassigned";
+    id ? (allMembers.get(id) ?? "Unassigned") : "Unassigned";
 
   const editBtn = (id: string) => (
     <button
@@ -197,7 +206,7 @@ export function ProposalCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/projects/${projectId}/tasks/${u.taskId}`}
+                    href={`/projects/${u.projectId}/tasks/${u.taskId}`}
                     className="line-clamp-2 font-medium underline-offset-4 hover:underline"
                     title={u.taskTitle}
                   >
@@ -295,7 +304,7 @@ export function ProposalCard({
                           s.map((x, j) => (j === i ? { ...x, assigneeId: v } : x)),
                         )
                       }
-                      members={members}
+                      members={membersByProject[u.projectId] ?? []}
                     />
                   </div>
                 ) : null}
@@ -307,15 +316,17 @@ export function ProposalCard({
         {resolved.newTasks.map((n, i) => (
           <div key={`n${i}`} className="px-3 py-2.5">
             <div className="flex items-start gap-2.5">
-              <Checkbox
-                checked={news[i].checked}
-                onCheckedChange={(c) =>
-                  setNews((s) =>
-                    s.map((x, j) => (j === i ? { ...x, checked: c === true } : x)),
-                  )
-                }
-                className="mt-0.5"
-              />
+              {n.needsClarification ? null : (
+                <Checkbox
+                  checked={news[i].checked}
+                  onCheckedChange={(c) =>
+                    setNews((s) =>
+                      s.map((x, j) => (j === i ? { ...x, checked: c === true } : x)),
+                    )
+                  }
+                  className="mt-0.5"
+                />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="line-clamp-2 font-medium" title={news[i].title}>
@@ -327,14 +338,23 @@ export function ProposalCard({
                         {n.confidence}
                       </Badge>
                     ) : null}
-                    {editBtn(`n${i}`)}
+                    {n.needsClarification ? null : editBtn(`n${i}`)}
                   </span>
                 </div>
+                {n.needsClarification ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Which project does this belong to?
+                  </p>
+                ) : n.projectName ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {n.projectName}
+                  </p>
+                ) : null}
                 {n.possibleDuplicateOf ? (
                   <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
                     Possible duplicate of{" "}
                     <Link
-                      href={`/projects/${projectId}/tasks/${n.possibleDuplicateOf.id}`}
+                      href={`/projects/${n.possibleDuplicateOf.projectId}/tasks/${n.possibleDuplicateOf.id}`}
                       className="underline underline-offset-2"
                     >
                       {n.possibleDuplicateOf.title}
@@ -415,7 +435,11 @@ export function ProposalCard({
                           s.map((x, j) => (j === i ? { ...x, assigneeId: v } : x)),
                         )
                       }
-                      members={members}
+                      members={
+                        n.projectId
+                          ? (membersByProject[n.projectId] ?? [])
+                          : []
+                      }
                     />
                   </div>
                 ) : null}
@@ -439,13 +463,15 @@ export function ProposalCard({
               />
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
-                  {b.taskTitle ? (
+                  {b.taskTitle && b.projectId ? (
                     <Link
-                      href={`/projects/${projectId}/tasks/${b.taskId}`}
+                      href={`/projects/${b.projectId}/tasks/${b.taskId}`}
                       className="font-medium underline-offset-4 hover:underline"
                     >
                       {b.taskTitle}
                     </Link>
+                  ) : b.taskTitle ? (
+                    <span className="font-medium">{b.taskTitle}</span>
                   ) : (
                     <span className="text-muted-foreground">
                       Not linked to a task
@@ -478,14 +504,26 @@ export function ProposalCard({
 }
 
 export function AppliedCard({
-  projectId,
   appliedChanges,
+  taskProjects,
 }: {
-  projectId: string;
   appliedChanges: { updatedTaskIds?: string[]; createdTaskIds?: string[] } | null;
+  // Task id -> project id, so each applied change can link to its task.
+  taskProjects: Record<string, string>;
 }) {
   const updated = appliedChanges?.updatedTaskIds ?? [];
   const created = appliedChanges?.createdTaskIds ?? [];
+  const taskLink = (id: string, label: string) =>
+    taskProjects[id] ? (
+      <Link
+        href={`/projects/${taskProjects[id]}/tasks/${id}`}
+        className="text-brand underline-offset-2 hover:underline"
+      >
+        {label}
+      </Link>
+    ) : (
+      <span>{label}</span>
+    );
   return (
     <div className="mt-2 rounded-xl border bg-card px-3 py-2.5 text-sm">
       <p className="flex items-center gap-1.5 font-medium">
@@ -495,24 +533,10 @@ export function AppliedCard({
       </p>
       <ul className="mt-1 flex flex-col gap-0.5 text-xs">
         {updated.map((id) => (
-          <li key={id}>
-            <Link
-              href={`/projects/${projectId}/tasks/${id}`}
-              className="text-brand underline-offset-2 hover:underline"
-            >
-              Updated task
-            </Link>
-          </li>
+          <li key={id}>{taskLink(id, "Updated task")}</li>
         ))}
         {created.map((id) => (
-          <li key={id}>
-            <Link
-              href={`/projects/${projectId}/tasks/${id}`}
-              className="text-brand underline-offset-2 hover:underline"
-            >
-              Created task
-            </Link>
-          </li>
+          <li key={id}>{taskLink(id, "Created task")}</li>
         ))}
       </ul>
     </div>

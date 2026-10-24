@@ -132,7 +132,7 @@ export default async function ProjectPage({
           <>
             <MemberStack members={members} />
             <Button variant="outline" asChild>
-              <Link href={`/journal?projectId=${projectId}`}>Journal</Link>
+              <Link href="/journal">Journal</Link>
             </Button>
             <NewTaskDialog projectId={projectId} members={members} />
           </>

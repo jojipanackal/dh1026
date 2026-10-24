@@ -167,7 +167,7 @@ export default async function TaskPage({
                         <span className="font-medium">{event.actorName}</span>
                         {event.source === "journal" && event.journalEntryId ? (
                           <Link
-                            href={`/journal/${event.journalEntryId}`}
+                            href={`/journal#entry-${event.journalEntryId}`}
                             className="text-xs text-brand underline-offset-2 hover:underline"
                           >
                             via journal

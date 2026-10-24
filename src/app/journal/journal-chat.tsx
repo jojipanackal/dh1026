@@ -43,15 +43,15 @@ function TypingDots() {
 
 function AssistantMessage({
   entry,
-  projectId,
-  members,
+  membersByProject,
+  taskProjects,
   onRetry,
   onDismiss,
   pending,
 }: {
   entry: ThreadEntry;
-  projectId: string;
-  members: { id: string; name: string }[];
+  membersByProject: Record<string, { id: string; name: string }[]>;
+  taskProjects: Record<string, string>;
   onRetry: () => void;
   onDismiss: () => void;
   pending: boolean;
@@ -98,9 +98,8 @@ function AssistantMessage({
             <p className="text-sm">{resolved.summary}</p>
             <ProposalCard
               entryId={entry.id}
-              projectId={projectId}
               resolved={resolved}
-              members={members}
+              membersByProject={membersByProject}
             />
             {resolved.decisions.length > 0 ? (
               <div className="rounded-2xl bg-card px-4 py-3 text-sm">
@@ -150,8 +149,8 @@ function AssistantMessage({
               <p className="text-sm">{resolved.summary}</p>
             ) : null}
             <AppliedCard
-              projectId={projectId}
               appliedChanges={entry.appliedChanges}
+              taskProjects={taskProjects}
             />
           </div>
         ) : null}
@@ -165,13 +164,13 @@ function AssistantMessage({
 }
 
 export function JournalChat({
-  projectId,
   entries,
-  members,
+  membersByProject,
+  taskProjects,
 }: {
-  projectId: string;
   entries: ThreadEntry[];
-  members: { id: string; name: string }[];
+  membersByProject: Record<string, { id: string; name: string }[]>;
+  taskProjects: Record<string, string>;
 }) {
   const router = useRouter();
   const [text, setText] = useState("");
@@ -197,7 +196,6 @@ export function JournalChat({
     setOptimistic((o) => [...o, { key, body }]);
     setText("");
     const formData = new FormData();
-    formData.set("projectId", projectId);
     formData.set("body", body);
     formData.set("submissionKey", key);
     startTransition(async () => {
@@ -265,8 +263,8 @@ export function JournalChat({
               </div>
               <AssistantMessage
                 entry={entry}
-                projectId={projectId}
-                members={members}
+                membersByProject={membersByProject}
+                taskProjects={taskProjects}
                 pending={pending}
                 onRetry={() => retry(entry.id)}
                 onDismiss={() => dismiss(entry.id)}

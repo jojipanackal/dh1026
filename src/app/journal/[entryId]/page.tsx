@@ -8,6 +8,7 @@ import { getJournalEntryForMember } from "@/server/journal";
 
 export const instant = false;
 
+// Old per-entry URLs now just anchor into the single journal thread.
 export default async function JournalEntryPage({
   params,
 }: {
@@ -25,8 +26,8 @@ export default async function JournalEntryPage({
     );
   }
   try {
-    const { entry } = await getJournalEntryForMember(entryId, user.id);
-    redirect(`/journal?projectId=${entry.projectId}#entry-${entry.id}`);
+    await getJournalEntryForMember(entryId, user.id);
+    redirect(`/journal#entry-${entryId}`);
   } catch (error) {
     if (error instanceof AppError && error.code === "NOT_FOUND") notFound();
     throw error;
