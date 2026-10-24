@@ -1,4 +1,4 @@
-# PHASES.md — Project Runner Implementation Plan
+# PHASES.md — Jeera Implementation Plan
 
 ## Objective
 
@@ -218,7 +218,7 @@ Present a coherent, credible product experience.
 
 ## Completion Criteria
 
-Project Runner is ready for its initial release when every success criterion in [PRD.md §9](PRD.md#9-success-criteria) is met, and correcting an AI interpretation does not lose the original journal history.
+Jeera is ready for its initial release when every success criterion in [PRD.md §9](PRD.md#9-success-criteria) is met, and correcting an AI interpretation does not lose the original journal history.
 
 ## Execution Protocol
 

@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Project Runner",
+  title: "Jeera",
   description: "Natural-language project updates and tracking",
 };
 

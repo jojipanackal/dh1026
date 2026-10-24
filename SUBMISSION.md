@@ -4,7 +4,7 @@ Complete this file during the hackathon and use it to prepare your submission th
 
 ## Project
 
-- **Project name:** TODO
+- **Project name:** Jeera
 - **Track:** TODO — Kill the Busywork / Make the Invisible Visible / Works Anyway / Make Room for Play
 - **Short description:** TODO — describe the problem, what you built, and who benefits.
 - **Code repository URL:** TODO

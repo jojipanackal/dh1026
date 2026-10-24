@@ -2,11 +2,11 @@
 
 ## 1. Product Overview
 
-**Product:** Project Runner
+**Product:** Jeera
 
 **Vision:** An AI-powered platform that helps software teams run projects through natural-language updates, automated task management, workload visibility, proactive follow-ups, and persistent project knowledge.
 
-Project Runner aims to reduce the administrative burden of project management while helping teams understand project progress, identify blockers, distribute work effectively, and preserve the reasoning behind technical decisions.
+Jeera aims to reduce the administrative burden of project management while helping teams understand project progress, identify blockers, distribute work effectively, and preserve the reasoning behind technical decisions.
 
 ## 2. Problem Statement
 
@@ -20,7 +20,7 @@ This creates several problems:
 - Technical decisions and their rationale are lost across conversations and documentation.
 - Managers lack a reliable view of progress, capacity, and risks.
 
-Project Runner addresses these problems by making natural-language updates the primary input for project coordination.
+Jeera addresses these problems by making natural-language updates the primary input for project coordination.
 
 ## 3. Target Users
 

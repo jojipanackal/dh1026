@@ -12,7 +12,7 @@ export default function OverviewPage() {
     <div>
       <PageHeader
         title="Overview"
-        description="Project Runner turns natural-language journal updates into structured tasks, blockers, and project history."
+        description="Jeera turns natural-language journal updates into structured tasks, blockers, and project history."
       />
       <Suspense fallback={<Skeleton className="h-28 w-full max-w-xl" />}>
         <SystemStatus />

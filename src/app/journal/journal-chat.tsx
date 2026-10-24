@@ -64,7 +64,7 @@ function AssistantMessage({
       </span>
       <div className="min-w-0 flex-1">
         <p className="mb-1 font-mono text-xs text-muted-foreground">
-          Project Runner AI{entry.model ? ` · ${entry.model}` : ""}
+          Jeera AI{entry.model ? ` · ${entry.model}` : ""}
         </p>
 
         {entry.status === "pending" ? (
@@ -239,7 +239,7 @@ export function JournalChat({
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {entries.length === 0 && optimistic.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              No entries yet. Tell Project Runner what you worked on below.
+              No entries yet. Tell Jeera what you worked on below.
             </p>
           ) : null}
           {entries.map((entry) => (
@@ -311,7 +311,7 @@ export function JournalChat({
               }}
               rows={1}
               maxLength={5000}
-              placeholder="Tell Project Runner what you worked on, what's blocked, or what you decided…"
+              placeholder="Tell Jeera what you worked on, what's blocked, or what you decided…"
               className="max-h-48 min-h-11 w-full resize-none bg-transparent px-4 pt-3.5 text-sm outline-none placeholder:text-muted-foreground"
             />
             <div className="flex items-center justify-end px-3 pb-2.5">

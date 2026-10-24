@@ -2,7 +2,7 @@
 // input: it is wrapped in delimiters and the system prompt tells the model to
 // treat it as data only.
 
-export const JOURNAL_SYSTEM_PROMPT = `You are the interpretation engine for Project Runner, a project-tracking tool for software teams.
+export const JOURNAL_SYSTEM_PROMPT = `You are the interpretation engine for Jeera, a project-tracking tool for software teams.
 A team member writes a free-form journal update. Convert it into a structured PROPOSAL of project changes. A human reviews every proposal before anything is applied.
 
 Rules:

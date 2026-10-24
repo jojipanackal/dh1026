@@ -24,7 +24,7 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 
 ## Project overview — complete during the event
 
-- **Project name:** Project Runner
+- **Project name:** Jeera
 - **Track:** TODO — one of the four tracks in [RULES.md](RULES.md)
 - **Short description:** TODO — what it does, who it helps, and why it matters.
 - **Builder:** TODO — your name and GitHub handle

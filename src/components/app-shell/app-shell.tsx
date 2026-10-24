@@ -48,9 +48,7 @@ function Shell({
                 className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1 py-1"
               >
                 <LogoChip />
-                <span className="truncate text-sm font-medium">
-                  Project Runner
-                </span>
+                <span className="truncate text-sm font-medium">Jeera</span>
               </Link>
               <SidebarTrigger />
             </div>
@@ -85,7 +83,7 @@ function Shell({
           <div className="flex h-12 shrink-0 items-center gap-2.5 border-b px-3 md:hidden">
             <SidebarTrigger />
             <LogoChip />
-            <span className="text-sm font-medium">Project Runner</span>
+            <span className="text-sm font-medium">Jeera</span>
           </div>
           <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">
             {children}
