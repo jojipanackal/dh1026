@@ -1,23 +1,37 @@
 import { Suspense } from "react";
+import { SquareKanban } from "lucide-react";
 
-import { AppNav } from "@/components/app-shell/app-nav";
+import { TabNav } from "@/components/app-shell/app-nav";
+import { ThemeToggle } from "@/components/app-shell/theme-toggle";
 import { UserSwitcher } from "@/components/app-shell/user-switcher";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col md:flex-row">
-      <header className="flex shrink-0 flex-col gap-3 border-b bg-card px-4 py-3 md:w-56 md:border-r md:border-b-0 md:py-6">
-        <span className="px-3 text-base font-semibold tracking-tight">
-          Project Runner
-        </span>
-        <Suspense>
-          <AppNav />
-        </Suspense>
-        <div className="md:mt-auto">
-          <UserSwitcher />
+    <div className="min-h-svh">
+      <div className="flex h-12 items-center gap-3 px-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-6 items-center justify-center rounded-md border bg-card">
+            <SquareKanban className="size-3.5" />
+          </span>
+          <span className="hidden text-sm font-medium whitespace-nowrap sm:inline">
+            Project Runner
+          </span>
         </div>
-      </header>
-      <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <span className="hidden h-5 w-px shrink-0 bg-border sm:block" aria-hidden="true" />
+        <Suspense>
+          <UserSwitcher />
+        </Suspense>
+        <div className="ml-auto">
+          <ThemeToggle />
+        </div>
+      </div>
+
+      <div className="mx-2 min-h-[calc(100svh-3rem)] rounded-t-xl border border-b-0 bg-card">
+        <Suspense>
+          <TabNav />
+        </Suspense>
+        <main className="mx-auto max-w-6xl px-6 py-10 md:px-10">{children}</main>
+      </div>
     </div>
   );
 }

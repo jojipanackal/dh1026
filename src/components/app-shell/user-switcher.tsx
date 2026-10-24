@@ -19,11 +19,13 @@ async function UserSwitcherLoader() {
   ]);
   if (allUsers.length === 0) {
     return (
-      <span className="px-3 text-xs text-muted-foreground">
+      <span className="text-xs text-muted-foreground">
         No users yet — run{" "}
-        <code className="rounded bg-muted px-1">npm run db:seed</code>
+        <code className="rounded bg-muted px-1 font-mono">npm run db:seed</code>
       </span>
     );
   }
-  return <UserSwitcherClient users={allUsers} currentUserId={current?.id ?? null} />;
+  return (
+    <UserSwitcherClient users={allUsers} currentUserId={current?.id ?? null} />
+  );
 }

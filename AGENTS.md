@@ -59,6 +59,11 @@ The 30-minute target is this repository's working convention. It does not replac
 - Record the final submitted commit SHA in the submission details. Documentation may record that SHA in a subsequent commit; do not claim later implementation changes belong to the earlier demo.
 - Follow the organizers' actual submission method and timing. Submit before the 12-hour deadline recorded in [RULES.md](RULES.md).
 
+## Project notes
+
+- `npm run build` and `next dev` share `.next/`; building while the dev server runs leaves it serving stale CSS or crashing. Stop dev, `rm -rf .next`, restart.
+- UI direction (user-approved): dark-by-default dev-console look (OpenCode-like), Inter for UI text, monospace only for ids/emails/timestamps, neutral shadcn tokens with an indigo `--brand` accent. Not a terminal aesthetic.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

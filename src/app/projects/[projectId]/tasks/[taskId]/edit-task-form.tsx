@@ -70,7 +70,7 @@ export function EditTaskForm({
         />
         <FieldError message={state.fieldErrors?.description} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="status">Status</Label>
           <Select name="status" defaultValue={task.status}>

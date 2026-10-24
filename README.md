@@ -29,7 +29,7 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 - **Short description:** TODO — what it does, who it helps, and why it matters.
 - **Builder:** TODO — your name and GitHub handle
 - **Working demo:** TODO — link or local demo instructions.
-- **Technology stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · Drizzle ORM · PostgreSQL · Zod · Vitest
+- **Technology stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · next-themes · Drizzle ORM · PostgreSQL · Zod · Vitest
 
 ### Run the project
 

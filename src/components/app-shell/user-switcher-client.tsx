@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { setDemoUser } from "@/app/actions";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -10,6 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+function initial(name: string) {
+  return name.trim().charAt(0).toUpperCase();
+}
 
 export function UserSwitcherClient({
   users,
@@ -19,9 +24,10 @@ export function UserSwitcherClient({
   currentUserId: string | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const current = users.find((u) => u.id === currentUserId);
 
   return (
-    <div className="px-3" title="Demo identity — no authentication">
+    <div className="flex items-center gap-2">
       <Select
         value={currentUserId ?? ""}
         disabled={pending}
@@ -31,7 +37,15 @@ export function UserSwitcherClient({
           });
         }}
       >
-        <SelectTrigger className="w-full" size="sm">
+        <SelectTrigger
+          className="h-7 w-auto gap-1.5 rounded-md border-transparent bg-transparent px-2 text-sm shadow-none hover:bg-muted"
+          size="sm"
+        >
+          {current ? (
+            <span className="flex size-5 items-center justify-center rounded-full bg-brand text-[10px] font-medium text-brand-foreground">
+              {initial(current.name)}
+            </span>
+          ) : null}
           <SelectValue placeholder="Pick a demo user" />
         </SelectTrigger>
         <SelectContent>
@@ -42,9 +56,14 @@ export function UserSwitcherClient({
           ))}
         </SelectContent>
       </Select>
-      <p className="mt-1 text-[10px] leading-tight text-muted-foreground">
-        Demo identity — no authentication
-      </p>
+      <Badge
+        variant="outline"
+        className="shrink-0 text-xs font-normal text-muted-foreground"
+        title="Demo identity — no authentication"
+      >
+        <span className="hidden sm:inline">Demo identity · no auth</span>
+        <span className="sm:hidden">Demo</span>
+      </Badge>
     </div>
   );
 }

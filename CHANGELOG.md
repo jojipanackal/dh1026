@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-24T23:30:00+05:30 — Dark dev-console UI theme
+
+- Changed: Dark-by-default theme with a light/dark toggle (`next-themes` 0.4.6, `src/components/theme-provider.tsx`, `theme-toggle.tsx`). Inter for UI text, with JetBrains Mono only for ids, emails, event types and timestamps. Neutral shadcn tokens plus an indigo `--brand` accent (`src/app/globals.css`). App shell redesigned as a top bar (logo, demo user switcher, toggle) above an inset panel with tab navigation (`src/components/app-shell/**`). New shared `StatusBadge`/`PriorityBadge` and `KeyValueList`. Projects, project and task pages rearranged into a main column and a details column, with bordered tables. Mobile layout fixed. Next.js dev indicator moved to the bottom-right.
+- Why: User asked for a dark theme in the style of a developer-tool console (OpenCode-like) that non-developers can also read comfortably. A terminal/monospace "Lyra" pass was tried first and rejected by the user, then reverted.
+- Validation: lint, typecheck, 45/45 unit tests and build pass. I reviewed Playwright screenshots in dark and light at 1440×900 and 390×844. `scrollWidth` is 390 at 390px on `/`, `/projects`, the project page and the task page. No browser console errors. No server code changed.
+- Limitations: Running `npm run build` while `next dev` is running overwrites the shared `.next` directory. The dev server then serves stale CSS or crashes; restart it after `rm -rf .next`.
+
 ## 2026-10-24T23:08:00+05:30 — Phase 2: projects, teams, and tasks
 
 - Changed: New tables `projects`, `project_memberships`, `tasks`, `activity_events` (migration `0001`); task lifecycle, validation, and diff rules (`src/lib/tasks/`); membership-checked services (`src/server/`); demo user switcher; `/projects`, project detail, and task detail pages with forms and activity history; `npm run db:seed`; unit and integration tests; nav Tasks → Projects.

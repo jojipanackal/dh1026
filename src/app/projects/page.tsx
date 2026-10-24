@@ -9,11 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TASK_STATUS_LABELS, type TaskStatus } from "@/lib/tasks/lifecycle";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getCurrentUser } from "@/server/current-user";
 import { listProjectsForUser } from "@/server/projects";
 
@@ -31,67 +37,92 @@ export default function ProjectsPage() {
   );
 }
 
+const NUM = "text-right tabular-nums";
+
 async function ProjectsContent() {
   const user = await getCurrentUser();
   if (!user) {
     return (
       <EmptyState
         title="No demo user selected"
-        message="Pick a demo user in the sidebar to see your projects. Demo identity only — there is no authentication."
+        message="Pick a demo user in the top bar to see your projects. Demo identity only — there is no authentication."
       />
     );
   }
   const projectList = await listProjectsForUser(user.id);
+
   return (
-    <div className="flex flex-col gap-8">
-      {projectList.length === 0 ? (
-        <EmptyState
-          title="No projects yet"
-          message="Create your first project below to start tracking tasks."
-        />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {projectList.map((project) => (
-            <Link
-              key={project.id}
-              href={`/projects/${project.id}`}
-              className="block"
-            >
-              <Card className="h-full transition-colors hover:border-foreground/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between gap-2">
-                    {project.name}
-                    <Badge variant="outline">{project.role}</Badge>
-                  </CardTitle>
-                  {project.description ? (
-                    <CardDescription>{project.description}</CardDescription>
-                  ) : null}
-                </CardHeader>
-                <CardContent>
-                  {project.total === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No tasks yet
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      {Object.entries(project.counts).map(([status, count]) => (
-                        <Badge key={status} variant="secondary">
-                          {TASK_STATUS_LABELS[status as TaskStatus] ?? status}:{" "}
-                          {count}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
-      <section>
-        <h2 className="mb-3 text-lg font-medium">New project</h2>
-        <NewProjectForm />
-      </section>
+    <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="min-w-0">
+        {projectList.length === 0 ? (
+          <EmptyState
+            title="No projects yet"
+            message="Create your first project to start tracking tasks."
+          />
+        ) : (
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>Project</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="text-right">To do</TableHead>
+                  <TableHead className="text-right">In progress</TableHead>
+                  <TableHead className="text-right">Blocked</TableHead>
+                  <TableHead className="text-right">Done</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projectList.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="py-3">
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="font-medium underline-offset-4 hover:underline"
+                      >
+                        {project.name}
+                      </Link>
+                      {project.description ? (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {project.description}
+                        </p>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal">
+                        {project.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className={NUM}>
+                      {project.counts.todo ?? 0}
+                    </TableCell>
+                    <TableCell className={NUM}>
+                      {project.counts.in_progress ?? 0}
+                    </TableCell>
+                    <TableCell className={NUM}>
+                      {project.counts.blocked ?? 0}
+                    </TableCell>
+                    <TableCell className={NUM}>
+                      {project.counts.done ?? 0}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">New project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <NewProjectForm />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

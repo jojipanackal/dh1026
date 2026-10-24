@@ -44,7 +44,7 @@ export function NewTaskForm({
         <Textarea id="description" name="description" rows={2} />
         <FieldError message={state.fieldErrors?.description} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="priority">Priority</Label>
           <Select name="priority" defaultValue="medium">
