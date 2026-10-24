@@ -22,6 +22,19 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Integrations milestone — Connector control plane (2026-10-25T03:25:38+05:30)
+
+- Implemented:
+  - Added `/integrations` to the primary navigation.
+  - Added connector cards for Telegram, GitHub, Slack, and Google Chat with clear configured/planned status.
+  - Telegram status is computed server-side from environment configuration without exposing the bot token; the page links to the existing webhook setup.
+  - Documented the shared-ingress principle so future connectors feed the same agent runtime.
+- Files and areas changed: `src/app/integrations/page.tsx`, `src/components/app-shell/nav-items.ts`, `README.md`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck`, `npm run lint`, `npm test` (95/95), and an HTTP smoke check of `/integrations` (200) pass.
+- Decisions affecting later phases: Integrations is a control plane, not a second task system; provider credentials remain server-side and connector event processing stays behind the normalized agent ingress.
+- Remaining limitations: GitHub, Slack, and Google Chat OAuth/event flows are not implemented; Telegram is configured through environment variables rather than a UI secret form.
+- Next phase: Add GitHub webhook/repository linking and per-person identity mapping for external chat accounts.
+
 ## Chat polish — Remove purple AI identity icons (2026-10-25T03:24:29+05:30)
 
 - Implemented: Removed the purple Sparkles/Bot avatar treatment from Agent briefing, assistant, loading, header, and empty states while preserving text labels and interaction behavior.

@@ -74,7 +74,7 @@ workflow before adding external chat adapters.
 ### Current status
 
 - Working features: application shell with responsive navigation (Agent,
-  Projects, Team); a membership-scoped Team directory showing teammates,
+  Projects, Team, Integrations); a membership-scoped Team directory showing teammates,
   projects, roles, and workload; demo user switcher (httpOnly cookie,
   no authentication); project creation and listing with per-status task
   counts; project detail page with Overview/Board/List/Activity/Members
@@ -106,7 +106,9 @@ workflow before adding external chat adapters.
   closed. A repeatable fake team-delivery dataset is available through
   `npm run db:seed:demo`. A Telegram webhook adapter is available at
   `/api/telegram/webhook`; it currently supports one configured demo identity
-  and uses the same normalized agent ingress as the web conversation.
+  and uses the same normalized agent ingress as the web conversation; an
+  Integrations page shows connector configuration and planned GitHub/Slack/
+  Google Chat adapters.
 - Known limitations: Knowledge remains an honest placeholder — that feature
   lands in a later phase (see [docs/PHASES.md](docs/PHASES.md)). No real authentication (demo user
   switcher only). Slack and Google Chat are represented by the normalized

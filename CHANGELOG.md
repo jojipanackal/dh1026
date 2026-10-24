@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:25:38+05:30 — Add the Integrations page
+
+- Changed: Added an Integrations page to the primary navigation with connector cards for Telegram, GitHub, Slack, and Google Chat. Telegram reflects server-side configuration without exposing secrets and links to the webhook setup; planned connectors explain their future capabilities and shared-ingress model.
+- Why: Integrations should be a visible control plane for connecting the agent to the tools where teams already work.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (95/95), and an HTTP smoke check of `/integrations` (200) passed.
+- Limitations: The page is a connector catalog/status surface; GitHub, Slack, and Google Chat OAuth/event flows are not implemented yet. Telegram credentials remain environment-managed.
+
 ## 2026-10-25T03:24:29+05:30 — Remove the purple AI chat avatar
 
 - Changed: Removed the purple Sparkles/Bot avatar treatment from briefing messages, assistant responses, loading responses, the chat header, and the empty Agent state. Text labels and message content remain unchanged.
