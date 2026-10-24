@@ -22,6 +22,13 @@ execution-agent work continues as Phases 10–13 in [PHASES.md](PHASES.md):
 web-first agent, task/dependency graph, evidence-backed status and sprint
 movement, then stale-work follow-ups.
 
+## Shell polish — Remove Jira-like logo mark (2026-10-25T03:21:36+05:30)
+
+- Implemented: Removed the square-kanban icon from the desktop and mobile shell so the header presents Jeera without the Jira-like mark.
+- Files and areas changed: `src/components/app-shell/app-shell.tsx`, `CHANGELOG.md`, and `AI_USAGE.md`.
+- Checks run and results: `npm run typecheck` and `npm run lint` pass.
+- Remaining limitations: None identified in these checks.
+
 ## Team milestone — Membership-scoped team directory (2026-10-25T03:19:17+05:30)
 
 - Implemented:

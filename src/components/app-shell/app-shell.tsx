@@ -2,7 +2,6 @@ import { Suspense } from "react";
 
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { SquareKanban } from "lucide-react";
 
 import { AppNav } from "@/components/app-shell/app-nav";
 import { ThemeToggle } from "@/components/app-shell/theme-toggle";
@@ -20,14 +19,6 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-function LogoChip() {
-  return (
-    <span className="flex size-6 shrink-0 items-center justify-center rounded-md border bg-card">
-      <SquareKanban className="size-3.5" />
-    </span>
-  );
-}
-
 function Shell({
   defaultOpen,
   children,
@@ -43,9 +34,8 @@ function Shell({
             <div className="flex items-center gap-2 px-1 group-data-[collapsible=icon]:hidden">
               <Link
                 href="/"
-                className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1 py-1"
+                className="flex min-w-0 flex-1 items-center rounded-md px-1 py-1"
               >
-                <LogoChip />
                 <span className="truncate text-sm font-medium">Jeera</span>
               </Link>
               <SidebarTrigger />
@@ -76,7 +66,6 @@ function Shell({
           {/* Mobile top bar: the sidebar is an off-canvas drawer below md. */}
           <div className="flex h-12 shrink-0 items-center gap-2.5 border-b px-3 md:hidden">
             <SidebarTrigger />
-            <LogoChip />
             <span className="text-sm font-medium">Jeera</span>
           </div>
           <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10">

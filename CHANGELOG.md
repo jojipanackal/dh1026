@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T03:21:36+05:30 — Remove the Jira-like shell mark
+
+- Changed: Removed the square-kanban logo chip from the desktop and mobile app shell, leaving the Jeera wordmark and navigation controls in place.
+- Why: The icon read as a Jira logo and did not represent Jeera's agent-first identity.
+- Validation: `npm run typecheck` and `npm run lint` passed.
+- Limitations: None identified in these checks.
+
 ## 2026-10-25T03:19:17+05:30 — Show the team directory
 
 - Changed: Replaced the Team placeholder with a membership-scoped directory showing each teammate's name, email, projects, role, open workload, and total assigned task count. Added a database-backed team query and integration coverage for project visibility and workload counts.
