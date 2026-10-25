@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:42:41+05:30 — Make the Telegram route compatible with Cache Components
+
+- Changed: Removed the `runtime` and `dynamic` route-segment exports from `src/app/api/telegram/webhook/route.ts` and documented the Vercel database prerequisite in `README.md`.
+- Why: Next.js 16 rejects those exports when `cacheComponents` is enabled; the default Node.js runtime and request-time behavior are sufficient for this webhook.
+- Validation: Verified against the installed Next.js 16 route-segment guidance; Vercel's first source deployment isolated this as the build blocker.
+- Limitations: A fresh Vercel deployment is still required to verify the corrected build and the hosted app still needs a real `DATABASE_URL`.
+
 ## 2026-10-25T05:40:00+05:30 — Add the Jeera pitch deck
 
 - Changed: Added a nine-slide, browser-presentable pitch deck and a companion talk track in `docs/JEERA_PITCH_DECK.html` and `docs/PITCH_DECK.md`.

@@ -8,9 +8,6 @@ import {
 } from "@/lib/agent/telegram";
 import { receiveAgentMessage } from "@/server/agent";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 export async function POST(request: Request) {
   const env = getServerEnv();
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_DEFAULT_USER_ID) {

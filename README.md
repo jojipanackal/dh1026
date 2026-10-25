@@ -73,6 +73,17 @@ workflow before adding external chat adapters.
    - `curl http://localhost:3000/api/health` — returns JSON health status
      (200 when the database is reachable, 503 otherwise)
 
+### Vercel deployment
+
+The Vercel project is `jeera` under the `Joji` team. Before deploying a
+database-backed build, set `DATABASE_URL` in the Vercel production environment
+to a hosted PostgreSQL connection string; the local `.env.local` value points
+to `localhost` and is not usable from Vercel. Apply the Drizzle migrations and
+seed the hosted database separately, then optionally add `OPENAI_API_KEY` and
+the Telegram variables. The app validates `DATABASE_URL` while prerendering,
+so a deployment without it will fail during the build rather than produce a
+misleading partial demo.
+
 ### Current status
 
 - Working features: application shell with responsive navigation (Agent, Tasks,
