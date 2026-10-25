@@ -28,7 +28,7 @@ A solo, 12-hour hackathon project. This repository started from a documentation 
 - **Track:** TODO — one of the four tracks in [RULES.md](RULES.md)
 - **Short description:** TODO — what it does, who it helps, and why it matters.
 - **Builder:** TODO — your name and GitHub handle
-- **Working demo:** TODO — link or local demo instructions.
+- **Working demo:** [Jeera on Vercel](https://jeera-joji13.vercel.app) — Vercel Authentication is enabled; use the temporary share link from the deployment handoff for unauthenticated demo access.
 - **Technology stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · next-themes · Drizzle ORM · PostgreSQL · Zod · Vitest
 
 The active roadmap is now the execution-agent sequence in
@@ -84,7 +84,7 @@ the Telegram variables. The app validates `DATABASE_URL` while prerendering,
 so a deployment without it will fail during the build rather than produce a
 misleading partial demo.
 
-The verified production deployment is `https://jeera-joji13.vercel.app`. Vercel
+The verified production deployment is [https://jeera-joji13.vercel.app](https://jeera-joji13.vercel.app). Vercel
 Authentication remains enabled on the project; use the temporary share URL
 provided in the deployment handoff for demo access. The current production
 build applies migrations and runs the idempotent demo seed before `next build`.

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T08:01:54+05:30 — Add the deployed demo URL to the README
+
+- Changed: Added the verified Vercel demo URL to the project overview and deployment instructions.
+- Why: Visitors should be able to find the hosted app directly from the repository README.
+- Validation: Checked the README link target and `git diff --check`.
+- Limitations: Vercel Authentication remains enabled, so unauthenticated visitors need the temporary share link from the deployment handoff.
+
 ## 2026-10-25T06:07:38+05:30 — Make the PWA installable and align the favicon
 
 - Changed: Added 192px, 512px, and Apple PNG icons generated from the existing Jeera logo; updated the manifest with explicit install sizes, scope, and id; added the App Router SVG icon convention; and expanded the service-worker cache to include the manifest and icons.
