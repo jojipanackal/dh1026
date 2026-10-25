@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeera — Pitch Deck</title>
+  <style>
+    :root {
+      --ink: #e8ecf6;
+      --muted: #9ba7bd;
+      --faint: #6e7b91;
+      --bg: #080b12;
+      --surface: #111722;
+      --line: #253149;
+      --indigo: #8b8cff;
+      --teal: #55d6c2;
+      --amber: #f5be68;
+      --red: #f28b9b;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { overflow: hidden; }
+    .deck { min-height: 100vh; position: relative; }
+    .slide { display: none; min-height: 100vh; padding: 7vh 8vw 8vh; position: relative; overflow: hidden; }
+    .slide.active { display: flex; flex-direction: column; justify-content: center; }
+    .slide::before { content: ""; position: absolute; width: 46vw; height: 46vw; border-radius: 50%; background: radial-gradient(circle, rgba(110, 105, 255, .15), transparent 65%); top: -22vw; right: -12vw; pointer-events: none; }
+    .slide::after { content: ""; position: absolute; width: 34vw; height: 34vw; border-radius: 50%; background: radial-gradient(circle, rgba(59, 215, 192, .08), transparent 68%); bottom: -21vw; left: -14vw; pointer-events: none; }
+    .content { position: relative; z-index: 1; max-width: 1180px; width: 100%; margin: 0 auto; }
+    .eyebrow { color: var(--teal); letter-spacing: .16em; text-transform: uppercase; font-size: 13px; font-weight: 700; margin-bottom: 24px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(48px, 7vw, 94px); line-height: .98; letter-spacing: -.055em; max-width: 920px; }
+    h2 { font-size: clamp(36px, 5vw, 66px); line-height: 1.02; letter-spacing: -.045em; max-width: 950px; }
+    h3 { font-size: 22px; letter-spacing: -.02em; }
+    .lead { color: var(--muted); font-size: clamp(20px, 2.2vw, 30px); line-height: 1.28; max-width: 760px; margin-top: 28px; }
+    .small { color: var(--muted); font-size: 16px; line-height: 1.5; }
+    .accent { color: var(--indigo); }
+    .teal { color: var(--teal); }
+    .amber { color: var(--amber); }
+    .red { color: var(--red); }
+    .rule { height: 1px; background: var(--line); margin: 36px 0; }
+    .footer { position: absolute; left: 8vw; right: 8vw; bottom: 24px; display: flex; justify-content: space-between; color: var(--faint); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; z-index: 3; }
+    .brand { color: var(--ink); font-weight: 750; letter-spacing: -.02em; text-transform: none; }
+    .brand span { color: var(--teal); }
+    .quote { border-left: 3px solid var(--teal); padding: 8px 0 8px 24px; font-size: clamp(26px, 3vw, 42px); line-height: 1.16; max-width: 900px; letter-spacing: -.03em; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 48px; }
+    .stat { border-top: 1px solid var(--line); padding-top: 18px; }
+    .stat strong { display: block; font-size: clamp(42px, 5vw, 72px); line-height: 1; letter-spacing: -.06em; color: var(--teal); }
+    .stat span { display: block; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.35; }
+    .list { display: grid; gap: 18px; margin-top: 34px; }
+    .list-item { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: start; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 6px; background: var(--indigo); box-shadow: 0 0 0 6px rgba(139,140,255,.10); }
+    .list-item strong { display: block; font-size: 21px; font-weight: 650; }
+    .list-item p { color: var(--muted); font-size: 16px; line-height: 1.45; margin-top: 4px; }
+    .old-state { color: var(--muted); border: 1px solid var(--line); padding: 20px 24px; font-size: 22px; position: relative; }
+    .old-state::after { content: ""; position: absolute; left: 24px; right: 24px; top: 50%; border-top: 1px solid var(--red); transform: rotate(-6deg); opacity: .7; }
+    .reality { border: 1px solid rgba(85,214,194,.45); background: linear-gradient(135deg, rgba(85,214,194,.08), rgba(139,140,255,.08)); padding: 24px; margin-top: 16px; }
+    .reality strong { display: block; font-size: 24px; margin-bottom: 10px; }
+    .reality p { color: var(--muted); line-height: 1.5; }
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 52px; position: relative; }
+    .flow::before { content: ""; position: absolute; top: 31px; left: 9%; right: 9%; border-top: 1px solid var(--line); z-index: -1; }
+    .step { background: var(--bg); border: 1px solid var(--line); padding: 20px; min-height: 145px; }
+    .step-num { color: var(--teal); font-size: 13px; letter-spacing: .12em; font-weight: 700; }
+    .step h3 { margin-top: 26px; font-size: 19px; }
+    .step p { color: var(--muted); font-size: 14px; line-height: 1.4; margin-top: 8px; }
+    .graph { margin-top: 42px; display: grid; grid-template-columns: 1fr 130px 1fr; gap: 16px; align-items: center; max-width: 960px; }
+    .node { border: 1px solid var(--line); background: rgba(17,23,34,.88); padding: 18px; min-height: 96px; }
+    .node .person { color: var(--teal); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+    .node strong { display: block; margin-top: 10px; font-size: 21px; }
+    .node small { display: block; color: var(--muted); margin-top: 8px; font-size: 14px; }
+    .connector { text-align: center; color: var(--amber); font-size: 14px; }
+    .connector::after { content: "→"; display: block; font-size: 38px; line-height: .8; color: var(--amber); }
+    .timeline { margin-top: 44px; border-left: 1px solid var(--line); padding-left: 34px; display: grid; gap: 25px; max-width: 860px; }
+    .event { position: relative; }
+    .event::before { content: ""; position: absolute; width: 11px; height: 11px; border-radius: 50%; background: var(--indigo); left: -40px; top: 6px; box-shadow: 0 0 0 5px rgba(139,140,255,.12); }
+    .event time { color: var(--teal); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+    .event strong { display: block; font-size: 22px; margin-top: 5px; }
+    .event p { color: var(--muted); margin-top: 4px; line-height: 1.4; }
+    .loop { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 70px; margin-top: 44px; max-width: 960px; }
+    .loop-item { border-top: 1px solid var(--line); padding-top: 16px; }
+    .loop-item strong { font-size: 20px; }
+    .loop-item p { color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .terminal { margin-top: 40px; border: 1px solid var(--line); background: #0b0f17; padding: 22px 26px; max-width: 780px; color: var(--teal); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px; line-height: 1.8; }
+    .terminal .dim { color: var(--faint); }
+    .closing { display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: end; }
+    .closing .right { border-left: 1px solid var(--line); padding-left: 38px; }
+    .closing h3 { color: var(--teal); font-size: 18px; text-transform: uppercase; letter-spacing: .12em; }
+    .closing p { margin-top: 14px; color: var(--muted); font-size: 20px; line-height: 1.4; }
+    .controls { position: fixed; right: 24px; bottom: 20px; z-index: 8; color: var(--faint); font-size: 12px; }
+    @media (max-width: 800px) {
+      body { overflow: auto; }
+      .slide { min-height: 100svh; padding: 12vh 8vw 10vh; }
+      .grid-2, .closing { grid-template-columns: 1fr; gap: 36px; }
+      .grid-3, .flow { grid-template-columns: 1fr; }
+      .flow::before { display: none; }
+      .graph { grid-template-columns: 1fr; }
+      .connector::after { content: "↓"; }
+      .loop { grid-template-columns: 1fr; }
+      .closing .right { border-left: 0; border-top: 1px solid var(--line); padding: 26px 0 0; }
+      .footer { position: fixed; }
+    }
+    @media print {
+      body { overflow: visible; background: #080b12; }
+      .slide, .slide.active { display: flex; min-height: 100vh; page-break-after: always; }
+      .controls { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-label="Jeera pitch deck">
+    <section class="slide active">
+      <div class="content">
+        <div class="eyebrow">Jeera · Execution agent</div>
+        <h1>The work between the tasks is where projects slip.</h1>
+        <p class="lead">Jeera turns everyday team conversations into a living execution record: who is doing what, who is waiting, what changed, and when to check again.</p>
+        <div class="rule"></div>
+        <p class="small">A natural-language task runner for teams that need more than a board.</p>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>01 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">The problem</div>
+        <h2>Task tools capture state. Teams live in context.</h2>
+        <div class="grid-2" style="margin-top: 52px;">
+          <div>
+            <div class="old-state">Landing page · In progress</div>
+            <div class="reality">
+              <strong>What the team actually needs to know</strong>
+              <p>George is waiting on Joji. Joji got pulled into an incident. Vaishakh cannot start QA until the signup form lands on staging. The status alone hides the handoff.</p>
+            </div>
+          </div>
+          <div class="list" style="margin-top: 0;">
+            <div class="list-item"><span class="dot"></span><div><strong>Waiting on someone</strong><p>The dependency is real, but it lives in a chat message.</p></div></div>
+            <div class="list-item"><span class="dot" style="background:var(--amber)"></span><div><strong>Temporarily interrupted</strong><p>The task is still active, but the next check-in should change.</p></div></div>
+            <div class="list-item"><span class="dot" style="background:var(--teal)"></span><div><strong>Ready to hand off</strong><p>Completion means proof and a clear next owner, not just Done.</p></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>02 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">The insight</div>
+        <h2>Every work update should become shared memory.</h2>
+        <p class="quote" style="margin-top: 48px;">“I got pulled into another issue. I will return to the landing page in two hours.”</p>
+        <div class="grid-3">
+          <div class="stat"><strong>Context</strong><span>Joji is interrupted. The task remains In progress.</span></div>
+          <div class="stat"><strong>Next step</strong><span>Resume the landing page after the incident.</span></div>
+          <div class="stat"><strong>Check-in</strong><span>Pause follow-up until the stated window elapses.</span></div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>03 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">The product</div>
+        <h2>One conversation becomes the operating record.</h2>
+        <div class="flow">
+          <div class="step"><span class="step-num">01</span><h3>Say what happened</h3><p>Write naturally in the Agent: progress, interruption, handoff, blocker, or completion.</p></div>
+          <div class="step"><span class="step-num">02</span><h3>Agent interprets</h3><p>Jeera links the message to real tasks, people, projects, and dependencies.</p></div>
+          <div class="step"><span class="step-num">03</span><h3>Review the change</h3><p>Task mutations stay reviewable. Context can be saved without changing status.</p></div>
+          <div class="step"><span class="step-num">04</span><h3>Keep work moving</h3><p>Answers stay grounded and follow-ups happen when evidence goes stale.</p></div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>04 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">Demo scenario · Landing Page Launch</div>
+        <h2>The graph makes invisible handoffs visible.</h2>
+        <div class="graph">
+          <div class="node"><span class="person">Joji</span><strong>Build the landing page</strong><small>In progress</small></div>
+          <div class="connector">George waits on Joji</div>
+          <div class="node"><span class="person">George</span><strong>Add the signup form</strong><small>Blocked</small></div>
+          <div class="node"><span class="person">George</span><strong>Add the signup form</strong><small>Blocked</small></div>
+          <div class="connector">Vaishakh waits on George</div>
+          <div class="node"><span class="person">Vaishakh</span><strong>QA on staging</strong><small>Blocked</small></div>
+          <div class="node"><span class="person">Vaishakh</span><strong>QA on staging</strong><small>Blocked</small></div>
+          <div class="connector">Joji waits on Vaishakh</div>
+          <div class="node"><span class="person">Joji</span><strong>Publish the launch</strong><small>Blocked</small></div>
+        </div>
+        <p class="small" style="margin-top: 30px;">The seeded demo contains 4 teammates, 10 tasks, and 5 recorded dependency links.</p>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>05 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">What Jeera remembers</div>
+        <h2>Status and context stay separate.</h2>
+        <div class="timeline">
+          <div class="event"><time>09:10 · progress</time><strong>Joji started the landing page</strong><p>The approved copy is in use and the page shell is in progress.</p></div>
+          <div class="event"><time>10:05 · pause</time><strong>Joji got pulled into a production issue</strong><p>The task remains In progress. Jeera records the interruption and the expected next step.</p></div>
+          <div class="event"><time>12:05 · resume</time><strong>Joji returned to the landing page</strong><p>The coordinator can answer the team without asking Joji to reconstruct the story.</p></div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>06 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">The coordination loop</div>
+        <h2>Jeera turns silence into a useful question.</h2>
+        <div class="loop">
+          <div class="loop-item"><strong>Morning</strong><p>“What are my tasks for today?” The Agent gives a brief and asks what comes first.</p></div>
+          <div class="loop-item"><strong>During the day</strong><p>“I am waiting on George.” The Agent records the dependency and its owner.</p></div>
+          <div class="loop-item"><strong>When work changes</strong><p>“I got occupied.” Context is remembered without inventing a new status.</p></div>
+          <div class="loop-item"><strong>When evidence goes stale</strong><p>The worker checks in with the assignee and includes the relevant task context.</p></div>
+          <div class="loop-item"><strong>At handoff</strong><p>“It is ready.” The Agent captures what was verified and who can move next.</p></div>
+          <div class="loop-item"><strong>At close</strong><p>Done includes completion details and an auditable history, not just a checkbox.</p></div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>07 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content">
+        <div class="eyebrow">Built for a working demo</div>
+        <h2>Web-first today. Channel-ready tomorrow.</h2>
+        <div class="grid-2" style="margin-top: 46px; align-items: start;">
+          <div class="terminal">
+            <div><span class="dim">$</span> npm run db:seed:demo</div>
+            <div><span class="dim">→</span> 4 members · 10 tasks · 5 links</div>
+            <div><span class="dim">$</span> npm run agent:worker</div>
+            <div><span class="dim">→</span> five-minute follow-up sweep</div>
+            <div><span class="dim">$</span> npm run dev</div>
+            <div><span class="dim">→</span> Agent + Graph + Queue</div>
+          </div>
+          <div class="list" style="margin-top: 0;">
+            <div class="list-item"><span class="dot"></span><div><strong>One source of truth</strong><p>PostgreSQL stores tasks, dependencies, journal evidence, and agent messages.</p></div></div>
+            <div class="list-item"><span class="dot" style="background:var(--teal)"></span><div><strong>Separate worker</strong><p>Follow-ups run outside the browser and can move to Vercel Cron later.</p></div></div>
+            <div class="list-item"><span class="dot" style="background:var(--amber)"></span><div><strong>Any conversation surface</strong><p>The core ingress is channel-ready, while the demo stays focused on the web Agent.</p></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>08 / 09</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="content closing">
+        <div>
+          <div class="eyebrow">Jeera</div>
+          <h2>Projects do not stall because a board lacks another column.</h2>
+          <p class="lead">They stall because the real state of work never becomes shared memory.</p>
+        </div>
+        <div class="right">
+          <h3>The demo in 90 seconds</h3>
+          <p>Open Graph. Ask what is blocked. Look up George. Show Joji’s interruption. Resolve one handoff. Close work with proof. Let the worker check in.</p>
+          <div class="rule"></div>
+          <p class="small">Jeera keeps the conversation natural and makes the execution state trustworthy.</p>
+        </div>
+      </div>
+      <div class="footer"><span class="brand">jee<span>ra</span></span><span>09 / 09</span></div>
+    </section>
+  </main>
+  <div class="controls">Use ← → or click · <span id="counter">1 / 9</span></div>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let current = 0;
+    const counter = document.getElementById('counter');
+    function show(index) {
+      current = (index + slides.length) % slides.length;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      history.replaceState(null, '', `#${current + 1}`);
+    }
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === ' ') show(current + 1);
+      if (event.key === 'ArrowLeft') show(current - 1);
+    });
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('a, button')) return;
+      show(current + 1);
+    });
+    const initial = Number(location.hash.slice(1));
+    if (initial >= 1 && initial <= slides.length) show(initial - 1);
+  </script>
+</body>
+</html>

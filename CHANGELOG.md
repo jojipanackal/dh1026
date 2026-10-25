@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:40:00+05:30 — Add the Jeera pitch deck
+
+- Changed: Added a nine-slide, browser-presentable pitch deck and a companion talk track in `docs/JEERA_PITCH_DECK.html` and `docs/PITCH_DECK.md`.
+- Why: The demo needs a clear narrative around invisible handoffs, remembered context, proactive follow-ups, and the working launch scenario.
+- Validation: Checked the slide count, navigation script, print styles, claim consistency with `docs/DEMO.md`, and `git diff --check`.
+- Limitations: The presentation artifact runtime was unavailable in this session, so the deliverable is an editable HTML deck rather than a PPTX export; visual review was limited to source inspection.
+
 ## 2026-10-25T05:31:00+05:30 — Prevent stale PWA bundles from causing hydration mismatches
 
 - Changed: Disabled service-worker registration in development, unregistering the existing root worker when present, and bumped the production static cache version.
