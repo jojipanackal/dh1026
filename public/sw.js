@@ -1,4 +1,4 @@
-const CACHE_NAME = "jeera-static-v1";
+const CACHE_NAME = "jeera-static-v2";
 const STATIC_ASSETS = ["/offline.html", "/icon.svg"];
 
 self.addEventListener("install", (event) => {

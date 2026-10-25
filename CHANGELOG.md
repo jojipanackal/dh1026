@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:31:00+05:30 — Prevent stale PWA bundles from causing hydration mismatches
+
+- Changed: Disabled service-worker registration in development, unregistering the existing root worker when present, and bumped the production static cache version.
+- Why: A cached older client bundle rendered the previous sidebar item order while the server rendered the current Tasks navigation, causing hydration to fail.
+- Validation: `npm run typecheck`, `npm run lint`, `npm test` (97/97), and `git diff --check` passed.
+- Limitations: A browser with an already-open stale tab may need one reload after the worker is unregistered.
+
 ## 2026-10-25T05:25:00+05:30 — Fix legacy journal rendering
 
 - Changed: Made the context-memory UI backward-compatible with journal interpretations created before `contextNotes` existed.
