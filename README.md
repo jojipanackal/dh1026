@@ -84,6 +84,11 @@ the Telegram variables. The app validates `DATABASE_URL` while prerendering,
 so a deployment without it will fail during the build rather than produce a
 misleading partial demo.
 
+The verified production deployment is `https://jeera-joji13.vercel.app`. Vercel
+Authentication remains enabled on the project; use the temporary share URL
+provided in the deployment handoff for demo access. The current production
+build applies migrations and runs the idempotent demo seed before `next build`.
+
 ### Current status
 
 - Working features: application shell with responsive navigation (Agent, Tasks,

@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T05:58:23+05:30 — Deploy Jeera to Vercel with Neon Postgres
+
+- Changed: Connected the Vercel `jeera` project to Neon’s free Postgres integration, applied all Drizzle migrations, seeded the 10-task demo dataset during the production build, and deployed the app.
+- Why: The hosted demo needs a reachable database instead of the local `localhost` connection string.
+- Validation: Vercel deployment `dpl_37jcpaRiCV6jTaiyHJwvRcHM2FQE` reached `READY`; `/api/health` returned HTTP 200 with `database.ok: true`; the shareable deployment URL returned HTTP 200.
+- Limitations: Vercel Authentication remains enabled; the temporary share URL expires on 2026-10-25 at 23:28 IST. The current build runs the idempotent demo seed on each deployment.
+
 ## 2026-10-25T05:42:41+05:30 — Make the Telegram route compatible with Cache Components
 
 - Changed: Removed the `runtime` and `dynamic` route-segment exports from `src/app/api/telegram/webhook/route.ts` and documented the Vercel database prerequisite in `README.md`.
