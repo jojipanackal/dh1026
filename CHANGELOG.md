@@ -15,6 +15,13 @@ Add entries as you build, newest first:
 - Limitations: <known issues or "None identified in these checks">
 ```
 
+## 2026-10-25T06:07:38+05:30 — Make the PWA installable and align the favicon
+
+- Changed: Added 192px, 512px, and Apple PNG icons generated from the existing Jeera logo; updated the manifest with explicit install sizes, scope, and id; added the App Router SVG icon convention; and expanded the service-worker cache to include the manifest and icons.
+- Why: The manifest only advertised an SVG with `sizes: "any"`, which prevented Chromium from satisfying its standard install checks, and the browser/apple icon metadata was not consistently rasterized.
+- Validation: `npm run typecheck`, `npm run lint`, and `npm test` (97/97) passed; the Vercel deployment reached `READY`; hosted manifest, favicon assets, service worker, and `/api/health` each returned HTTP 200.
+- Limitations: The local build could not fetch Google Fonts in the sandbox, but the Vercel build completed successfully. Deployment protection still means an expired share link can block install discovery.
+
 ## 2026-10-25T05:58:23+05:30 — Deploy Jeera to Vercel with Neon Postgres
 
 - Changed: Connected the Vercel `jeera` project to Neon’s free Postgres integration, applied all Drizzle migrations, seeded the 10-task demo dataset during the production build, and deployed the app.

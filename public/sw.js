@@ -1,5 +1,12 @@
-const CACHE_NAME = "jeera-static-v2";
-const STATIC_ASSETS = ["/offline.html", "/icon.svg"];
+const CACHE_NAME = "jeera-static-v3";
+const STATIC_ASSETS = [
+  "/offline.html",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-icon.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -37,7 +44,7 @@ self.addEventListener("fetch", (event) => {
 
   const isStaticAsset =
     url.pathname.startsWith("/_next/static/") ||
-    /\.(?:css|js|svg|woff2?)$/i.test(url.pathname);
+    /\.(?:css|js|png|svg|webmanifest|woff2?)$/i.test(url.pathname);
   if (!isStaticAsset) return;
 
   event.respondWith(

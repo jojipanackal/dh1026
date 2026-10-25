@@ -89,6 +89,13 @@ Authentication remains enabled on the project; use the temporary share URL
 provided in the deployment handoff for demo access. The current production
 build applies migrations and runs the idempotent demo seed before `next build`.
 
+For installation, open the HTTPS demo in Chrome or Edge and use the install
+control in the address bar or browser menu. On iOS Safari, use Share → Add to
+Home Screen. The manifest now includes explicit 192px and 512px PNG icons and
+the service worker caches the manifest and icon assets. Vercel Authentication
+or an expired share link can still prevent a browser from recognizing the app
+as installable; refresh the share link or use an authenticated project session.
+
 ### Current status
 
 - Working features: application shell with responsive navigation (Agent, Tasks,

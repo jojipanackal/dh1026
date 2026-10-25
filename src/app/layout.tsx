@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   description: "Natural-language project updates and tracking",
   icons: {
     icon: "/icon.svg",
-    apple: "/icon.svg",
+    apple: "/apple-icon.png",
   },
   appleWebApp: {
     capable: true,
